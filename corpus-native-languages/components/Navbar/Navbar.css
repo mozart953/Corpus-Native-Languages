@@ -1,0 +1,19 @@
+.Navbar{
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    position: sticky;
+    margin-left: 10px;
+    margin-right: 40px;
+    margin-top: 20px;
+
+}
+
+.iniLinks{
+    padding: 6px;
+    color:beige;
+}
+
+.iniLinks:hover{
+    color: black;
+}

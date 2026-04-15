@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mayan-IA",
+  title: "Mayan-Corpus",
   description: "This project is developing to help to presserve native languages in Guatemala and close the gap between native communities and technology. ",
 };
 

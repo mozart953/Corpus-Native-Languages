@@ -1,5 +1,5 @@
-import HomeComponent from "@/components/Home.jsx";
-import NavbarComponent from "@/components/Navbar.jsx";
+import HomeComponent from "@/components/Home/Home.jsx";
+import NavbarComponent from "@/components/Navbar/Navbar.jsx";
 
 
 export default function Home() {
