@@ -3,15 +3,14 @@
     justify-content: flex-end;
     align-items: center;
     position: sticky;
-    margin-left: 10px;
-    margin-right: 40px;
-    margin-top: 20px;
+    padding-right: 60px;
 
 }
 
 .iniLinks{
     padding: 6px;
     color:beige;
+    font-weight: bold;
 }
 
 .iniLinks:hover{
