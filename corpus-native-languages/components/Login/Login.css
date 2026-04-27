@@ -1,0 +1,37 @@
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    height: 100vh;
+}
+
+
+.mainCard{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    width: 300px;
+    height: 300px;
+    border-radius: 2px;
+}
+
+.loginForm{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.user, .password{
+    display: flex;
+    flex-direction: column;
+    margin: 20px;
+    color:black;
+}
+
+#enter{
+    background-color: greenyellow;
+}
+
