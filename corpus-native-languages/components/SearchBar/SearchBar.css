@@ -93,7 +93,7 @@
   border-bottom-width: 2px;
   border-radius: 6px;
   color: var(--nl-faint);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.8rem;
   pointer-events: none;
 }
@@ -137,7 +137,7 @@
 
 .searchBar__count {
   color: var(--nl-muted);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.8rem;
 }
 

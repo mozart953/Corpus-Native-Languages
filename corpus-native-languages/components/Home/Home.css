@@ -89,7 +89,7 @@
 
 .home__stats dt {
   color: var(--nl-faint);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.14em;
@@ -99,7 +99,7 @@
 .home__stats dd {
   margin: 6px 0 0;
   color: var(--nl-white);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-display);
   font-size: 1.7rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -168,7 +168,7 @@
 
 .home__selectionBar strong {
   color: var(--nl-blue-bright);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
 }
 
 .home__sidebar {

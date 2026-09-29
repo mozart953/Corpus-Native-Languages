@@ -126,7 +126,7 @@
 }
 
 .wordCard__word {
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-display);
   font-size: 1.32rem;
   font-weight: 600;
   line-height: 1.25;
@@ -164,7 +164,7 @@
   display: block;
   margin-bottom: 2px;
   color: var(--nl-faint);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -177,7 +177,7 @@
 }
 
 .wordCard__value {
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.92rem;
   color: var(--nl-text);
 }

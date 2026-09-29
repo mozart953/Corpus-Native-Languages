@@ -43,13 +43,18 @@
   --nl-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
   --nl-shadow-blue: 0 0 0 1px var(--nl-blue-line), 0 16px 40px rgba(0, 0, 0, 0.65);
 
-  /* Type */
-  --nl-font: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --nl-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Type — three families, one job each (see app/layout.tsx) */
+  --nl-font-display: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nl-font: var(--font-source-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nl-font-label: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Motion + rhythm */
   --nl-speed: 160ms;
   --nl-max: 1180px;
+
+  /* Horizontal gutter. The navbar and the page content share it so the nav
+     links stay aligned with the headings underneath them. */
+  --nl-inset: clamp(20px, 5vw, 56px);
 
   /* Icon masks — inline SVG data URIs, so no icon library is needed. */
   --nl-icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.6-3.6'/%3E%3C/svg%3E");
@@ -109,6 +114,7 @@ h2,
 h3,
 h4 {
   color: var(--nl-white);
+  font-family: var(--nl-font-display);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.02em;
@@ -206,12 +212,17 @@ ol {
   width: 100%;
   max-width: var(--nl-max);
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 var(--nl-inset);
 }
 
+/* Page content. It carries its own width and gutter — previously it had
+   neither, so every section sat flush against the viewport edge. */
 .nl-main {
   flex: 1;
-  padding: 48px 0 96px;
+  width: 100%;
+  max-width: var(--nl-max);
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 72px) var(--nl-inset) clamp(72px, 9vw, 120px);
 }
 
 .nl-section {
@@ -233,7 +244,7 @@ ol {
   gap: 8px;
   margin-bottom: 10px;
   color: var(--nl-blue-bright);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -274,7 +285,7 @@ ol {
   border: 1px solid var(--nl-blue-line);
   border-radius: var(--nl-radius-pill);
   color: var(--nl-blue-bright);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -450,14 +461,9 @@ ol {
 }
 
 @media (max-width: 640px) {
-  .nl-container {
-    padding: 0 16px;
-  }
-
-  .nl-main {
-    padding: 32px 0 72px;
-  }
-
+  /* Horizontal padding is handled by --nl-inset, which already clamps down to
+     its 20px minimum. Overriding it here is what let the content run flush to
+     the edge on small screens. */
   .nl-section {
     margin-top: 48px;
   }

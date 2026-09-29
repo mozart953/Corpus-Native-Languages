@@ -65,7 +65,7 @@
   border: 1px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
   border-radius: 12px;
   color: var(--card-accent);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-display);
   font-size: 1.25rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -93,7 +93,7 @@
 
 .languageCard__autonym {
   color: var(--nl-muted);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.78rem;
 }
 
@@ -129,7 +129,7 @@
 
 .languageCard__stats dt {
   color: var(--nl-faint);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -139,7 +139,7 @@
 .languageCard__stats dd {
   margin: 2px 0 0;
   color: var(--nl-white);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-display);
   font-size: 1rem;
   font-weight: 700;
 }
@@ -163,7 +163,7 @@
   border: 1px solid var(--nl-success);
   border-radius: var(--nl-radius-pill);
   color: var(--nl-success);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.08em;

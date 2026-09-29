@@ -130,7 +130,7 @@
   border: 1px solid var(--nl-border-strong);
   border-radius: 6px;
   color: var(--nl-muted);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;

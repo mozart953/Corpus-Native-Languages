@@ -35,7 +35,7 @@
   border: 1px solid var(--nl-blue-line);
   border-radius: 50%;
   color: var(--nl-blue-bright);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-display);
   font-size: 1.6rem;
 }
 
@@ -65,7 +65,7 @@
 
 .wordList__pageInfo {
   color: var(--nl-muted);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.82rem;
 }
 

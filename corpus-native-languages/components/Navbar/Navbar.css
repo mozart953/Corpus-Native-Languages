@@ -35,7 +35,7 @@
   border: 1px solid var(--nl-blue-line);
   border-radius: 10px;
   box-shadow: 0 0 22px rgba(47, 139, 255, 0.3);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -52,7 +52,7 @@
 
 .navbar__brandText small {
   color: var(--nl-faint);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.66rem;
   font-weight: 500;
   letter-spacing: 0.12em;
@@ -135,7 +135,7 @@
   border: 1px solid var(--nl-blue-line);
   border-radius: 50%;
   color: var(--nl-blue-bright);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -152,7 +152,7 @@
 
 .navbar__userText small {
   color: var(--nl-blue-bright);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.64rem;
   font-weight: 500;
   letter-spacing: 0.1em;

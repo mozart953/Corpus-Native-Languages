@@ -60,7 +60,7 @@
 
 .downloadMenu__formatName {
   color: var(--nl-white);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -96,7 +96,7 @@
 .downloadMenu__message {
   min-height: 1.2em;
   color: var(--nl-blue-bright);
-  font-family: var(--nl-mono);
+  font-family: var(--nl-font-label);
   font-size: 0.76rem;
 }
 
