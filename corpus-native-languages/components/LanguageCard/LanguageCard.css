@@ -1,0 +1,202 @@
+.languageCard {
+  --card-accent: var(--nl-blue);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius);
+  overflow: hidden;
+  transition: border-color var(--nl-speed) ease, transform var(--nl-speed) ease,
+    box-shadow var(--nl-speed) ease;
+}
+
+/* A thin accent rail keyed to the language colour. */
+.languageCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--card-accent);
+  opacity: 0.55;
+  transition: opacity var(--nl-speed) ease;
+}
+
+.languageCard:hover {
+  border-color: var(--nl-border-strong);
+  transform: translateY(-3px);
+  box-shadow: var(--nl-shadow);
+}
+
+.languageCard:hover::before {
+  opacity: 1;
+}
+
+.languageCard.is-active {
+  border-color: var(--card-accent);
+  box-shadow: 0 0 0 1px var(--card-accent), 0 18px 42px rgba(0, 0, 0, 0.6);
+}
+
+.languageCard.is-active::before {
+  opacity: 1;
+}
+
+/* -------------------------------- button --------------------------------- */
+
+.languageCard__main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.languageCard__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  background: color-mix(in srgb, var(--card-accent) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
+  border-radius: 12px;
+  color: var(--card-accent);
+  font-family: var(--nl-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+
+.languageCard__iconImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.languageCard__identity {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.languageCard__name {
+  color: var(--nl-white);
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.languageCard__autonym {
+  color: var(--nl-muted);
+  font-family: var(--nl-mono);
+  font-size: 0.78rem;
+}
+
+.languageCard__active {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-left: auto;
+  flex: none;
+  background: var(--card-accent);
+  border-radius: 50%;
+  color: #000;
+  font-size: 0.8rem;
+}
+
+/* -------------------------------- meta ----------------------------------- */
+
+.languageCard__region {
+  color: var(--nl-faint);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.languageCard__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px 0;
+  border-top: 1px solid var(--nl-border);
+  border-bottom: 1px solid var(--nl-border);
+}
+
+.languageCard__stats dt {
+  color: var(--nl-faint);
+  font-family: var(--nl-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.languageCard__stats dd {
+  margin: 2px 0 0;
+  color: var(--nl-white);
+  font-family: var(--nl-mono);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* ------------------------------- footer ---------------------------------- */
+
+.languageCard__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.languageCard__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: var(--nl-success-soft);
+  border: 1px solid var(--nl-success);
+  border-radius: var(--nl-radius-pill);
+  color: var(--nl-success);
+  font-family: var(--nl-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.languageCard__status.is-warn {
+  background: rgba(255, 176, 32, 0.12);
+  border-color: #ffb020;
+  color: #ffc65c;
+}
+
+.languageCard__status.is-critical {
+  background: var(--nl-danger-soft);
+  border-color: var(--nl-danger);
+  color: var(--nl-danger);
+}
+
+.languageCard__iconAction {
+  color: var(--nl-faint);
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--nl-speed) ease;
+}
+
+.languageCard__iconAction:hover {
+  color: var(--nl-blue-bright);
+}
+
+@media (max-width: 420px) {
+  .languageCard__stats {
+    grid-template-columns: 1fr;
+  }
+}

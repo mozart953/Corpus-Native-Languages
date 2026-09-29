@@ -1,26 +1,464 @@
-@import "tailwindcss";
+/* =============================================================================
+   Native Languages — global theme
+   Pure CSS only: design tokens, reset, and a few shared primitives.
+   Every component ships its own co-located stylesheet for the rest.
+   ============================================================================= */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  /* Surfaces */
+  --nl-bg: #000000;
+  --nl-surface: #08090d;
+  --nl-surface-2: #0d1017;
+  --nl-surface-3: #131826;
+  --nl-border: #1b2434;
+  --nl-border-strong: #2a3a55;
+
+  /* Text */
+  --nl-white: #ffffff;
+  --nl-text: #dce6f5;
+  --nl-muted: #93a5c0;
+  --nl-faint: #6b7d99;
+
+  /* Brand */
+  --nl-blue: #2f8bff;
+  --nl-blue-bright: #74b9ff;
+  --nl-blue-soft: rgba(47, 139, 255, 0.14);
+  --nl-blue-line: rgba(47, 139, 255, 0.4);
+  --nl-blue-glow: rgba(47, 139, 255, 0.35);
+
+  /* Feedback */
+  --nl-danger: #ff6b6b;
+  --nl-danger-soft: rgba(255, 107, 107, 0.12);
+  --nl-success: #46e0a0;
+  --nl-success-soft: rgba(70, 224, 160, 0.12);
+
+  /* Shape */
+  --nl-radius-sm: 8px;
+  --nl-radius: 14px;
+  --nl-radius-lg: 20px;
+  --nl-radius-pill: 999px;
+
+  --nl-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  --nl-shadow-blue: 0 0 0 1px var(--nl-blue-line), 0 16px 40px rgba(0, 0, 0, 0.65);
+
+  /* Type */
+  --nl-font: var(--font-geist-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nl-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Motion + rhythm */
+  --nl-speed: 160ms;
+  --nl-max: 1180px;
+
+  /* Icon masks — inline SVG data URIs, so no icon library is needed. */
+  --nl-icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.6-3.6'/%3E%3C/svg%3E");
+  --nl-icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+  --nl-icon-download: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='M7.5 10.5L12 15l4.5-4.5'/%3E%3Cpath d='M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2'/%3E%3C/svg%3E");
+  --nl-icon-upload: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17V5'/%3E%3Cpath d='M7.5 9.5L12 5l4.5 4.5'/%3E%3Cpath d='M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2'/%3E%3C/svg%3E");
+  --nl-icon-copy: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='9' width='11' height='11' rx='2'/%3E%3Cpath d='M5 15V5a2 2 0 012-2h8'/%3E%3C/svg%3E");
+  --nl-icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5l5 5 10-11'/%3E%3C/svg%3E");
+  --nl-icon-user: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 20a8 8 0 0116 0'/%3E%3C/svg%3E");
+  --nl-icon-menu: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M4 7h16M4 12h16M4 17h16'/%3E%3C/svg%3E");
+  --nl-icon-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='8.5' cy='9.5' r='1.6'/%3E%3Cpath d='M21 15.5l-5-5L5 20'/%3E%3C/svg%3E");
+  --nl-icon-trash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16'/%3E%3Cpath d='M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2'/%3E%3Cpath d='M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13'/%3E%3C/svg%3E");
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* --------------------------------- reset --------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background-color: var(--nl-bg);
+  color: var(--nl-text);
+  font-family: var(--nl-font);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Fixed blue ambience behind every page. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 15% -10%, rgba(47, 139, 255, 0.16), transparent 60%),
+    radial-gradient(45rem 35rem at 95% 5%, rgba(47, 139, 255, 0.09), transparent 65%);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--nl-white);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+p {
+  color: var(--nl-text);
+}
+
+a {
+  color: var(--nl-blue-bright);
+  text-decoration: none;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--nl-blue-bright);
+  outline-offset: 2px;
+  border-radius: var(--nl-radius-sm);
+}
+
+::selection {
+  background: var(--nl-blue);
+  color: var(--nl-white);
+}
+
+::placeholder {
+  color: var(--nl-faint);
+  opacity: 1;
+}
+
+/* Custom scrollbar so the black theme stays consistent. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--nl-border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--nl-border-strong);
+  border: 2px solid var(--nl-bg);
+  border-radius: var(--nl-radius-pill);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--nl-blue-line);
+}
+
+/* ------------------------------ primitives ------------------------------- */
+
+.nl-page {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.nl-container {
+  width: 100%;
+  max-width: var(--nl-max);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.nl-main {
+  flex: 1;
+  padding: 48px 0 96px;
+}
+
+.nl-section {
+  margin-top: 64px;
+}
+
+.nl-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.nl-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--nl-blue-bright);
+  font-family: var(--nl-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.nl-eyebrow::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--nl-blue-line);
+}
+
+.nl-title {
+  font-size: clamp(1.6rem, 3.4vw, 2.25rem);
+}
+
+.nl-subtitle {
+  max-width: 62ch;
+  margin-top: 10px;
+  color: var(--nl-muted);
+  font-size: 1rem;
+}
+
+.nl-panel {
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius-lg);
+  box-shadow: var(--nl-shadow);
+}
+
+.nl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: var(--nl-blue-soft);
+  border: 1px solid var(--nl-blue-line);
+  border-radius: var(--nl-radius-pill);
+  color: var(--nl-blue-bright);
+  font-family: var(--nl-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.nl-chip--muted {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--nl-border-strong);
+  color: var(--nl-muted);
+}
+
+/* Buttons */
+.nl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid var(--nl-border-strong);
+  border-radius: var(--nl-radius-sm);
+  background: transparent;
+  color: var(--nl-white);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background var(--nl-speed) ease, border-color var(--nl-speed) ease,
+    color var(--nl-speed) ease, transform var(--nl-speed) ease;
+}
+
+.nl-btn:hover:not(:disabled) {
+  border-color: var(--nl-blue-line);
+  background: var(--nl-blue-soft);
+  color: var(--nl-white);
+}
+
+.nl-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.nl-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.nl-btn--primary {
+  background: var(--nl-blue);
+  border-color: var(--nl-blue);
+  color: var(--nl-white);
+  box-shadow: 0 8px 24px rgba(47, 139, 255, 0.28);
+}
+
+.nl-btn--primary:hover:not(:disabled) {
+  background: #1f7bf0;
+  border-color: #1f7bf0;
+}
+
+.nl-btn--ghost {
+  border-color: transparent;
+  color: var(--nl-muted);
+}
+
+.nl-btn--ghost:hover:not(:disabled) {
+  color: var(--nl-white);
+}
+
+.nl-btn--danger:hover:not(:disabled) {
+  background: var(--nl-danger-soft);
+  border-color: var(--nl-danger);
+  color: var(--nl-danger);
+}
+
+.nl-btn--block {
+  width: 100%;
+}
+
+.nl-btn--sm {
+  padding: 7px 12px;
+  font-size: 0.8rem;
+}
+
+/* Icon glyph drawn with CSS so we ship no image or icon library. */
+.nl-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex: none;
+  background: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+.nl-icon--search {
+  -webkit-mask-image: var(--nl-icon-search);
+  mask-image: var(--nl-icon-search);
+}
+
+.nl-icon--close {
+  -webkit-mask-image: var(--nl-icon-close);
+  mask-image: var(--nl-icon-close);
+}
+
+.nl-icon--download {
+  -webkit-mask-image: var(--nl-icon-download);
+  mask-image: var(--nl-icon-download);
+}
+
+.nl-icon--copy {
+  -webkit-mask-image: var(--nl-icon-copy);
+  mask-image: var(--nl-icon-copy);
+}
+
+.nl-icon--check {
+  -webkit-mask-image: var(--nl-icon-check);
+  mask-image: var(--nl-icon-check);
+}
+
+.nl-icon--user {
+  -webkit-mask-image: var(--nl-icon-user);
+  mask-image: var(--nl-icon-user);
+}
+
+.nl-icon--menu {
+  -webkit-mask-image: var(--nl-icon-menu);
+  mask-image: var(--nl-icon-menu);
+}
+
+.nl-icon--image {
+  -webkit-mask-image: var(--nl-icon-image);
+  mask-image: var(--nl-icon-image);
+}
+
+.nl-icon--trash {
+  -webkit-mask-image: var(--nl-icon-trash);
+  mask-image: var(--nl-icon-trash);
+}
+
+.nl-icon--upload {
+  -webkit-mask-image: var(--nl-icon-upload);
+  mask-image: var(--nl-icon-upload);
+}
+
+.nl-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .nl-container {
+    padding: 0 16px;
+  }
+
+  .nl-main {
+    padding: 32px 0 72px;
+  }
+
+  .nl-section {
+    margin-top: 48px;
+  }
 }

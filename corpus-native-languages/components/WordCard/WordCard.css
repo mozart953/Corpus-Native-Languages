@@ -1,0 +1,232 @@
+.wordCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius);
+  transition: border-color var(--nl-speed) ease, transform var(--nl-speed) ease,
+    box-shadow var(--nl-speed) ease;
+}
+
+.wordCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(160deg, rgba(47, 139, 255, 0.12), transparent 55%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--nl-speed) ease;
+}
+
+.wordCard:hover {
+  border-color: var(--nl-border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--nl-shadow);
+}
+
+.wordCard:hover::before,
+.wordCard:focus-within::before {
+  opacity: 1;
+}
+
+.wordCard.is-selected {
+  border-color: var(--nl-blue);
+  box-shadow: var(--nl-shadow-blue);
+}
+
+/* Selected cards get a solid accent rail. */
+.wordCard.is-selected::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 3px;
+  background: var(--nl-blue);
+  border-radius: 0 3px 3px 0;
+}
+
+/* --------------------------------- head ---------------------------------- */
+
+.wordCard__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.wordCard__lang {
+  margin-right: auto;
+}
+
+.wordCard__select {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.wordCard__select input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.wordCard__checkbox {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  background: var(--nl-bg);
+  border: 1px solid var(--nl-border-strong);
+  border-radius: 5px;
+  color: transparent;
+  font-size: 0.7rem;
+  transition: background var(--nl-speed) ease, border-color var(--nl-speed) ease,
+    color var(--nl-speed) ease;
+}
+
+.wordCard__select:hover .wordCard__checkbox {
+  border-color: var(--nl-blue-line);
+}
+
+.wordCard__select input:checked + .wordCard__checkbox {
+  background: var(--nl-blue);
+  border-color: var(--nl-blue);
+  color: var(--nl-white);
+}
+
+.wordCard__select input:focus-visible + .wordCard__checkbox {
+  outline: 2px solid var(--nl-blue-bright);
+  outline-offset: 2px;
+}
+
+.wordCard__pending {
+  border-style: dashed;
+}
+
+/* A reviewed entry should look settled next to a pending one. */
+.wordCard__verified {
+  background: var(--nl-success-soft);
+  border-color: var(--nl-success);
+  color: var(--nl-success);
+}
+
+/* ------------------------------ the pair --------------------------------- */
+
+.wordCard__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.wordCard__word {
+  font-family: var(--nl-mono);
+  font-size: 1.32rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--nl-white);
+  overflow-wrap: anywhere;
+  /* The native word is the anchor of the card: keep it from wrapping mid-syllable. */
+  hyphens: auto;
+}
+
+.wordCard__translation {
+  font-size: 1.32rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--nl-blue-bright);
+  overflow-wrap: anywhere;
+}
+
+.wordCard__arrow {
+  color: var(--nl-faint);
+  font-size: 1rem;
+  transform: translateY(-1px);
+}
+
+.wordCard__mark {
+  padding: 0 2px;
+  background: var(--nl-blue-soft);
+  border-bottom: 1px solid var(--nl-blue);
+  border-radius: 3px;
+  color: var(--nl-white);
+}
+
+/* ------------------------------- metadata -------------------------------- */
+
+.wordCard__label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--nl-faint);
+  font-family: var(--nl-mono);
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.wordCard__pronunciation {
+  padding-top: 12px;
+  border-top: 1px dashed var(--nl-border);
+}
+
+.wordCard__value {
+  font-family: var(--nl-mono);
+  font-size: 0.92rem;
+  color: var(--nl-text);
+}
+
+.wordCard__usage {
+  color: var(--nl-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+/* -------------------------------- footer --------------------------------- */
+
+.wordCard__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--nl-border);
+}
+
+.wordCard__action {
+  padding: 6px 10px;
+  font-size: 0.76rem;
+}
+
+.wordCard__action.is-copied {
+  color: var(--nl-success);
+}
+
+.wordCard__action.is-copied:hover {
+  background: var(--nl-success-soft);
+  border-color: var(--nl-success);
+  color: var(--nl-success);
+}
+
+@media (max-width: 480px) {
+  .wordCard__pair {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .wordCard__arrow {
+    transform: rotate(90deg);
+    transform-origin: left center;
+  }
+
+  .wordCard__translation {
+    font-size: 1.15rem;
+  }
+}
