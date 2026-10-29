@@ -1,0 +1,80 @@
+.loginDialog {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.loginDialog__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: loginDialog-fade 180ms ease;
+}
+
+.loginDialog__panel {
+  position: relative;
+  width: min(920px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  animation: loginDialog-rise 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.loginDialog__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--nl-border-strong);
+  border-radius: 50%;
+  color: var(--nl-muted);
+  font-size: 0.9rem;
+  transition: color var(--nl-speed) ease, border-color var(--nl-speed) ease,
+    background var(--nl-speed) ease, transform var(--nl-speed) ease;
+}
+
+.loginDialog__close:hover {
+  background: var(--nl-danger-soft);
+  border-color: var(--nl-danger);
+  color: var(--nl-danger);
+  transform: rotate(90deg);
+}
+
+@keyframes loginDialog-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loginDialog-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .loginDialog {
+    padding: 12px;
+  }
+
+  .loginDialog__panel {
+    max-height: calc(100vh - 24px);
+  }
+}

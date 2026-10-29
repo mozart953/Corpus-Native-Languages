@@ -1,0 +1,37 @@
+/* Layout for the standalone /login route. */
+
+.page__loginWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 920px;
+  margin: 0 auto;
+  padding-top: 24px;
+}
+
+.page__back {
+  align-self: flex-start;
+  color: var(--nl-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: color var(--nl-speed) ease;
+}
+
+.page__back:hover {
+  color: var(--nl-blue-bright);
+}
+
+.page__loginNote {
+  padding: 14px 18px;
+  background: var(--nl-blue-soft);
+  border: 1px solid var(--nl-blue-line);
+  border-left-width: 3px;
+  border-radius: var(--nl-radius-sm);
+  color: var(--nl-text);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.page__loginNote strong {
+  color: var(--nl-white);
+}

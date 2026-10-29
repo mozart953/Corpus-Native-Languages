@@ -1,0 +1,119 @@
+.downloadMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px;
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius-lg);
+}
+
+.downloadMenu__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.downloadMenu__head .nl-eyebrow {
+  margin-bottom: 6px;
+}
+
+.downloadMenu__title {
+  font-size: 1.1rem;
+}
+
+.downloadMenu__scope {
+  flex: none;
+  margin-top: 18px;
+}
+
+/* ------------------------------- formats --------------------------------- */
+
+.downloadMenu__formats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.downloadMenu__format {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: var(--nl-bg);
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius-sm);
+  text-align: left;
+  transition: border-color var(--nl-speed) ease, background var(--nl-speed) ease;
+}
+
+.downloadMenu__format:hover {
+  border-color: var(--nl-border-strong);
+  background: var(--nl-surface-3);
+}
+
+.downloadMenu__format.is-active {
+  background: var(--nl-blue-soft);
+  border-color: var(--nl-blue);
+}
+
+.downloadMenu__formatName {
+  color: var(--nl-white);
+  font-family: var(--nl-font-label);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.downloadMenu__format.is-active .downloadMenu__formatName {
+  color: var(--nl-blue-bright);
+}
+
+.downloadMenu__formatHint {
+  color: var(--nl-faint);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+/* ------------------------------- actions --------------------------------- */
+
+.downloadMenu__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.downloadMenu__download {
+  flex: 1 1 180px;
+}
+
+.downloadMenu__note {
+  color: var(--nl-faint);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.downloadMenu__message {
+  min-height: 1.2em;
+  color: var(--nl-blue-bright);
+  font-family: var(--nl-font-label);
+  font-size: 0.76rem;
+}
+
+@media (max-width: 520px) {
+  .downloadMenu {
+    padding: 18px;
+  }
+
+  .downloadMenu__head {
+    flex-direction: column;
+  }
+
+  .downloadMenu__scope {
+    margin-top: 0;
+  }
+
+  .downloadMenu__actions .nl-btn {
+    flex: 1 1 100%;
+  }
+}
