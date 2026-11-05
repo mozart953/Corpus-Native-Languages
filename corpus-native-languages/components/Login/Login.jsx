@@ -178,7 +178,8 @@ function LoginComponent({
         ) : null}
 
         <p className="login__fineprint">
-          This is a demonstration form. Nothing is sent anywhere and no account is created.
+          Passwords are hashed with bcrypt on the server. Sessions last 30 minutes
+          and refresh while you are active.
         </p>
       </form>
     </div>

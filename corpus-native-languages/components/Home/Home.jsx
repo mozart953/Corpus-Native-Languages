@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LANGUAGES, WORDS } from "../../data/corpus";
 import { SEARCH_FIELDS, filterWords } from "../../utils/search";
+import { apiFetch } from "../../lib/api";
+import { useCorpusAuth } from "../../lib/useCorpusAuth";
 import NavbarComponent from "../Navbar/Navbar.jsx";
 import SearchBar from "../SearchBar/SearchBar.jsx";
 import LanguageCard from "../LanguageCard/LanguageCard.jsx";
@@ -14,11 +16,16 @@ import { wordsToJson, wordsToPairsTxt, buildFilename, downloadTextFile } from ".
 import "./Home.css";
 
 /** Headline numbers, computed from the corpus rather than hard-coded. */
-function summarise() {
-  const speakers = LANGUAGES.reduce((total, language) => total + language.speakers, 0);
-  const endangered = LANGUAGES.filter((language) => language.status !== "active").length;
+function summarise(languages, words) {
+  const speakers = languages.reduce((total, language) => total + language.speakers, 0);
+  const endangered = languages.filter((language) => language.status !== "active").length;
 
-  return { speakers, endangered, words: WORDS.length, languages: LANGUAGES.length };
+  return {
+    speakers,
+    endangered,
+    words: words.length,
+    languages: languages.length,
+  };
 }
 
 /**
@@ -28,11 +35,23 @@ function summarise() {
  * because the corpus is public: reading and downloading words should never be
  * behind an account. Signing in only adds the ability to contribute.
  *
- * `user` is local state and switching it swaps the navbar between its
- * signed-out and signed-in shapes. Nothing here talks to a server.
+ * The corpus is fetched from the Express API. The bundled fixtures remain the
+ * initial render and the fallback when the API is unavailable, so the page
+ * still works during frontend-only development.
  */
 function HomeComponent() {
-  const [user, setUser] = useState(null);
+  const {
+    user,
+    submitting: authSubmitting,
+    error: authError,
+    setError: setAuthError,
+    login,
+    logout,
+  } = useCorpusAuth();
+
+  const [languages, setLanguages] = useState(LANGUAGES);
+  const [words, setWords] = useState(WORDS);
+  const [corpusSource, setCorpusSource] = useState("fixtures");
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState(SEARCH_FIELDS.ALL);
   const [languageId, setLanguageId] = useState("all");
@@ -43,14 +62,47 @@ function HomeComponent() {
   const [iconTarget, setIconTarget] = useState(null);
   const [pendingNotice, setPendingNotice] = useState(null);
 
-  const stats = summarise();
+  useEffect(() => {
+    let cancelled = false;
 
-  const visibleWords = filterWords(WORDS, { query, languageId, field: scope });
-  const languageTotal = WORDS.filter(
+    async function loadCorpus() {
+      try {
+        const [languageResponse, wordResponse] = await Promise.all([
+          apiFetch("/languages?limit=100"),
+          apiFetch("/words?limit=100&page=1"),
+        ]);
+
+        if (cancelled) return;
+
+        const nextLanguages = languageResponse?.data ?? [];
+        const nextWords = wordResponse?.data ?? [];
+
+        if (nextLanguages.length > 0) setLanguages(nextLanguages);
+        if (nextWords.length > 0) setWords(nextWords);
+        setCorpusSource("api");
+      } catch {
+        if (cancelled) return;
+        setCorpusSource("fixtures");
+        setPendingNotice(
+          "The corpus API is unavailable right now — showing the bundled sample data.",
+        );
+      }
+    }
+
+    loadCorpus();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stats = summarise(languages, words);
+
+  const visibleWords = filterWords(words, { query, languageId, field: scope });
+  const languageTotal = words.filter(
     (word) => languageId === "all" || word.languageId === languageId,
   ).length;
 
-  const activeLanguage = LANGUAGES.find((language) => language.id === languageId);
+  const activeLanguage = languages.find((language) => language.id === languageId);
   const languageLabel = activeLanguage?.name ?? "all languages";
 
   const toggleSelect = (id) => {
@@ -65,25 +117,38 @@ function HomeComponent() {
     setSelectedIds([]);
   };
 
-  /** Stand-in for the sign-in request that will be added with the backend. */
-  const handleLogin = ({ name, email }) => {
-    const fallback = email.split("@")[0].replace(/[._-]+/g, " ");
-
-    setUser({
-      name: name || fallback,
-      initials: (name || fallback).slice(0, 2),
-      role: "Contributor",
+  const handleLogin = async ({ name, email, password }) => {
+    const ok = await login({
+      mode: loginMode ?? "signin",
+      name,
+      email,
+      password,
     });
+
+    if (!ok) return;
+
     setLoginMode(null);
-    setPendingNotice("Signed in locally. No request was sent — this is the frontend only.");
+    setPendingNotice(
+      "Signed in. Your session refreshes while you are active and expires after 30 minutes of inactivity.",
+    );
   };
 
-  const handleLogout = () => {
-    setUser(null);
+  const handleLogout = async () => {
+    await logout();
     setSelectedIds([]);
     setPendingNotice("Signed out. Any images you loaded are cleared from the page.");
     setHeroImage(null);
     setLanguageIcons({});
+  };
+
+  const openLogin = (mode) => {
+    setAuthError(null);
+    setLoginMode(mode);
+  };
+
+  const closeLogin = () => {
+    setAuthError(null);
+    setLoginMode(null);
   };
 
   const downloadSingle = (word) => {
@@ -106,7 +171,7 @@ function HomeComponent() {
     <div className="nl-page">
       <NavbarComponent
         user={user}
-        onLogin={setLoginMode}
+        onLogin={openLogin}
         onLogout={handleLogout}
         activePath="/"
       />
@@ -153,7 +218,7 @@ function HomeComponent() {
                 <button
                   type="button"
                   className="nl-btn nl-btn--ghost"
-                  onClick={() => setLoginMode("signin")}
+                  onClick={() => openLogin("signin")}
                 >
                   Contribute
                 </button>
@@ -211,12 +276,12 @@ function HomeComponent() {
           </div>
 
           <ul className="home__languages">
-            {LANGUAGES.map((language) => (
+            {languages.map((language) => (
               <li key={language.id}>
                 <LanguageCard
                   language={language}
                   active={languageId === language.id}
-                  wordCount={WORDS.filter((word) => word.languageId === language.id).length}
+                  wordCount={words.filter((word) => word.languageId === language.id).length}
                   onSelect={selectLanguage}
                   iconUrl={languageIcons[language.id] ?? null}
                   onIconUpload={(id) => setIconTarget(id)}
@@ -319,7 +384,7 @@ function HomeComponent() {
                     setLanguageIcons((current) => ({ ...current, [iconTarget]: dataUrl }))
                   }
                   label={`Icon for ${
-                    LANGUAGES.find((language) => language.id === iconTarget)?.name ?? "language"
+                    languages.find((language) => language.id === iconTarget)?.name ?? "language"
                   }`}
                   description="Square images only, up to 1 MB."
                   maxSizeMB={1}
@@ -357,7 +422,7 @@ function HomeComponent() {
             <button
               type="button"
               className="nl-btn nl-btn--primary"
-              onClick={() => setLoginMode(user ? "signup" : "signin")}
+              onClick={() => openLogin(user ? "signup" : "signin")}
             >
               {user ? "Invite a contributor" : "Sign in to contribute"}
             </button>
@@ -369,8 +434,9 @@ function HomeComponent() {
         <div className="nl-container home__footerInner">
           <p>Native Languages — a corpus for the languages of Guatemala.</p>
           <p className="home__footerNote">
-            Frontend demonstration. Sample entries are placeholders and are not yet verified by
-            speakers.
+            {corpusSource === "api"
+              ? "Corpus loaded from the API. Entries marked pending are awaiting community review."
+              : "Sample entries are placeholders and are not yet verified by speakers."}
           </p>
         </div>
       </footer>
@@ -378,8 +444,10 @@ function HomeComponent() {
       <LoginDialog
         open={loginMode !== null}
         mode={loginMode ?? "signin"}
-        onClose={() => setLoginMode(null)}
+        onClose={closeLogin}
         onSubmit={handleLogin}
+        submitting={authSubmitting}
+        error={authError}
       />
     </div>
   );

@@ -7,9 +7,11 @@ The corpus is meant to be **read by people, downloaded by researchers, and used
 to train language technology** that finally represents the languages of the
 Mayan, Xinka and Garifuna peoples.
 
-> **Status: early frontend prototype.** The interface is working, but the corpus
-> is placeholder data, sign-in is simulated, and nothing is persisted yet. See
-> [Current scope](#current-scope) before using anything here as real data.
+> **Status: working full-stack prototype.** The corpus is served by a real
+> Express + Prisma API, browsing and exports are open to everyone, and accounts
+> are real (bcrypt + NextAuth sessions). Contribution and review forms are the
+> next UI milestone; the API and role workflow behind them are already built.
+> Sample entries are still fixtures and are not verified linguistic data.
 
 ---
 
@@ -53,19 +55,27 @@ What works today:
 - Paginated word cards with search highlighting and a pending/verified badge.
 - Select individual words and export them as JSON, tab-separated TXT, or a
   readable TXT report. Copy pairs or exports to the clipboard.
-- A simulated sign-in / sign-up flow in a dialog and on a standalone `/login`
-  page, including the signed-in navbar state.
-- Local image previews for the hero banner and language icons.
-- Responsive dark theme built on shared CSS design tokens.
+- The corpus is fetched from the Express API; the bundled fixtures remain the
+  first render and the offline fallback.
+- Real registration and sign-in through NextAuth's local Credentials provider,
+  backed by bcrypt accounts in SQLite. 30-minute sliding sessions with an
+  automatic cookie refresher, in the home dialog and on `/login`.
+- Role-aware API: public reads; contributors create and edit their own entries;
+  reviewers recommend approval; admins give final approval, soft-delete and
+  restore content, manage roles, and read the audit trail.
+- Every submit, edit, review, removal and restore writes an `AuditLog` snapshot
+  with actor, timestamp and reason.
 
 What is intentionally **not** implemented yet:
 
-- No API calls, database, persistence or real authentication.
-- Sign-in accepts any valid-looking email/password and creates a local-only user.
+- Contribution and moderation screens in the UI. The API supports them today;
+  the dialogs still only register and sign in.
 - Uploaded images are read into data URLs in memory and disappear on refresh;
   they are never uploaded.
+- Audio recordings and pronunciation playback.
+- Object storage, a public versioned dataset endpoint, automated tests beyond
+  the moderation smoke script, and a deployment pipeline.
 - The corpus contains 28 sample words, all `verified: false`.
-- The `back/` folder is an Express scaffold with no server entry point.
 
 ---
 
@@ -73,72 +83,85 @@ What is intentionally **not** implemented yet:
 
 ```
 .
-├── corpus-native-languages/     # Next.js frontend (the working app)
+├── corpus-native-languages/     # Next.js 16 frontend
 │   ├── app/                     # App Router routes
-│   │   ├── layout.tsx           # fonts, metadata, global styles
+│   │   ├── layout.tsx           # fonts, metadata, provider wrapper
 │   │   ├── page.tsx             # "/" → Home component
-│   │   └── login/page.jsx       # "/login" deep-link sign-in page
+│   │   ├── login/page.jsx       # "/login" sign-in page
+│   │   └── api/auth/[...nextauth]/route.js
 │   ├── components/              # feature UI + co-located CSS
-│   │   ├── Home/
-│   │   ├── Navbar/
-│   │   ├── SearchBar/
-│   │   ├── LanguageCard/
-│   │   ├── WordList/
-│   │   ├── WordCard/
-│   │   ├── DownloadMenu/
-│   │   ├── ImageUploader/
-│   │   └── Login/
-│   ├── data/corpus.js           # placeholder languages + words
-│   ├── utils/
-│   │   ├── search.js            # filter by language + free text
-│   │   ├── text.js              # folding, normalisation, highlighting
-│   │   └── exporters.js         # JSON/TXT serialisers + downloads
+│   │   ├── Auth/                # session provider + cookie refresher
+│   │   ├── Home/                # state owner: search, selection, auth dialog
+│   │   ├── Navbar/  SearchBar/  LanguageCard/  WordList/  WordCard/
+│   │   ├── DownloadMenu/  ImageUploader/
+│   │   └── Login/               # LoginDialog + standalone Login form
+│   ├── lib/
+│   │   ├── api.js               # fetch wrapper for /api/backend
+│   │   └── useCorpusAuth.js     # shared signup/login/logout hook
+│   ├── auth.js                  # NextAuth config (local provider, 30-min JWT)
+│   ├── data/corpus.js           # fixtures / offline fallback
+│   ├── utils/                   # search, text folding, exporters
 │   └── public/
-├── back/                        # Express 5 backend scaffold (not yet built)
+├── back/                        # Express 5 + Prisma API
+│   ├── prisma/                  # schema, migrations, seed data
+│   ├── scripts/                 # fixture sync + moderation smoke test
+│   ├── src/                     # routes → middleware → controller → service
+│   └── README.md                # full API reference
 ├── LICENSE
 └── README.md
 ```
 
 ### Frontend
 
-- **Framework:** Next.js 16 (App Router) with React 19. The route files are
-  TypeScript, while most UI components are `.jsx`; `allowJs` is enabled.
-- **Routes:** `/` renders the corpus landing page, `/login` is the shareable
-  sign-in route. The navbar is rendered inside each page because it shares the
-  signed-in state with it.
-- **Rendering model:** the UI is client-side. `components/Home/Home.jsx` is the
-  state owner for the search query, selected language, word selection, login
-  dialog and local images. No request leaves the browser.
-- **Search:** `utils/search.js` combines a language filter with free-text
-  matching. `utils/text.js` folds case, diacritics and decorative apostrophes so
-  variants of the same word match, while keeping an index map so the original
-  characters can still be highlighted.
-- **Exports:** `utils/exporters.js` contains pure serialisation helpers plus a
-  `Blob` + object-URL download. The TSV export is the machine-readable path; the
-  JSON export preserves every field; the detailed TXT is for human review.
-- **Styling:** `app/globals.css` defines the design tokens (colours, type,
-  spacing, icon masks) and shared primitives. Each component ships its own
-  co-located stylesheet. Tailwind's PostCSS plugin is present, but the interface
-  itself is hand-written CSS.
+- **Framework:** Next.js 16 (App Router) with React 19. Route files are
+  TypeScript, most UI components are `.jsx`; `allowJs` is enabled.
+- **Data:** `components/Home/Home.jsx` fetches up to 100 languages and words from
+  the API on mount. If the request fails it keeps `data/corpus.js` and says so in
+  the footer, so frontend work does not require the backend.
+- **Same-origin API:** the browser calls `/api/backend/*`; `next.config.ts`
+  rewrites that to the Express `/api/v1/*`. Keeping requests same-origin means
+  the HttpOnly NextAuth cookie is forwarded without CORS or credentials hacks.
+- **Auth:** `auth.js` configures exactly one provider, `local`, whose
+  `authorize` callback delegates the password check to `POST /auth/login`.
+  Sign-up posts to `/auth/register` and then signs in. Sessions are JWT cookies
+  with `maxAge: 1800`, `updateAge: 60`; `SessionRefresher` calls `update()` every
+  20 minutes and when the tab becomes visible. An idle session expires after 30
+  minutes.
+- **Search and exports:** `utils/search.js` combines the language filter with
+  free text; `utils/text.js` folds case, diacritics and decorative apostrophes
+  while keeping an index map for highlighting. `utils/exporters.js` contains the
+  JSON/TXT serialisers and the Blob download helper.
+- **Styling:** `app/globals.css` defines design tokens and shared primitives each
+  component extends with its own stylesheet. Tailwind's PostCSS plugin is
+  present, but the interface is hand-written CSS.
 
-### Backend (planned)
+### Backend
 
-`back/` currently contains only `package.json`, `package-lock.json` and a
-`.gitignore`, with Express 5 declared as a dependency. There is no `index.js`, no
-route and no start script yet. It is the intended home for:
+`back/` is a fully layered Express 5 API. See [`back/README.md`](back/README.md)
+for the environment reference, every endpoint, filters and limits.
 
-- the corpus API and database access,
-- authentication, sessions and contributor roles,
-- community review / verification workflows,
-- image and audio storage,
-- a public, versioned dataset API.
-
-Until that exists, the frontend runs entirely from `data/corpus.js`.
+- **Layers:** `routes → middlewares/guards → validators → controllers →
+  services → repositories → Prisma`. Controllers only handle HTTP; permissions,
+  transactions and audit writes live in services.
+- **Database:** SQLite through Prisma 6 (`Language`, `Word`, `User`,
+  `AuditLog`). No provider-specific SQL, so PostgreSQL/MySQL only need a
+  datasource change plus a migration.
+- **Protection:** Helmet, an origin allow-list, input validation on every write,
+  `requireAuth`/`requireRole` guards, and four 15-minute rate limiters (300
+  global, 10 auth, 60 writes, 120 reviews).
+- **Auth boundary:** NextAuth issues the cookie; Express verifies it with the
+  shared `AUTH_SECRET` via `@auth/core/jwt`. Express owns the `User` table and
+  bcrypt hashes, and leaves `passwordHash` nullable plus a `provider` column so a
+  future Google provider can be linked without a schema change.
+- **Moderation:** `pending → reviewer_approved → approved`, with `rejected` and
+  `removed` branches. Only an admin approval publishes content. Deletion is
+  logical: `deletedAt`/`deletedById`/`deletionReason` are set and an audit
+  snapshot is written, so removed content disappears from public reads but is
+  never lost.
 
 ### Data shape
 
-The frontend expects two collections, currently defined in
-`corpus-native-languages/data/corpus.js`:
+The API returns the shape the frontend already used, plus review metadata:
 
 ```js
 // Language
@@ -150,7 +173,9 @@ The frontend expects two collections, currently defined in
   speakers: 486000,
   words: 1240,
   status: "active" | "endangered" | "critically-endangered",
-  accent: "#2f8bff"
+  accent: "#2f8bff",
+  verified: true,
+  reviewState: "approved"
 }
 
 // Word
@@ -163,27 +188,31 @@ The frontend expects two collections, currently defined in
   pronunciation: "hoon",
   partOfSpeech: "numeral",
   usage: "Jumul = 'there is one'.",
-  verified: false
+  verified: false,
+  reviewState: "pending"
 }
 ```
 
 `verified` is deliberately part of the record model: a word is only shown as
-verified once speakers of that community have reviewed it.
+verified once speakers of that community have reviewed it. `languageName` is
+joined from the language at read time, so renaming a language updates every
+word response.
 
-### Planned request flow
+### Request flow
 
 ```
 Browser
   └─ Next.js app (corpus-native-languages)
-       ├─ reads/writes corpus through the API
-       └─ keeps UI state locally
-              │
-              ▼
-       back/ — Express 5 API
-       ├─ auth + contributor roles
-       ├─ corpus / review endpoints
-       ├─ PostgreSQL (or similar) database
-       └─ object storage (images, audio)
+       ├─ /api/backend/*  ──rewrite──┐
+       ├─ /api/auth/*     NextAuth   │
+       └─ UI state (search, export)  │
+                                     ▼
+                          back/ — Express 5 API
+                          ├─ NextAuth cookie verification (shared secret)
+                          ├─ role guards + rate limiters + validation
+                          ├─ services (workflow, transactions, audit)
+                          ├─ Prisma → SQLite
+                          └─ AuditLog snapshots
 ```
 
 ---
@@ -193,63 +222,129 @@ Browser
 ### Prerequisites
 
 - **Node.js 20.9 or newer** (required by Next.js 16)
-- npm, pnpm, yarn or bun
+- npm
 - Git
 
-### Run the frontend
-
-```bash
-git clone https://github.com/mozart953/Corpus-Native-Languages.git
-cd "Corpus-Native-Languages/corpus-native-languages"
-npm install
-npm run dev
-```
-
-Open <http://localhost:3000>. The page hot-reloads as you edit. The standalone
-sign-in page is at <http://localhost:3000/login>.
-
-No environment variables are required for the current prototype.
-
-### Scripts
-
-Run these from `corpus-native-languages/`:
-
-| Command         | Purpose                                   |
-| --------------- | ----------------------------------------- |
-| `npm run dev`   | Start the development server on port 3000 |
-| `npm run build` | Create a production build                 |
-| `npm run start` | Serve the production build                |
-| `npm run lint`  | Run ESLint                                |
-
-### Production build
-
-```bash
-cd corpus-native-languages
-npm install
-npm run build
-npm run start
-```
-
-### Backend
-
-The backend is not runnable yet. When working on it:
+### 1. Start the backend
 
 ```bash
 cd back
 npm install
+
+# Windows PowerShell
+Copy-Item .env.example .env
+# macOS/Linux
+cp .env.example .env
 ```
 
-There is currently no `dev` or `start` script in `back/package.json`. The server
-entry point, routes and database layer still need to be added.
+Generate a secret and put it in `back/.env` as `AUTH_SECRET`:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+Then:
+
+```bash
+npm run setup     # prisma generate + migrate + seed
+npm run dev       # http://localhost:4000
+```
+
+Check <http://localhost:4000/api/v1/health>. The seed creates eight approved
+languages, 28 approved sample words, and the accounts listed below.
+
+### 2. Start the frontend
+
+In a second terminal:
+
+```bash
+cd corpus-native-languages
+npm install
+cp .env.local.example .env.local      # PowerShell: Copy-Item
+```
+
+Paste the **same** `AUTH_SECRET` into `.env.local`, then:
+
+```bash
+npm run dev       # http://localhost:3000
+```
+
+Open <http://localhost:3000>. The standalone sign-in page is
+<http://localhost:3000/login>.
+
+### Seed accounts (development only)
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@corpus.local` | `Admin123!` |
+| Reviewer | `reviewer@corpus.local` | `Reviewer123!` |
+| Contributor | `contributor@corpus.local` | `Contributor123!` |
+
+Change these in `back/.env` before any real deployment.
+
+### Environment variables
+
+Both apps need a matching secret and cookie name:
+
+| Variable | App | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | back | SQLite file, default `file:./dev.db`. |
+| `AUTH_SECRET` | both | Sign/verify the NextAuth JWT. At least 32 characters, identical in both apps. |
+| `AUTH_COOKIE_NAME` | both | `corpus.session-token`. |
+| `AUTH_SESSION_MAX_AGE` | back | 1800 seconds. |
+| `PORT`, `CORS_ORIGINS`, `TRUST_PROXY` | back | HTTP and proxy settings. |
+| `API_URL` | frontend | `http://localhost:4000/api/v1`, used by the rewrite and NextAuth. |
+| `NEXT_PUBLIC_API_BASE` | frontend | `/api/backend`, the browser-facing prefix. |
+
+Full references: [`back/.env.example`](back/.env.example) and
+[`corpus-native-languages/.env.local.example`](corpus-native-languages/.env.local.example).
+
+### Scripts
+
+Frontend (`corpus-native-languages/`):
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server on port 3000 |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint |
+
+Backend (`back/`):
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` / `npm start` | API on port 4000 |
+| `npm run setup` | Generate client, migrate and seed |
+| `npm run db:seed` / `db:reset` / `db:studio` | Seeding, reset, Prisma Studio |
+| `npm run db:sync-fixtures` | Copy frontend fixtures into the seed folder |
+| `npm run test:flow` | End-to-end moderation smoke test (API must be running) |
+
+### Production build
+
+```bash
+cd back
+npm run db:deploy
+npm start
+
+cd ../corpus-native-languages
+npm run build
+npm start
+```
+
+Set strong secrets, a non-default SQLite path (or another Prisma provider),
+`NODE_ENV=production`, and a real `CORS_ORIGINS` value. NextAuth marks the cookie
+`Secure` in production, so serve both apps over HTTPS.
 
 ---
 
 ## Roadmap
 
-- [ ] Replace `data/corpus.js` with a real API and database.
-- [ ] Implement authentication, contributor roles and sessions.
+- [x] Replace `data/corpus.js` with a real API and database (fixtures remain as fallback).
+- [x] Implement authentication, contributor roles and sessions.
+- [x] Build the community review and verification workflow with an audit trail.
+- [ ] Add contribution and moderation screens to the UI.
 - [ ] Persist image and audio uploads to object storage.
-- [ ] Build the community review and verification workflow with an audit trail.
 - [ ] Add audio recordings and pronunciation playback.
 - [ ] Publish a versioned public dataset/API with citation guidance.
 - [ ] Add automated tests and a deployment pipeline.
@@ -259,11 +354,13 @@ entry point, routes and database layer still need to be added.
 ## Contributing
 
 - Create a feature branch and open a pull request against `developer` or `main`.
-- Keep UI components presentational; put reusable logic in `utils/`.
-- Do not commit secrets. `.env*` files are ignored.
-- Treat linguistic data as community property: do not add scraped or
-  unverified material without marking its review status, and prefer entries
-  confirmed by speakers.
+- Keep UI components presentational; put reusable logic in `lib/` or `utils/`.
+- Keep HTTP concerns in controllers, workflow rules in services, and queries in
+  repositories.
+- Do not commit secrets. `.env*` files are ignored; commit `.env.example` files.
+- Treat linguistic data as community property: do not add scraped or unverified
+  material without marking its review status, and prefer entries confirmed by
+  speakers.
 
 ---
 

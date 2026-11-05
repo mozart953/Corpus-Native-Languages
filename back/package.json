@@ -1,16 +1,53 @@
 {
-  "name": "back",
+  "name": "corpus-native-languages-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "description": "Layered Express + Prisma API for the Native Languages corpus of Guatemala",
+  "type": "module",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:deploy": "prisma migrate deploy",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "prisma migrate reset --force",
+    "db:studio": "prisma studio",
+    "db:sync-fixtures": "node scripts/sync-fixtures.js",
+    "test:flow": "node scripts/test-api-flow.mjs",
+    "setup": "prisma generate && prisma migrate dev --name init && node prisma/seed.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "corpus",
+    "guatemala",
+    "mayan",
+    "express",
+    "prisma",
+    "sqlite"
+  ],
+  "author": "Wilson Pop",
+  "license": "MIT",
   "dependencies": {
-    "express": "^5.2.1"
+    "@auth/core": "0.41.3",
+    "@prisma/client": "6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.3",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0"
+  },
+  "devDependencies": {
+    "prisma": "6.19.3"
+  },
+  "engines": {
+    "node": ">=20.9"
   }
 }

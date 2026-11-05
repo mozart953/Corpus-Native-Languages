@@ -1,30 +1,36 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import LoginComponent from "@/components/Login/Login.jsx";
 import NavbarComponent from "@/components/Navbar/Navbar.jsx";
+import { useCorpusAuth } from "@/lib/useCorpusAuth";
 import "./page.css";
 
 /**
  * Standalone sign-in page.
  *
  * The home page opens the same form in a dialog, so this route is the
- * deep-link version: useful for sharing a link, and it keeps the navbar
- * consistent with the rest of the site.
- *
- * As on the home page, nothing is sent anywhere — submitting only flips the
- * local state so the signed-in navbar can be seen.
+ * deep-link version. Authentication goes through NextAuth's `local`
+ * Credentials provider, which delegates the password check to the Express
+ * API. A successful sign-in creates the 30-minute session cookie.
  */
 function LoginPage() {
-  const [user, setUser] = useState(null);
+  const { user, submitting, error, setError, login, logout } = useCorpusAuth();
+
+  const handleLogin = async ({ email, password }) => {
+    await login({ mode: "signin", email, password });
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <div className="nl-page">
       <NavbarComponent
         user={user}
-        onLogin={() => setUser(null)}
-        onLogout={() => setUser(null)}
+        onLogin={() => setError(null)}
+        onLogout={handleLogout}
         activePath="/login"
       />
 
@@ -35,22 +41,15 @@ function LoginPage() {
           </Link>
 
           <LoginComponent
-            onSubmit={({ name, email }) => {
-              const fallback = email.split("@")[0].replace(/[._-]+/g, " ");
-              const display = name || fallback;
-
-              setUser({
-                name: display,
-                initials: display.slice(0, 2),
-                role: "Contributor",
-              });
-            }}
+            onSubmit={handleLogin}
+            submitting={submitting}
+            error={error}
           />
 
           {user ? (
             <p className="page__loginNote" role="status">
-              Signed in as <strong>{user.name}</strong> on this device only. The navbar above is
-              now showing the signed-in state — try signing out.
+              Signed in as <strong>{user.name}</strong>. Your session refreshes
+              while you are active and expires after 30 minutes of inactivity.
             </p>
           ) : null}
         </div>

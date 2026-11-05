@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans, Inter, Source_Sans_3 } from "next/font/google";
+import Providers from "@/components/Auth/Providers.jsx";
 import "./globals.css";
 
 /**
@@ -44,7 +45,7 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${sourceSans.variable} ${inter.variable}`}
       >
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

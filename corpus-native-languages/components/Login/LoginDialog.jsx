@@ -11,7 +11,14 @@ import "./LoginDialog.css";
  * without an account, so the form is always a dialog rather than a gate.
  * Handles Escape, backdrop clicks, focus capture on open and the scroll lock.
  */
-function LoginDialog({ open = false, mode = "signin", onClose = null, onSubmit = null }) {
+function LoginDialog({
+  open = false,
+  mode = "signin",
+  onClose = null,
+  onSubmit = null,
+  submitting = false,
+  error = null,
+}) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
 
@@ -81,7 +88,13 @@ function LoginDialog({ open = false, mode = "signin", onClose = null, onSubmit =
           <span className="nl-icon nl-icon--close" aria-hidden="true" />
         </button>
 
-        <LoginComponent mode={mode} onSubmit={onSubmit} onCancel={onClose} />
+        <LoginComponent
+          mode={mode}
+          onSubmit={onSubmit}
+          onCancel={onClose}
+          submitting={submitting}
+          error={error}
+        />
       </div>
     </div>
   );
