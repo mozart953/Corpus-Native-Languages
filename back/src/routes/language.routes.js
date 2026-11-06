@@ -19,7 +19,22 @@ export const languageRoutes = Router();
 
 // Public reads -------------------------------------------------------------
 languageRoutes.get("/", languageQueryValidator, validate, languageController.list);
-languageRoutes.get("/mine", requireAuth, languageListMineValidator, validate, languageController.listMine);
+
+// Sign-in-only views. `/trash` and `/mine` must stay above `/:id`.
+languageRoutes.get(
+  "/mine",
+  requireAuth,
+  languageListMineValidator,
+  validate,
+  languageController.listMine,
+);
+languageRoutes.get(
+  "/trash",
+  requireAuth,
+  languageListMineValidator,
+  validate,
+  languageController.listTrash,
+);
 languageRoutes.get("/:id", languageIdValidator, validate, languageController.get);
 
 // Authenticated writes -----------------------------------------------------
@@ -53,6 +68,17 @@ languageRoutes.patch(
   languageController.update,
 );
 
+// Draft lifecycle ----------------------------------------------------------
+languageRoutes.post(
+  "/:id/submit",
+  requireAuth,
+  requireRole("contributor", "reviewer", "admin"),
+  writeLimiter,
+  languageIdValidator,
+  validate,
+  languageController.submit,
+);
+
 // Moderation ---------------------------------------------------------------
 languageRoutes.post(
   "/:id/review",
@@ -65,20 +91,42 @@ languageRoutes.post(
   languageController.review,
 );
 
+languageRoutes.post(
+  "/:id/removal-request",
+  requireAuth,
+  requireRole("reviewer", "admin"),
+  reviewLimiter,
+  languageDeleteValidator,
+  validate,
+  languageController.requestRemoval,
+);
+
+languageRoutes.delete(
+  "/:id/removal-request",
+  requireAuth,
+  requireRole("reviewer", "admin"),
+  reviewLimiter,
+  languageIdValidator,
+  validate,
+  languageController.cancelRemovalRequest,
+);
+
+// Admin removes; a contributor may discard only their own draft.
 languageRoutes.delete(
   "/:id",
   requireAuth,
-  requireRole("admin"),
+  requireRole("contributor", "reviewer", "admin"),
   writeLimiter,
   languageDeleteValidator,
   validate,
   languageController.remove,
 );
 
+// Admin restores removed content; an owner restores a trashed draft.
 languageRoutes.post(
   "/:id/restore",
   requireAuth,
-  requireRole("admin"),
+  requireRole("contributor", "reviewer", "admin"),
   writeLimiter,
   languageRestoreValidator,
   validate,

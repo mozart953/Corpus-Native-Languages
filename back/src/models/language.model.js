@@ -5,6 +5,8 @@ export const LANGUAGE_STATUSES = Object.freeze([
 ]);
 
 export const REVIEW_STATES = Object.freeze({
+  // Contributor-owned, not yet submitted. Never visible to moderators.
+  DRAFT: "draft",
   PENDING: "pending",
   REVIEWER_APPROVED: "reviewer_approved",
   APPROVED: "approved",
@@ -42,7 +44,11 @@ export function toLanguageResponse(language) {
     reviewState: language.reviewState,
     rejectionReason: language.rejectionReason ?? null,
     reviewedAt: language.reviewedAt ?? null,
+    removalRequestedAt: language.removalRequestedAt ?? null,
+    removalRequestReason: language.removalRequestReason ?? null,
+    createdById: language.createdById ?? null,
     deletedAt: language.deletedAt ?? null,
+    deletionReason: language.deletionReason ?? null,
     createdAt: language.createdAt,
     updatedAt: language.updatedAt,
   };

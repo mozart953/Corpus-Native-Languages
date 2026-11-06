@@ -14,6 +14,14 @@ export const languageController = {
     res.json(await languageService.listMine(req.user, req.validated));
   }),
 
+  listTrash: asyncHandler(async (req, res) => {
+    res.json(await languageService.listTrash(req.user, req.validated));
+  }),
+
+  submit: asyncHandler(async (req, res) => {
+    res.json(await languageService.submit(req.validated.id, req.user));
+  }),
+
   create: asyncHandler(async (req, res) => {
     res.status(201).json(await languageService.create(req.validated, req.user));
   }),
@@ -35,5 +43,14 @@ export const languageController = {
   review: asyncHandler(async (req, res) => {
     const { id, decision, comment } = req.validated;
     res.json(await languageService.review(id, { decision, comment }, req.user));
+  }),
+
+  requestRemoval: asyncHandler(async (req, res) => {
+    const { id, reason } = req.validated;
+    res.json(await languageService.requestRemoval(id, { reason }, req.user));
+  }),
+
+  cancelRemovalRequest: asyncHandler(async (req, res) => {
+    res.json(await languageService.cancelRemovalRequest(req.validated.id, req.user));
   }),
 };

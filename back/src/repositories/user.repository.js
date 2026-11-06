@@ -25,6 +25,10 @@ export const userRepository = {
     return client.user.update({ where: { id }, data: { role } });
   },
 
+  updateStatus(id, data, client = prisma) {
+    return client.user.update({ where: { id }, data });
+  },
+
   markLogin(id, client = prisma) {
     return client.user.update({
       where: { id },

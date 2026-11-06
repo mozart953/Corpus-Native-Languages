@@ -29,12 +29,29 @@ async function upsertSeedUser({ email, username, password, role }) {
       console.warn(
         `[seed] ${normalisedEmail} already exists with role "${existing.role}" (expected "${role}"). Left unchanged.`,
       );
-    } else {
-      console.log(`[seed] = ${role} ${normalisedEmail} already exists`);
     }
+
+    // Seed accounts must be usable after every reseed, even if the database
+    // predates the approval workflow.
+    if (existing.status !== "active" || !existing.approvedAt) {
+      const repaired = await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          status: "active",
+          statusReason: null,
+          statusChangedAt: new Date(),
+          approvedAt: existing.approvedAt ?? new Date(),
+        },
+      });
+      console.log(`[seed] ~ reactivated ${role} ${normalisedEmail}`);
+      return repaired;
+    }
+
+    console.log(`[seed] = ${role} ${normalisedEmail} already exists`);
     return existing;
   }
 
+  const now = new Date();
   const user = await prisma.user.create({
     data: {
       email: normalisedEmail,
@@ -42,6 +59,9 @@ async function upsertSeedUser({ email, username, password, role }) {
       passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS),
       provider: "local",
       role,
+      status: "active",
+      statusChangedAt: now,
+      approvedAt: now,
     },
   });
 

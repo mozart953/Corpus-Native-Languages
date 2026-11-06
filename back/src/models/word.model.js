@@ -25,7 +25,11 @@ export function toWordResponse(word) {
     reviewState: word.reviewState,
     rejectionReason: word.rejectionReason ?? null,
     reviewedAt: word.reviewedAt ?? null,
+    removalRequestedAt: word.removalRequestedAt ?? null,
+    removalRequestReason: word.removalRequestReason ?? null,
+    createdById: word.createdById ?? null,
     deletedAt: word.deletedAt ?? null,
+    deletionReason: word.deletionReason ?? null,
     createdAt: word.createdAt,
     updatedAt: word.updatedAt,
   };

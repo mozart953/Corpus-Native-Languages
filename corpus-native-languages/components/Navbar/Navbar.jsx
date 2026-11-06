@@ -27,12 +27,27 @@ function NavbarComponent({
   const confirmRef = useRef(null);
 
   const isSignedIn = Boolean(user);
-  const links = [
-    { id: "home", href: "/", label: "Home" },
-    { id: "words", href: "/#words", label: "Words" },
-    { id: "languages", href: "/#languages", label: "Languages" },
-    { id: "contribute", href: "/#contribute", label: "Contribute" },
-  ];
+  const roleKey = user?.roleKey ?? "contributor";
+  const canReview = roleKey === "reviewer" || roleKey === "admin";
+  const isAdmin = roleKey === "admin";
+
+  // Signed-in users get real routes instead of the landing-page anchors. The
+  // review and admin links only appear for roles the API will actually accept.
+  const links = isSignedIn
+    ? [
+        { id: "home", href: "/", label: "Home" },
+        { id: "words", href: "/#words", label: "Words" },
+        { id: "languages", href: "/#languages", label: "Languages" },
+        { id: "contribute", href: "/contribute", label: "Contribute" },
+        ...(canReview ? [{ id: "review", href: "/review", label: "Review" }] : []),
+        ...(isAdmin ? [{ id: "admin", href: "/admin", label: "Admin" }] : []),
+      ]
+    : [
+        { id: "home", href: "/", label: "Home" },
+        { id: "words", href: "/#words", label: "Words" },
+        { id: "languages", href: "/#languages", label: "Languages" },
+        { id: "contribute", href: "/#contribute", label: "Contribute" },
+      ];
 
   useEffect(() => {
     if (confirmingSignOut) confirmRef.current?.focus();

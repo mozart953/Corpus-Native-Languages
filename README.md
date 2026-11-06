@@ -7,11 +7,13 @@ The corpus is meant to be **read by people, downloaded by researchers, and used
 to train language technology** that finally represents the languages of the
 Mayan, Xinka and Garifuna peoples.
 
-> **Status: working full-stack prototype.** The corpus is served by a real
-> Express + Prisma API, browsing and exports are open to everyone, and accounts
-> are real (bcrypt + NextAuth sessions). Contribution and review forms are the
-> next UI milestone; the API and role workflow behind them are already built.
-> Sample entries are still fixtures and are not verified linguistic data.
+> **Status: working full-stack prototype with role-specific desks.** The corpus is
+> served by a real Express + Prisma API, browsing and exports are open to
+> everyone, and accounts are real (bcrypt + NextAuth sessions). Contributors,
+> reviewers and admins now have separate screens at `/contribute`, `/review` and
+> `/admin`, backed by the full draft → review → admin-approval workflow. New
+> registrations wait for admin approval before they can sign in. Sample entries
+> are still fixtures and are not verified linguistic data.
 
 ---
 
@@ -60,18 +62,29 @@ What works today:
 - Real registration and sign-in through NextAuth's local Credentials provider,
   backed by bcrypt accounts in SQLite. 30-minute sliding sessions with an
   automatic cookie refresher, in the home dialog and on `/login`.
+- New accounts land in `pending`; an admin approves them as contributor or
+  reviewer, changes roles, deactivates/reactivates accounts, and the API applies
+  those changes on the next request. Role desks and links appear only when the
+  live account is allowed to use them.
+- A contributor desk at `/contribute`: create/edit words and languages, keep
+  private drafts, submit a draft for review, and restore a discarded draft from
+  the private trash.
+- A review desk at `/review`: moderation queue, reviewer approval/rejection,
+  entry editing, and removal requests. A reviewer edit still needs the admin's
+  final approval; content stays public until an admin acts on a removal request.
+- An admin desk at `/admin`: account approval and lifecycle, published-content
+  editing, direct logical removal with a reason, and an archive where removed
+  content can be restored to the review queue.
 - Role-aware API: public reads; contributors create and edit their own entries;
   reviewers recommend approval; admins give final approval, soft-delete and
   restore content, manage roles, and read the audit trail.
-- Every submit, edit, review, removal and restore writes an `AuditLog` snapshot
-  with actor, timestamp and reason.
+- Every submit, edit, review, removal, draft discard/restore and archive restore
+  writes an `AuditLog` snapshot with actor, timestamp and reason.
 
 What is intentionally **not** implemented yet:
 
-- Contribution and moderation screens in the UI. The API supports them today;
-  the dialogs still only register and sign in.
 - Uploaded images are read into data URLs in memory and disappear on refresh;
-  they are never uploaded.
+  they are never uploaded. The contribution desks do not manage media yet.
 - Audio recordings and pronunciation playback.
 - Object storage, a public versioned dataset endpoint, automated tests beyond
   the moderation smoke script, and a deployment pipeline.
@@ -87,17 +100,25 @@ What is intentionally **not** implemented yet:
 │   ├── app/                     # App Router routes
 │   │   ├── layout.tsx           # fonts, metadata, provider wrapper
 │   │   ├── page.tsx             # "/" → Home component
-│   │   ├── login/page.jsx       # "/login" sign-in page
+│   │   ├── login/page.jsx       # "/login" sign-in / sign-up page
+│   │   ├── contribute/page.jsx  # "/contribute" contributor desk
+│   │   ├── review/page.jsx      # "/review" reviewer + admin queue
+│   │   ├── admin/page.jsx       # "/admin" accounts + content + archive
 │   │   └── api/auth/[...nextauth]/route.js
 │   ├── components/              # feature UI + co-located CSS
 │   │   ├── Auth/                # session provider + cookie refresher
 │   │   ├── Home/                # state owner: search, selection, auth dialog
+│   │   ├── RolePage/            # shared auth/status/role gate shell
+│   │   ├── Contribute/          # drafts, trash, submit, shared entry form
+│   │   ├── Review/              # moderation queue + removal requests
+│   │   ├── Admin/               # accounts, published content, archive
+│   │   ├── Moderation/          # review/account status badges
 │   │   ├── Navbar/  SearchBar/  LanguageCard/  WordList/  WordCard/
 │   │   ├── DownloadMenu/  ImageUploader/
 │   │   └── Login/               # LoginDialog + standalone Login form
 │   ├── lib/
 │   │   ├── api.js               # fetch wrapper for /api/backend
-│   │   └── useCorpusAuth.js     # shared signup/login/logout hook
+│   │   └── useCorpusAuth.js     # live profile, signup/login/logout hook
 │   ├── auth.js                  # NextAuth config (local provider, 30-min JWT)
 │   ├── data/corpus.js           # fixtures / offline fallback
 │   ├── utils/                   # search, text folding, exporters
@@ -123,10 +144,16 @@ What is intentionally **not** implemented yet:
   the HttpOnly NextAuth cookie is forwarded without CORS or credentials hacks.
 - **Auth:** `auth.js` configures exactly one provider, `local`, whose
   `authorize` callback delegates the password check to `POST /auth/login`.
-  Sign-up posts to `/auth/register` and then signs in. Sessions are JWT cookies
-  with `maxAge: 1800`, `updateAge: 60`; `SessionRefresher` calls `update()` every
+  Sign-up posts to `/auth/register`, creates a `pending` account, and waits for
+  admin approval instead of signing in. Sessions are JWT cookies with
+  `maxAge: 1800`, `updateAge: 60`; `SessionRefresher` calls `update()` every
   20 minutes and when the tab becomes visible. An idle session expires after 30
   minutes.
+- **Role desks:** `/contribute`, `/review` and `/admin` are separate pages behind
+  the shared `RolePage` gate, which checks the live `/auth/me` profile. The navbar
+  only advertises desks the account can use; navigating directly shows a clear
+  sign-in, pending, rejected or not-allowed state. `/admin` also exposes account
+  approval and lifecycle plus the logical-removal archive.
 - **Search and exports:** `utils/search.js` combines the language filter with
   free text; `utils/text.js` folds case, diacritics and decorative apostrophes
   while keeping an index map for highlighting. `utils/exporters.js` contains the
@@ -153,11 +180,17 @@ for the environment reference, every endpoint, filters and limits.
   shared `AUTH_SECRET` via `@auth/core/jwt`. Express owns the `User` table and
   bcrypt hashes, and leaves `passwordHash` nullable plus a `provider` column so a
   future Google provider can be linked without a schema change.
-- **Moderation:** `pending → reviewer_approved → approved`, with `rejected` and
-  `removed` branches. Only an admin approval publishes content. Deletion is
-  logical: `deletedAt`/`deletedById`/`deletionReason` are set and an audit
-  snapshot is written, so removed content disappears from public reads but is
-  never lost.
+- **Moderation:** `draft → pending → reviewer_approved → approved`, with
+  `rejected` and `removed` branches. Only an admin approval publishes content.
+  New contributor content is a private draft; submitting moves it to the queue.
+  Deletion is logical: a discarded draft keeps `draft` state with `deletedAt` for
+  the owner's private trash, while an admin removal sets `reviewState = "removed"`
+  and writes an audit snapshot. Removed content disappears from public reads but
+  remains in `/archive` for an admin restore.
+- **Accounts:** registration is `pending`, only `active` accounts can sign in,
+  and role/status is re-read on every request. Admins approve or reject
+  registrations, assign contributor/reviewer roles, and deactivate or reactivate
+  accounts; reactivation preserves the previous role.
 
 ### Data shape
 
@@ -270,7 +303,9 @@ npm run dev       # http://localhost:3000
 ```
 
 Open <http://localhost:3000>. The standalone sign-in page is
-<http://localhost:3000/login>.
+<http://localhost:3000/login>. Signed-in accounts reach their desks at
+`/contribute` (contributor, reviewer, admin), `/review` (reviewer, admin) and
+`/admin` (admin).
 
 ### Seed accounts (development only)
 
@@ -343,9 +378,10 @@ Set strong secrets, a non-default SQLite path (or another Prisma provider),
 - [x] Replace `data/corpus.js` with a real API and database (fixtures remain as fallback).
 - [x] Implement authentication, contributor roles and sessions.
 - [x] Build the community review and verification workflow with an audit trail.
-- [ ] Add contribution and moderation screens to the UI.
-- [ ] Persist image and audio uploads to object storage.
-- [ ] Add audio recordings and pronunciation playback.
+- [x] Add contribution, moderation and admin account/archive screens to the UI.
+- [ ] Add audio recordings, image uploads and pronunciation playback.
+- [ ] Persist media to object storage.
+- [ ] Add email notifications for account approval, review outcomes and removal requests.
 - [ ] Publish a versioned public dataset/API with citation guidance.
 - [ ] Add automated tests and a deployment pipeline.
 

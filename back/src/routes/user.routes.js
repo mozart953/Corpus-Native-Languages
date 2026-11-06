@@ -6,6 +6,7 @@ import { validate } from "../middlewares/validate.js";
 import {
   userListValidator,
   userRoleValidator,
+  userStatusValidator,
 } from "../validators/user.validator.js";
 
 export const userRoutes = Router();
@@ -26,4 +27,13 @@ userRoutes.patch(
   userRoleValidator,
   validate,
   userController.updateRole,
+);
+
+userRoutes.patch(
+  "/:id/status",
+  requireAuth,
+  requireRole("admin"),
+  userStatusValidator,
+  validate,
+  userController.updateStatus,
 );

@@ -57,6 +57,9 @@ export const wordRepository = {
         deletionReason: reason ?? null,
         reviewState: REVIEW_STATES.REMOVED,
         verified: false,
+        removalRequestedAt: null,
+        removalRequestedById: null,
+        removalRequestReason: null,
       },
       include: { language: languageSelection },
     });
@@ -74,6 +77,60 @@ export const wordRepository = {
         rejectionReason: null,
         reviewedById: null,
         reviewedAt: null,
+        removalRequestedAt: null,
+        removalRequestedById: null,
+        removalRequestReason: null,
+      },
+      include: { language: languageSelection },
+    });
+  },
+
+  // A contributor moving their own draft to the private trash keeps the draft
+  // state so it is never confused with admin-removed content.
+  discardDraft(id, { deletedById, reason }, client = prisma) {
+    return client.word.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: deletedById ?? null,
+        deletionReason: reason ?? null,
+        verified: false,
+      },
+      include: { language: languageSelection },
+    });
+  },
+
+  restoreDraft(id, client = prisma) {
+    return client.word.update({
+      where: { id },
+      data: {
+        deletedAt: null,
+        deletedById: null,
+        deletionReason: null,
+      },
+      include: { language: languageSelection },
+    });
+  },
+
+  setRemovalRequest(id, { actorId, reason }, client = prisma) {
+    return client.word.update({
+      where: { id },
+      data: {
+        removalRequestedAt: new Date(),
+        removalRequestedById: actorId,
+        removalRequestReason: reason ?? null,
+      },
+      include: { language: languageSelection },
+    });
+  },
+
+  clearRemovalRequest(id, client = prisma) {
+    return client.word.update({
+      where: { id },
+      data: {
+        removalRequestedAt: null,
+        removalRequestedById: null,
+        removalRequestReason: null,
       },
       include: { language: languageSelection },
     });

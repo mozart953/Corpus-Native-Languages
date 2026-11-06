@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LANGUAGES, WORDS } from "../../data/corpus";
 import { SEARCH_FIELDS, filterWords } from "../../utils/search";
@@ -44,7 +45,9 @@ function HomeComponent() {
     user,
     submitting: authSubmitting,
     error: authError,
+    notice: authNotice,
     setError: setAuthError,
+    clearNotice: clearAuthNotice,
     login,
     logout,
   } = useCorpusAuth();
@@ -143,11 +146,13 @@ function HomeComponent() {
 
   const openLogin = (mode) => {
     setAuthError(null);
+    clearAuthNotice();
     setLoginMode(mode);
   };
 
   const closeLogin = () => {
     setAuthError(null);
+    clearAuthNotice();
     setLoginMode(null);
   };
 
@@ -223,7 +228,9 @@ function HomeComponent() {
                   Contribute
                 </button>
               ) : (
-                <span className="nl-chip">Signed in as {user.name}</span>
+                <Link href="/contribute" className="nl-btn nl-btn--ghost">
+                  Open my contribution desk
+                </Link>
               )}
             </div>
 
@@ -419,13 +426,19 @@ function HomeComponent() {
               </p>
             </div>
 
-            <button
-              type="button"
-              className="nl-btn nl-btn--primary"
-              onClick={() => openLogin(user ? "signup" : "signin")}
-            >
-              {user ? "Invite a contributor" : "Sign in to contribute"}
-            </button>
+            {user ? (
+              <Link href="/contribute" className="nl-btn nl-btn--primary">
+                Go to the contribution desk
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className="nl-btn nl-btn--primary"
+                onClick={() => openLogin("signup")}
+              >
+                Create an account to contribute
+              </button>
+            )}
           </div>
         </section>
       </main>
@@ -448,6 +461,7 @@ function HomeComponent() {
         onSubmit={handleLogin}
         submitting={authSubmitting}
         error={authError}
+        notice={authNotice}
       />
     </div>
   );

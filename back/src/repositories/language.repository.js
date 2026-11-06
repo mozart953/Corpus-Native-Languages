@@ -42,6 +42,9 @@ export const languageRepository = {
         deletionReason: reason ?? null,
         reviewState: REVIEW_STATES.REMOVED,
         verified: false,
+        removalRequestedAt: null,
+        removalRequestedById: null,
+        removalRequestReason: null,
       },
     });
   },
@@ -58,6 +61,54 @@ export const languageRepository = {
         rejectionReason: null,
         reviewedById: null,
         reviewedAt: null,
+        removalRequestedAt: null,
+        removalRequestedById: null,
+        removalRequestReason: null,
+      },
+    });
+  },
+
+  discardDraft(id, { deletedById, reason }, client = prisma) {
+    return client.language.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        deletedById: deletedById ?? null,
+        deletionReason: reason ?? null,
+        verified: false,
+      },
+    });
+  },
+
+  restoreDraft(id, client = prisma) {
+    return client.language.update({
+      where: { id },
+      data: {
+        deletedAt: null,
+        deletedById: null,
+        deletionReason: null,
+      },
+    });
+  },
+
+  setRemovalRequest(id, { actorId, reason }, client = prisma) {
+    return client.language.update({
+      where: { id },
+      data: {
+        removalRequestedAt: new Date(),
+        removalRequestedById: actorId,
+        removalRequestReason: reason ?? null,
+      },
+    });
+  },
+
+  clearRemovalRequest(id, client = prisma) {
+    return client.language.update({
+      where: { id },
+      data: {
+        removalRequestedAt: null,
+        removalRequestedById: null,
+        removalRequestReason: null,
       },
     });
   },

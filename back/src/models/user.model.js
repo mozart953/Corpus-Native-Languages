@@ -8,8 +8,26 @@ export const PROVIDERS = Object.freeze(["local", "google"]);
 export const DEFAULT_PROVIDER = "local";
 export const DEFAULT_ROLE = "contributor";
 
+/**
+ * Account lifecycle. Only `active` accounts may sign in. New registrations are
+ * `pending` until an admin approves them with a contributor or reviewer role.
+ */
+export const USER_STATUSES = Object.freeze([
+  "pending",
+  "active",
+  "rejected",
+  "deactivated",
+]);
+
+// Roles an admin may grant at approval time. Admin accounts are promoted later.
+export const APPROVAL_ROLES = Object.freeze(["contributor", "reviewer"]);
+
 export function isValidRole(role) {
   return ROLES.includes(role);
+}
+
+export function isValidStatus(status) {
+  return USER_STATUSES.includes(status);
 }
 
 export function toPublicUser(user) {
@@ -19,6 +37,12 @@ export function toPublicUser(user) {
     username: user.username,
     provider: user.provider,
     role: user.role,
+    status: user.status,
+    statusReason: user.statusReason ?? null,
+    statusChangedAt: user.statusChangedAt ?? null,
+    approvedAt: user.approvedAt ?? null,
+    lastLoginAt: user.lastLoginAt ?? null,
     createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
   };
 }

@@ -10,4 +10,9 @@ export const userController = {
     const { id, role } = req.validated;
     res.json(await userService.updateRole(id, role, req.user));
   }),
+
+  updateStatus: asyncHandler(async (req, res) => {
+    const { id, status, role, reason } = req.validated;
+    res.json(await userService.updateStatus(id, { status, role, reason }, req.user));
+  }),
 };

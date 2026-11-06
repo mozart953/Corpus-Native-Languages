@@ -16,22 +16,32 @@ export class ApiError extends Error {
  * In the browser the base URL is `/api/backend`, which Next.js rewrites to the
  * Express server. Keeping requests same-origin means the NextAuth session
  * cookie is forwarded automatically and there is no CORS/credential dance.
+ *
+ * Reads retry once on a 5xx response. This covers a stale keep-alive connection
+ * after the dev API restarts and does not retry mutations or rate limiting.
  */
 export async function apiFetch(path, options = {}) {
   const { method = "GET", body, headers, ...rest } = options;
   const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+  const retryable = method === "GET";
+  let response;
 
-  const response = await fetch(url, {
-    method,
-    credentials: "same-origin",
-    headers: {
-      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-      ...headers,
-    },
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    cache: "no-store",
-    ...rest,
-  });
+  for (let attempt = 0; attempt <= (retryable ? 1 : 0); attempt += 1) {
+    response = await fetch(url, {
+      method,
+      credentials: "same-origin",
+      headers: {
+        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...headers,
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      cache: "no-store",
+      ...rest,
+    });
+
+    if (!retryable || response.status < 500 || attempt === 1) break;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
 
   const text = await response.text();
   let payload = null;

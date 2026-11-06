@@ -121,40 +121,68 @@ Every error uses:
 
 ## Roles and moderation
 
+Every new registration is created with the `contributor` role and `pending`
+status. Only `active` accounts can sign in. The API re-reads the account on every
+request, so an approval, role change or deactivation applies immediately—even
+to a session that is already open.
+
 | Action | Public | Contributor | Reviewer | Admin |
 | --- | --- | --- | --- | --- |
 | Read approved corpus | ✅ | ✅ | ✅ | ✅ |
-| Register / sign in | ✅ | ✅ | ✅ | ✅ |
-| Create languages / words | — | ✅ (pending) | ✅ (pending) | ✅ (approved) |
-| Edit own entries | — | ✅ (back to pending) | ✅ | ✅ |
-| Edit any entry | — | — | ✅ (back to pending) | ✅ (state preserved) |
+| Register | ✅ (lands `pending`) | — | — | — |
+| Sign in / use the API | — | active only | active only | active only |
+| Create languages / words | — | ✅ (`draft`) | ✅ (`reviewer_approved`) | ✅ (`approved`) |
+| Edit own entries | — | ✅ (draft stays draft; submitted returns to `pending`) | ✅ (returns to `reviewer_approved`) | ✅ (state preserved) |
+| Edit any entry | — | — | ✅ except approved content (returns to `reviewer_approved`) | ✅ (state preserved) |
+| Discard own unpublished draft | — | ✅ (private trash) | — | ✅ |
 | See review queue / history | — | — | ✅ | ✅ |
-| Recommend approval | — | — | ✅ (`reviewer_approved`) | ✅ (`approved`) |
+| Recommend approval / rejection | — | — | ✅ (`reviewer_approved` / `rejected`) | ✅ (final `approved` / `rejected`) |
+| Request removal | — | — | ✅ | ✅ |
 | Final approval | — | — | — | ✅ |
-| Unpublish approved content | — | — | — | ✅ |
-| Soft-delete / restore | — | — | — | ✅ |
-| List users / change roles | — | — | — | ✅ |
+| Logical removal / archive restore | — | restore own trashed draft | restore own trashed draft | ✅ |
+| Account approval, roles, deactivation | — | — | — | ✅ |
 
-Review states: `pending` → `reviewer_approved` → `approved`, with `rejected` and
-`removed` as terminal branches. Public reads only expose rows whose
+Review states: `draft` → `pending` → `reviewer_approved` → `approved`, with
+`rejected` and `removed` as terminal branches. Public reads only expose rows whose
 `reviewState` is `approved` **and** `deletedAt` is `null`; words additionally
-require an approved, non-deleted language.
+require an approved, non-deleted language. `draft` content is visible only to its
+author, and a discarded draft remains `draft` with `deletedAt` set so the author
+can restore it from their private trash.
 
 ### Deletion is logical
 
 Admins never physically delete corpus rows. `DELETE /words/:id` (or
 `/languages/:id`) sets `deletedAt`, `deletedById`, `deletionReason` and
 `reviewState = "removed"`, and appends an `AuditLog` row containing the full
-snapshot. The content disappears from the public API but stays recoverable via
-`POST /words/:id/restore`. Restored content returns as `pending` so it is
-reviewed again.
+snapshot. The content disappears from the public API and normal moderation queue,
+but stays recoverable through `GET /archive` and
+`POST /words/:id/restore`. Restored content returns as `pending` so it is reviewed
+again.
+
+A contributor deleting their own unpublished draft uses the same endpoint but
+gets a private trash move instead: the row keeps `reviewState = "draft"`, gains
+`deletedAt`, and is listed only for its author by `GET /words/trash` (or
+`/languages/trash`). Restoring it returns it to the draft list. Reviewers cannot
+delete content; they open a removal request, and the content stays public until
+an admin performs the logical removal.
+
+### Account lifecycle
+
+Accounts move through `pending` → `active`, with `rejected` and `deactivated` as
+paused states. Public registration always creates a `pending` contributor; an
+admin approves it as `contributor` or `reviewer`. A `rejected` registration can
+be approved later, an active account can be deactivated, and a deactivated
+account can be reactivated with its previous role intact. Accounts are never
+hard-deleted, and neither the acting admin's own account nor the last active
+admin can be deactivated.
 
 ### Audit trail
 
 `AuditLog` records every registration, role change, submission, edit, review,
-approval, rejection, removal and restore, including actor, timestamp, previous
-and next state, reason, and a JSON snapshot. Reviewers and admins read it
-through `/reviews/history`; admins can query the raw log through `/audit`.
+approval, rejection, removal, draft discard/restore and archive restore, including
+actor, timestamp, previous and next state, reason, and a JSON snapshot. Reviewers
+and admins read it through `/reviews/history`; admins can query the raw log through
+`/audit`.
 
 ---
 
@@ -164,12 +192,20 @@ The Next.js app owns the login form and issues an encrypted JWT cookie using
 NextAuth's Credentials provider. Express does not issue cookies; it verifies the
 same JWT with `@auth/core/jwt` and the shared `AUTH_SECRET`. This means:
 
-1. `POST /auth/register` creates the bcrypt account in SQLite.
-2. NextAuth's `local` provider calls `POST /auth/login` to verify the password.
-3. NextAuth writes `corpus.session-token` (HttpOnly, SameSite=Lax, 30-minute
+1. `POST /auth/register` creates the bcrypt account with `status = "pending"`.
+2. An admin activates the account and assigns `contributor` or `reviewer`.
+3. NextAuth's `local` provider calls `POST /auth/login`; only active accounts are
+   allowed through.
+4. NextAuth writes `corpus.session-token` (HttpOnly, SameSite=Lax, 30-minute
    expiry, refreshed while active).
-4. Express reads that cookie on every protected request and attaches
-   `req.user = { id, email, username, role, provider }`.
+5. Express reads that cookie on every protected request, re-reads the account
+   from the database and attaches `req.user = { id, email, username, role,
+   provider, status }`.
+
+Because step 5 is a live lookup, changing a role or deactivating an account takes
+effect on the next request; a deactivated session receives `403
+ACCOUNT_DEACTIVATED`. `GET /auth/me` returns the same live profile, which the
+frontend uses to refresh the navbar and role desk.
 
 Keep `AUTH_SECRET`, `AUTH_COOKIE_NAME` and `AUTH_SESSION_MAX_AGE` identical in
 `back/.env` and `corpus-native-languages/.env.local`.
@@ -191,9 +227,9 @@ Base URL: `http://localhost:4000/api/v1`
 
 | Method | Path | Access | Description |
 | --- | --- | --- | --- |
-| `POST` | `/auth/register` | public | Create a local account (`username`, `email`, `password`). |
-| `POST` | `/auth/login` | public | Verify email/password; used by NextAuth. |
-| `GET` | `/auth/me` | signed in | Current account, decoded from the session cookie. |
+| `POST` | `/auth/register` | public | Create a local account (`username`, `email`, `password`). The account starts `pending` and returns `meta.requiresApproval`. |
+| `POST` | `/auth/login` | public | Verify email/password for an active account; used by NextAuth. Pending, rejected and deactivated accounts receive `403`. |
+| `GET` | `/auth/me` | signed in | Live current account, re-read from the database. |
 
 ### Languages
 
@@ -201,12 +237,16 @@ Base URL: `http://localhost:4000/api/v1`
 | --- | --- | --- | --- |
 | `GET` | `/languages` | public | Paginated approved languages. Filters: `q`, `status`, `sort`, `direction`, `page`, `limit`. |
 | `GET` | `/languages/:id` | public | One approved, non-deleted language. |
-| `GET` | `/languages/mine` | signed in | Entries created by the current user, any state. |
-| `POST` | `/languages` | contributor+ | Create a language. |
-| `PUT/PATCH` | `/languages/:id` | contributor+ | Update; non-admin edits return the entry to `pending`. |
+| `GET` | `/languages/mine` | signed in | Entries created by the current user, excluding trashed drafts. |
+| `GET` | `/languages/trash` | signed in | The current user's discarded drafts. |
+| `POST` | `/languages` | contributor+ | Create a language: `draft` for contributors, `reviewer_approved` for reviewers, `approved` for admins. |
+| `PUT/PATCH` | `/languages/:id` | contributor+ | Update. Contributors keep their drafts, submitted content returns to `pending`, reviewers move content to `reviewer_approved`, admins keep the current state. |
+| `POST` | `/languages/:id/submit` | contributor+ | Submit an own draft for review (`draft` → `pending`). |
 | `POST` | `/languages/:id/review` | reviewer+ | `{ decision: "approve" \| "reject", comment? }`. |
-| `DELETE` | `/languages/:id` | admin | Logical removal, `{ reason? }`. |
-| `POST` | `/languages/:id/restore` | admin | Restore a removed language to `pending`. |
+| `POST` | `/languages/:id/removal-request` | reviewer+ | Open a removal request, `{ reason }`; content stays public. |
+| `DELETE` | `/languages/:id/removal-request` | reviewer+ | Withdraw a removal request, or reject it as an admin. |
+| `DELETE` | `/languages/:id` | contributor+ / admin | Contributor: move an own draft to the private trash. Admin: logical removal, `{ reason? }`. |
+| `POST` | `/languages/:id/restore` | owner / admin | Restore a trashed draft (owner) or archived language (admin, returns to `pending`). |
 
 Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `words?`,
 `status?`, `accent?`. `status` is `active`, `endangered` or
@@ -218,12 +258,16 @@ Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `words?`,
 | --- | --- | --- | --- |
 | `GET` | `/words` | public | Paginated approved words. Filters: `q`, `languageId`, `partOfSpeech`, `verified`, `sort`, `direction`, `page`, `limit`. |
 | `GET` | `/words/:id` | public | One approved word in an approved language. |
-| `GET` | `/words/mine` | signed in | Entries created by the current user, any state. |
-| `POST` | `/words` | contributor+ | Create a word. |
-| `PUT/PATCH` | `/words/:id` | contributor+ | Update; non-admin edits return the entry to `pending`. |
+| `GET` | `/words/mine` | signed in | Entries created by the current user, excluding trashed drafts. |
+| `GET` | `/words/trash` | signed in | The current user's discarded drafts. |
+| `POST` | `/words` | contributor+ | Create a word: `draft` for contributors, `reviewer_approved` for reviewers, `approved` for admins. |
+| `PUT/PATCH` | `/words/:id` | contributor+ | Update. Contributors keep their drafts, submitted content returns to `pending`, reviewers move content to `reviewer_approved`, admins keep the current state. |
+| `POST` | `/words/:id/submit` | contributor+ | Submit an own draft for review (`draft` → `pending`). |
 | `POST` | `/words/:id/review` | reviewer+ | `{ decision: "approve" \| "reject", comment? }`. |
-| `DELETE` | `/words/:id` | admin | Logical removal, `{ reason? }`. |
-| `POST` | `/words/:id/restore` | admin | Restore a removed word to `pending`. |
+| `POST` | `/words/:id/removal-request` | reviewer+ | Open a removal request, `{ reason }`; content stays public. |
+| `DELETE` | `/words/:id/removal-request` | reviewer+ | Withdraw a removal request, or reject it as an admin. |
+| `DELETE` | `/words/:id` | contributor+ / admin | Contributor: move an own draft to the private trash. Admin: logical removal, `{ reason? }`. |
+| `POST` | `/words/:id/restore` | owner / admin | Restore a trashed draft (owner) or archived word (admin, returns to `pending`). |
 
 Word body: `id?`, `languageId`, `word`, `translation`, `pronunciation?`,
 `partOfSpeech?`, `usage?`. `languageName` is joined from the language at read
@@ -237,11 +281,13 @@ Sort fields — words: `word`, `translation`, `languageId`, `createdAt`,
 
 | Method | Path | Access | Description |
 | --- | --- | --- | --- |
-| `GET` | `/reviews/queue` | reviewer+ | Pending and reviewer-approved words/languages. Filters: `type=all\|word\|language`, `languageId`, `page`, `limit`. |
+| `GET` | `/reviews/queue` | reviewer+ | Pending, reviewer-approved and removal-requested words/languages. Filters: `type=all\|word\|language`, `languageId`, `page`, `limit`. |
 | `GET` | `/reviews/history` | reviewer+ | Audit entries. Filters: `entityType`, `entityId`, `action`, `page`, `limit`. |
+| `GET` | `/archive` | admin | Logically removed content. Filters: `type=all\|word\|language`, `q`, `page`, `limit`. Returns `{ data: { words, languages } }`. |
 | `GET` | `/audit` | admin | Raw audit log with the same filters. |
-| `GET` | `/users` | admin | Paginated accounts. |
+| `GET` | `/users` | admin | Paginated accounts. Filters: `q`, `role`, `status`, `page`, `limit`. |
 | `PATCH` | `/users/:id/role` | admin | `{ role: "contributor" \| "reviewer" \| "admin" }`. |
+| `PATCH` | `/users/:id/status` | admin | `{ status: "pending" \| "active" \| "rejected" \| "deactivated", role?, reason? }`. Approval roles are `contributor` or `reviewer`; reactivating a deactivated account keeps its previous role. |
 
 ### Rate limits
 
@@ -255,6 +301,17 @@ All limits use a 15-minute window and return `429 RATE_LIMITED`:
 | Reviews | 120 |
 
 Set `NODE_ENV=test` to disable limiters in automated tests.
+
+### Development proxy connections
+
+The Next.js rewrite in development keeps HTTP connections alive to this API. Node
+closes idle keep-alive sockets after five seconds by default, and a proxy can try
+to reuse one just as it closes, producing an occasional plain-text `500 Internal
+Server Error` that never reaches Express (and is therefore not in the API log).
+`server.js` raises `keepAliveTimeout` to 65 seconds and `headersTimeout` to 66
+seconds so the proxy's idle connections stay valid; the frontend also retries a
+failed `GET` once. This is harmless in production, where the same settings keep
+load-balancer connections healthy.
 
 ---
 

@@ -17,6 +17,7 @@ function LoginComponent({
   onCancel = null,
   submitting = false,
   error = null,
+  notice = null,
 }) {
   const isSignUp = mode === "signup";
   const formId = useId();
@@ -155,6 +156,12 @@ function LoginComponent({
         {message ? (
           <p className="login__error" id={errorId} role="alert">
             {message}
+          </p>
+        ) : null}
+
+        {notice ? (
+          <p className="login__notice" role="status">
+            {notice}
           </p>
         ) : null}
 

@@ -14,6 +14,14 @@ export const wordController = {
     res.json(await wordService.listMine(req.user, req.validated));
   }),
 
+  listTrash: asyncHandler(async (req, res) => {
+    res.json(await wordService.listTrash(req.user, req.validated));
+  }),
+
+  submit: asyncHandler(async (req, res) => {
+    res.json(await wordService.submit(req.validated.id, req.user));
+  }),
+
   create: asyncHandler(async (req, res) => {
     res.status(201).json(await wordService.create(req.validated, req.user));
   }),
@@ -35,5 +43,14 @@ export const wordController = {
   review: asyncHandler(async (req, res) => {
     const { id, decision, comment } = req.validated;
     res.json(await wordService.review(id, { decision, comment }, req.user));
+  }),
+
+  requestRemoval: asyncHandler(async (req, res) => {
+    const { id, reason } = req.validated;
+    res.json(await wordService.requestRemoval(id, { reason }, req.user));
+  }),
+
+  cancelRemovalRequest: asyncHandler(async (req, res) => {
+    res.json(await wordService.cancelRemovalRequest(req.validated.id, req.user));
   }),
 };

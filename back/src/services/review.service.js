@@ -1,4 +1,5 @@
 import { wordService } from "./word.service.js";
+import { languageService } from "./language.service.js";
 import { auditService } from "./audit.service.js";
 import { ApiError } from "../utils/ApiError.js";
 
@@ -15,21 +16,31 @@ export const reviewService = {
     const wantsWords = type === "all" || type === "word";
     const wantsLanguages = type === "all" || type === "language";
 
-    const words = wantsWords
-      ? await wordService.listForQueue({ page, limit, languageId })
-      : null;
-    const languages = wantsLanguages
-      ? await wordService.listLanguagesForQueue({ page, limit })
-      : null;
+    const [words, languages, removalWords, removalLanguages] = await Promise.all([
+      wantsWords ? wordService.listForQueue({ page, limit, languageId }) : null,
+      wantsLanguages ? wordService.listLanguagesForQueue({ page, limit }) : null,
+      wantsWords
+        ? wordService.listRemovalRequests({ page, limit, languageId })
+        : null,
+      wantsLanguages ? languageService.listRemovalRequests({ page, limit }) : null,
+    ]);
 
     return {
       data: {
         words: words?.data ?? [],
         languages: languages?.data ?? [],
+        removalRequests: {
+          words: removalWords?.data ?? [],
+          languages: removalLanguages?.data ?? [],
+        },
       },
       meta: {
         words: words?.meta ?? null,
         languages: languages?.meta ?? null,
+        removalRequests: {
+          words: removalWords?.meta ?? null,
+          languages: removalLanguages?.meta ?? null,
+        },
       },
     };
   },

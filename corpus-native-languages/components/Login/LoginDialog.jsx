@@ -18,6 +18,7 @@ function LoginDialog({
   onSubmit = null,
   submitting = false,
   error = null,
+  notice = null,
 }) {
   const panelRef = useRef(null);
   const previousFocus = useRef(null);
@@ -94,6 +95,7 @@ function LoginDialog({
           onCancel={onClose}
           submitting={submitting}
           error={error}
+          notice={notice}
         />
       </div>
     </div>

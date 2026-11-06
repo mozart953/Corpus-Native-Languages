@@ -1,0 +1,63 @@
+.adminFilters {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.6fr) repeat(2, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  background: var(--nl-surface-2);
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius);
+}
+
+.adminAccount {
+  border-left: 3px solid var(--nl-border-strong);
+}
+
+.adminAccount--self {
+  border-left-color: var(--nl-blue);
+  background: linear-gradient(180deg, rgba(47, 139, 255, 0.06), var(--nl-surface-2));
+}
+
+.adminAccount__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-right: auto;
+}
+
+.adminAccount__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--nl-border);
+}
+
+.adminAccount__roleField {
+  min-width: 150px;
+}
+
+.adminAccount__buttons {
+  margin-top: 0;
+}
+
+.adminAccount__hint {
+  flex-basis: 100%;
+}
+
+.adminContentSearch {
+  flex: 1 1 320px;
+  min-width: 220px;
+}
+
+@media (max-width: 760px) {
+  .adminFilters {
+    grid-template-columns: 1fr;
+  }
+
+  .adminAccount__roleField {
+    flex: 1 1 100%;
+  }
+}

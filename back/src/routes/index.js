@@ -5,6 +5,7 @@ import { wordRoutes } from "./word.routes.js";
 import { reviewRoutes } from "./review.routes.js";
 import { userRoutes } from "./user.routes.js";
 import { auditRoutes } from "./audit.routes.js";
+import { archiveRoutes } from "./archive.routes.js";
 
 export const routes = Router();
 
@@ -21,6 +22,7 @@ routes.get("/", (_req, res) => {
       reviews: "/api/v1/reviews",
       users: "/api/v1/users",
       audit: "/api/v1/audit",
+      archive: "/api/v1/archive",
     },
   });
 });
@@ -31,3 +33,4 @@ routes.use("/words", wordRoutes);
 routes.use("/reviews", reviewRoutes);
 routes.use("/users", userRoutes);
 routes.use("/audit", auditRoutes);
+routes.use("/archive", archiveRoutes);

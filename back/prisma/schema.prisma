@@ -36,6 +36,12 @@ model Language {
   reviewedById    String?
   reviewedAt      DateTime?
 
+  // A reviewer may ask an admin to remove content. The request does not hide
+  // the entry; only the admin's logical delete does.
+  removalRequestedAt     DateTime?
+  removalRequestedById   String?
+  removalRequestReason   String?
+
   // Authorship and logical deletion.
   createdById     String?
   deletedAt       DateTime?
@@ -49,6 +55,7 @@ model Language {
 
   @@index([reviewState])
   @@index([deletedAt])
+  @@index([removalRequestedAt])
   @@index([name])
 }
 
@@ -70,6 +77,11 @@ model Word {
   reviewedById    String?
   reviewedAt      DateTime?
 
+  // Reviewer-raised removal request; visible to reviewers/admins only.
+  removalRequestedAt     DateTime?
+  removalRequestedById   String?
+  removalRequestReason   String?
+
   createdById     String?
   deletedAt       DateTime?
   deletedById     String?
@@ -82,6 +94,7 @@ model Word {
   @@index([word])
   @@index([reviewState])
   @@index([deletedAt])
+  @@index([removalRequestedAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +111,16 @@ model User {
   provider     String    @default("local")
   providerId   String?
   role         String    @default("contributor")
+
+  // Account lifecycle: pending -> active | rejected, active <-> deactivated.
+  // Only active accounts can sign in, and the API re-checks this on every
+  // authenticated request so deactivation takes effect immediately.
+  status          String    @default("pending")
+  statusReason    String?
+  statusChangedAt DateTime?
+  approvedAt      DateTime?
+  approvedById    String?
+
   lastLoginAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -105,6 +128,7 @@ model User {
   @@unique([provider, providerId])
   @@index([role])
   @@index([provider])
+  @@index([status])
 }
 
 // ---------------------------------------------------------------------------

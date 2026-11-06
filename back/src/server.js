@@ -8,6 +8,13 @@ const server = app.listen(env.port, () => {
   console.log(`[api] Public health check: http://localhost:${env.port}/api/v1/health`);
 });
 
+// Node closes idle keep-alive sockets after 5 seconds by default. A proxy such
+// as the Next.js rewrite (or a production load balancer) may try to reuse one
+// just as it closes, which surfaces as a transient 500. Keep sockets open longer
+// than the proxy's idle window; headersTimeout must stay above keepAliveTimeout.
+server.keepAliveTimeout = 65_000;
+server.headersTimeout = 66_000;
+
 let shuttingDown = false;
 
 async function shutdown(signal) {

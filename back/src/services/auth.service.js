@@ -33,6 +33,8 @@ export const authService = {
           passwordHash,
           provider: DEFAULT_PROVIDER,
           role: DEFAULT_ROLE,
+          status: "pending",
+          statusChangedAt: new Date(),
         },
         tx,
       );
@@ -42,7 +44,7 @@ export const authService = {
           entityType: "user",
           entityId: created.id,
           action: "registered",
-          toState: created.role,
+          toState: created.status,
           actor: {
             id: created.id,
             email: created.email,
@@ -56,7 +58,13 @@ export const authService = {
       return created;
     });
 
-    return { data: toPublicUser(user) };
+    return {
+      data: toPublicUser(user),
+      meta: {
+        requiresApproval: true,
+        message: "Account created. An admin must approve it before you can sign in.",
+      },
+    };
   },
 
   async login({ email, password }) {
@@ -75,6 +83,22 @@ export const authService = {
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) throw ApiError.unauthorized("Invalid email or password.");
+
+    // Check the lifecycle only after the password is known to be correct, so a
+    // wrong password never reveals whether an account exists or its state.
+    if (user.status !== "active") {
+      const messages = {
+        pending: "Your account is waiting for admin approval.",
+        rejected: "Your account registration was rejected.",
+        deactivated: "Your account has been deactivated.",
+      };
+      const reasons = user.statusReason ? ` Reason: ${user.statusReason}` : "";
+      throw new ApiError(
+        403,
+        (messages[user.status] ?? "Your account is not active.") + reasons,
+        { code: `ACCOUNT_${String(user.status).toUpperCase()}` },
+      );
+    }
 
     await userRepository.markLogin(user.id);
     return { data: toPublicUser(user) };
