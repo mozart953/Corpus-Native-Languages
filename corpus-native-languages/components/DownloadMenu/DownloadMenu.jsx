@@ -96,11 +96,11 @@ function DownloadMenu({
         </div>
 
         {useSelection ? (
-          <Badge variant="outline" className="downloadMenu__scope border-white/25 bg-white/[0.06] text-white">
+          <Badge variant="outline" className="downloadMenu__scope border-white/10 bg-white/[0.06] text-white">
             {selectedWords.length} selected
           </Badge>
         ) : (
-          <Badge variant="outline" className="downloadMenu__scope border-white/15 bg-white/[0.03] text-white/55">
+          <Badge variant="outline" className="downloadMenu__scope border-white/10 bg-white/[0.03] text-white/55">
             {words.length} in view
           </Badge>
         )}

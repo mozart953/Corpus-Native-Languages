@@ -109,10 +109,10 @@
   width: 44px;
   height: 44px;
   flex: none;
-  background: linear-gradient(145deg, #ffffff, #c9c9c9);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(145deg, var(--ds-gray-50), #c4c4c4);
+  border: 1px solid color-mix(in srgb, var(--ds-white) 18%, transparent);
   border-radius: 12px;
-  color: #070707;
+  color: var(--ds-gray-950);
   font-family: var(--nl-font-label);
   font-size: 0.8rem;
   font-weight: 800;
@@ -175,13 +175,13 @@
 }
 
 .login__input:hover {
-  border-color: var(--nl-border-strong);
+  border-color: var(--nl-border-hover);
 }
 
 .login__input:focus-visible {
-  background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.42);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+  background: var(--nl-surface-2);
+  border-color: var(--nl-border-focus);
+  box-shadow: var(--nl-ring);
   outline: none;
 }
 

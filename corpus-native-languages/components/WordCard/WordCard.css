@@ -26,7 +26,7 @@
 }
 
 .wordCard:hover {
-  border-color: var(--nl-border-strong);
+  border-color: var(--nl-border-hover);
   transform: translateY(-2px);
   box-shadow: var(--nl-shadow);
 }
@@ -156,10 +156,10 @@
 
 .wordCard__mark {
   padding: 0 2px;
-  background: rgba(255, 255, 255, 0.14);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--ds-white) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ds-white) 22%, transparent);
   border-radius: 3px;
-  color: var(--nl-white);
+  color: var(--ds-gray-50);
 }
 
 /* ------------------------------- metadata -------------------------------- */

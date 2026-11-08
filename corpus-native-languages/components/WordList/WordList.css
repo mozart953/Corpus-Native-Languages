@@ -21,8 +21,8 @@
   gap: 12px;
   padding: 64px 32px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
-  border: 1px dashed var(--nl-border-strong);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  border: 1px dashed var(--nl-border-hover);
   border-radius: var(--nl-radius-lg);
   text-align: center;
   backdrop-filter: blur(12px);
@@ -34,10 +34,10 @@
   place-items: center;
   width: 62px;
   height: 62px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--nl-border-strong);
+  background: var(--nl-surface-3);
+  border: 1px solid var(--nl-border);
   border-radius: 50%;
-  color: var(--nl-white);
+  color: var(--ds-gray-50);
   font-family: var(--nl-font-display);
   font-size: 1.6rem;
 }

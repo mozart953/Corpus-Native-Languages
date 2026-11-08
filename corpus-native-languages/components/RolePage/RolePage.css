@@ -102,10 +102,10 @@
 }
 
 .roleTab.is-active {
-  background: var(--nl-white);
-  border-color: var(--nl-white);
-  color: #090909;
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
+  background: var(--ds-gray-50);
+  border-color: color-mix(in srgb, var(--ds-gray-50) 80%, transparent);
+  color: var(--ds-gray-950);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
 }
 
 .roleTab__count {
@@ -193,8 +193,8 @@
 }
 
 .roleCard:hover {
-  background: rgba(255, 255, 255, 0.055);
-  border-color: var(--nl-border-strong);
+  background: var(--nl-surface-hover);
+  border-color: var(--nl-border-hover);
 }
 
 .roleCard--removed {
@@ -327,16 +327,16 @@
 .roleInput:hover,
 .roleSelect:hover,
 .roleTextarea:hover {
-  border-color: var(--nl-border-strong);
+  border-color: var(--nl-border-hover);
 }
 
 .roleInput:focus,
 .roleSelect:focus,
 .roleTextarea:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.42);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.09);
+  background: var(--nl-surface-2);
+  border-color: var(--nl-border-focus);
+  box-shadow: var(--nl-ring);
 }
 
 .roleTextarea {

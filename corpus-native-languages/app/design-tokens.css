@@ -1,0 +1,147 @@
+/**
+ * Design tokens — single source of truth for the monochrome glass theme.
+ *
+ * SRP: this file only defines token values.
+ * Consumers (globals.css, component CSS, Tailwind/shadcn vars) read these tokens
+ * instead of hardcoding colors. To restyle the product, change values here.
+ *
+ * Palette direction (Next.js-like monochrome): layered near-blacks, stepped grays,
+ * and restrained white overlays. Contrast is always dark-vs-light (never white-on-
+ * white or black-on-black). Status colors are the only non-grayscale accents.
+ */
+
+:root,
+.dark {
+  color-scheme: dark;
+
+  /* Base layers (darkest -> lighter). Use a lighter layer on top of a darker one. */
+  --ds-black: #000000;
+  --ds-gray-950: #0a0a0a;
+  --ds-gray-900: #111111;
+  --ds-gray-850: #171717;
+  --ds-gray-800: #1f1f1f;
+  --ds-gray-700: #2e2e2e;
+  --ds-gray-500: #737373;
+  --ds-gray-400: #8f8f8f;
+  --ds-gray-200: #a1a1a1;
+  --ds-gray-100: #c7c7c7;
+  --ds-gray-50: #ededed;
+  --ds-white: #ffffff;
+
+  /* App surfaces */
+  --nl-bg: var(--ds-gray-950);
+  --nl-bg-elevated: var(--ds-gray-900);
+  --nl-surface: color-mix(in srgb, var(--ds-white) 3%, transparent);
+  --nl-surface-2: color-mix(in srgb, var(--ds-white) 5%, transparent);
+  --nl-surface-3: color-mix(in srgb, var(--ds-white) 8%, transparent);
+  --nl-surface-hover: color-mix(in srgb, var(--ds-white) 7%, transparent);
+  --nl-surface-active: color-mix(in srgb, var(--ds-white) 10%, transparent);
+
+  /* Borders — subtle/normal, never "remarkable". */
+  --nl-border: color-mix(in srgb, var(--ds-white) 8%, transparent);
+  --nl-border-subtle: color-mix(in srgb, var(--ds-white) 6%, transparent);
+  --nl-border-hover: color-mix(in srgb, var(--ds-white) 14%, transparent);
+  --nl-border-focus: color-mix(in srgb, var(--ds-white) 28%, transparent);
+  --nl-border-strong: var(--nl-border-hover);
+
+  /* Text — light on dark surfaces. */
+  --nl-white: var(--ds-gray-50);
+  --nl-text: #d4d4d4;
+  --nl-muted: var(--ds-gray-200);
+  --nl-faint: var(--ds-gray-500);
+
+  /* Interactive monochrome accents (legacy names kept for compatibility). */
+  --nl-blue: var(--ds-gray-50);
+  --nl-blue-bright: var(--ds-gray-50);
+  --nl-blue-soft: color-mix(in srgb, var(--ds-white) 8%, transparent);
+  --nl-blue-line: var(--nl-border-hover);
+  --nl-blue-glow: color-mix(in srgb, var(--ds-white) 10%, transparent);
+
+  /* Glass */
+  --nl-glass-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ds-white) 5%, transparent),
+    color-mix(in srgb, var(--ds-white) 2%, transparent)
+  );
+  --nl-glass-bg-strong: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ds-white) 7%, transparent),
+    color-mix(in srgb, var(--ds-white) 3%, transparent)
+  );
+  --nl-glass-blur: 14px;
+  --nl-glass-border: var(--nl-border);
+
+  /* Buttons */
+  --nl-btn-bg: color-mix(in srgb, var(--ds-white) 4%, transparent);
+  --nl-btn-bg-hover: color-mix(in srgb, var(--ds-white) 9%, transparent);
+  --nl-btn-bg-active: color-mix(in srgb, var(--ds-white) 12%, transparent);
+  --nl-btn-border: var(--nl-border);
+  --nl-btn-border-hover: var(--nl-border-hover);
+  --nl-btn-text: var(--ds-gray-50);
+  --nl-btn-primary-bg: var(--ds-gray-50);
+  --nl-btn-primary-bg-hover: var(--ds-white);
+  --nl-btn-primary-bg-active: #d4d4d4;
+  --nl-btn-primary-text: var(--ds-gray-950);
+  --nl-btn-primary-border: color-mix(in srgb, var(--ds-gray-50) 90%, transparent);
+
+  /* Feedback — only status/tag surfaces. */
+  --nl-danger: #f87171;
+  --nl-danger-soft: rgba(248, 113, 113, 0.14);
+  --nl-success: #4ade80;
+  --nl-success-soft: rgba(74, 222, 128, 0.14);
+  --nl-warning: #facc15;
+  --nl-warning-soft: rgba(250, 204, 21, 0.14);
+  --nl-info: #93c5fd;
+  --nl-info-soft: rgba(147, 197, 253, 0.14);
+
+  /* Shape / motion / layout */
+  --nl-radius-sm: 8px;
+  --nl-radius: 12px;
+  --nl-radius-lg: 16px;
+  --nl-radius-pill: 999px;
+  --nl-speed: 150ms;
+  --nl-max: 1180px;
+  --nl-inset: clamp(20px, 5vw, 56px);
+  --nl-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+  --nl-shadow-blue: 0 0 0 1px var(--nl-border), 0 16px 40px rgba(0, 0, 0, 0.5);
+  --nl-ring: 0 0 0 3px color-mix(in srgb, var(--ds-white) 12%, transparent);
+
+  /* Typography */
+  --nl-font-display: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nl-font: var(--font-source-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nl-font-label: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* shadcn/Tailwind semantic tokens (monochrome). */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.94 0 0);
+  --card: oklch(0.185 0 0);
+  --card-foreground: oklch(0.94 0 0);
+  --popover: oklch(0.185 0 0);
+  --popover-foreground: oklch(0.94 0 0);
+  --primary: oklch(0.94 0 0);
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.235 0 0);
+  --secondary-foreground: oklch(0.94 0 0);
+  --muted: oklch(0.235 0 0);
+  --muted-foreground: oklch(0.68 0 0);
+  --accent: oklch(0.255 0 0);
+  --accent-foreground: oklch(0.94 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: oklch(0.72 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.7 0 0);
+  --chart-3: oklch(0.556 0 0);
+  --chart-4: oklch(0.439 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.165 0 0);
+  --sidebar-foreground: oklch(0.94 0 0);
+  --sidebar-primary: oklch(0.94 0 0);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.235 0 0);
+  --sidebar-accent-foreground: oklch(0.94 0 0);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.72 0 0);
+}

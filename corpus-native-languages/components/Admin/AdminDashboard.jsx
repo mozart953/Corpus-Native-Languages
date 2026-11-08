@@ -131,7 +131,7 @@ function AccountCard({
                 size="sm"
                 disabled={busy}
                 onClick={() => onReject(account)}
-                className="border-white/20 bg-transparent text-white hover:bg-white/10"
+                className="border-white/10 bg-transparent text-white hover:bg-white/10"
               >
                 Reject
               </Button>
@@ -173,7 +173,7 @@ function AccountCard({
               size="sm"
               disabled={busy || isSelf}
               onClick={() => onDeactivate(account)}
-              className="border-white/20 bg-transparent text-white hover:bg-white/10"
+              className="border-white/10 bg-transparent text-white hover:bg-white/10"
             >
               Deactivate
             </Button>
@@ -249,7 +249,7 @@ function ContentCard({ kind, entry, busy, onEdit, onRemove }) {
           size="sm"
           disabled={busy}
           onClick={() => onRemove(kind, entry)}
-          className="border-white/20 bg-transparent text-white hover:bg-white/10"
+          className="border-white/10 bg-transparent text-white hover:bg-white/10"
         >
           Remove (logical)
         </Button>

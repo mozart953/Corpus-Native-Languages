@@ -236,7 +236,7 @@ export default function SiteImageManager() {
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
               onChange={chooseFile}
-              className="h-auto cursor-pointer border-white/15 bg-white/[0.03] py-2 text-white/70 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-black hover:file:bg-white/90"
+              className="h-auto cursor-pointer border-white/10 bg-white/[0.03] py-2 text-white/70 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-black hover:file:bg-white/90"
             />
             <p className="text-xs leading-5 text-white/40">
               PNG, JPEG, WebP or GIF · up to 5 MB. Large landscape images work
@@ -254,7 +254,7 @@ export default function SiteImageManager() {
               onChange={(event) => setAlt(event.target.value)}
               maxLength={200}
               placeholder="A short description for screen readers"
-              className="border-white/15 bg-white/[0.03] text-white placeholder:text-white/30"
+              className="border-white/10 bg-white/[0.03] text-white placeholder:text-white/30"
             />
             <p className="text-xs text-white/40">
               {alt.length}/200 · Describe what the image shows, not the file name.
@@ -268,7 +268,7 @@ export default function SiteImageManager() {
           ) : null}
 
           {notice ? (
-            <Alert className="border-white/15 bg-white/[0.05] text-white">
+            <Alert className="border-white/10 bg-white/[0.05] text-white">
               <AlertDescription>{notice}</AlertDescription>
             </Alert>
           ) : null}
@@ -289,7 +289,7 @@ export default function SiteImageManager() {
                 variant="outline"
                 disabled={saving || removing}
                 onClick={remove}
-                className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                className="border-white/10 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
                 {removing ? (
                   <Loader2 className="size-4 animate-spin" aria-hidden="true" />

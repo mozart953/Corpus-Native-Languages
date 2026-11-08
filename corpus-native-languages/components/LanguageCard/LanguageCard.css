@@ -31,7 +31,7 @@
 }
 
 .languageCard:hover {
-  border-color: var(--nl-border-strong);
+  border-color: var(--nl-border-hover);
   transform: translateY(-3px);
   box-shadow: var(--nl-shadow);
 }
@@ -64,10 +64,10 @@
   width: 46px;
   height: 46px;
   flex: none;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: color-mix(in srgb, var(--ds-white) 7%, transparent);
+  border: 1px solid var(--nl-border);
   border-radius: 12px;
-  color: var(--nl-white);
+  color: var(--ds-gray-50);
   font-family: var(--nl-font-display);
   font-size: 1.25rem;
   font-weight: 800;
@@ -175,13 +175,13 @@
 
 .languageCard__status.is-warn {
   background: var(--nl-warning-soft);
-  border-color: rgba(243, 201, 105, 0.4);
+  border-color: color-mix(in srgb, var(--nl-warning) 35%, transparent);
   color: var(--nl-warning);
 }
 
 .languageCard__status.is-critical {
   background: var(--nl-danger-soft);
-  border-color: rgba(255, 112, 112, 0.4);
+  border-color: color-mix(in srgb, var(--nl-danger) 35%, transparent);
   color: var(--nl-danger);
 }
 

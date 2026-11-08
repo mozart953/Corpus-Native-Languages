@@ -31,11 +31,11 @@
   width: 38px;
   height: 38px;
   flex: none;
-  background: linear-gradient(145deg, #ffffff, #bdbdbd);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: linear-gradient(145deg, var(--ds-gray-50), #b8b8b8);
+  border: 1px solid color-mix(in srgb, var(--ds-white) 18%, transparent);
   border-radius: 10px;
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.14);
-  color: #070707;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+  color: var(--ds-gray-950);
   font-family: var(--nl-font-label);
   font-size: 0.85rem;
   font-weight: 800;
@@ -134,10 +134,10 @@
   width: 32px;
   height: 32px;
   flex: none;
-  background: linear-gradient(140deg, #ffffff, #c9c9c9);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: linear-gradient(140deg, var(--ds-gray-50), #c4c4c4);
+  border: 1px solid color-mix(in srgb, var(--ds-white) 16%, transparent);
   border-radius: 50%;
-  color: #080808;
+  color: var(--ds-gray-950);
   font-family: var(--nl-font-label);
   font-size: 0.78rem;
   font-weight: 800;
@@ -207,8 +207,8 @@
 }
 
 .navbar__toggle:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--nl-border-strong);
+  background: var(--nl-surface-hover);
+  border-color: var(--nl-border-hover);
 }
 
 .navbar__toggle .nl-icon--menu.is-open {

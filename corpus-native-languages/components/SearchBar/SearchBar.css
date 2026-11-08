@@ -53,14 +53,14 @@
 }
 
 .searchBar__input:hover {
-  border-color: var(--nl-border-strong);
+  border-color: var(--nl-border-hover);
 }
 
 .searchBar__input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.42);
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.09), 0 18px 44px rgba(0, 0, 0, 0.55);
+  background: var(--nl-surface-2);
+  border-color: var(--nl-border-focus);
+  box-shadow: var(--nl-ring), 0 18px 44px rgba(0, 0, 0, 0.45);
 }
 
 .searchBar__clear {
@@ -68,7 +68,7 @@
   right: 12px;
   width: 32px;
   height: 32px;
-  border: 1px solid var(--nl-border-strong);
+  border: 1px solid var(--nl-border);
   border-radius: 50%;
   color: var(--nl-muted);
   transition: color var(--nl-speed) ease, border-color var(--nl-speed) ease,
@@ -76,9 +76,9 @@
 }
 
 .searchBar__clear:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--nl-border-strong);
-  color: var(--nl-white);
+  background: var(--nl-surface-hover);
+  border-color: var(--nl-border-hover);
+  color: var(--ds-gray-50);
 }
 
 .searchBar__kbd {
@@ -88,9 +88,8 @@
   place-items: center;
   width: 26px;
   height: 26px;
-  background: var(--nl-bg);
-  border: 1px solid var(--nl-border-strong);
-  border-bottom-width: 2px;
+  background: var(--nl-bg-elevated);
+  border: 1px solid var(--nl-border);
   border-radius: 6px;
   color: var(--nl-faint);
   font-family: var(--nl-font-label);
@@ -133,9 +132,9 @@
 }
 
 .searchBar__scope.is-active {
-  background: var(--nl-white);
-  color: #080808;
-  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.15);
+  background: var(--ds-gray-50);
+  color: var(--ds-gray-950);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
 }
 
 .searchBar__count {

@@ -1,73 +1,18 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./design-tokens.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* =============================================================================
-   Native Languages — global theme
-   Pure CSS only: design tokens, reset, and a few shared primitives.
-   Every component ships its own co-located stylesheet for the rest.
-   ============================================================================= */
+/*
+  Native Languages — global styles.
+  SRP: globals owns reset, shared primitives, and icon masks.
+  Design values come from design-tokens.css (single source of truth).
+*/
 
 :root {
-  color-scheme: dark;
-
-  /* Surfaces — monochrome glass */
-  --nl-bg: #050505;
-  --nl-surface: rgba(255, 255, 255, 0.035);
-  --nl-surface-2: rgba(255, 255, 255, 0.055);
-  --nl-surface-3: rgba(255, 255, 255, 0.085);
-  --nl-border: rgba(255, 255, 255, 0.11);
-  --nl-border-strong: rgba(255, 255, 255, 0.24);
-
-  /* Text */
-  --nl-white: #ffffff;
-  --nl-text: #e8e8e8;
-  --nl-muted: #a3a3a3;
-  --nl-faint: #737373;
-
-  /* Accent — deliberately white, not blue. Coloured pixels are reserved for
-     status badges, which carry meaning. */
-  --nl-blue: #ffffff;
-  --nl-blue-bright: #ffffff;
-  --nl-blue-soft: rgba(255, 255, 255, 0.08);
-  --nl-blue-line: rgba(255, 255, 255, 0.3);
-  --nl-blue-glow: rgba(255, 255, 255, 0.16);
-
-  /* Feedback — only status surfaces use these. */
-  --nl-danger: #ff7070;
-  --nl-danger-soft: rgba(255, 112, 112, 0.12);
-  --nl-success: #58e0a4;
-  --nl-success-soft: rgba(88, 224, 164, 0.12);
-  --nl-warning: #f3c969;
-  --nl-warning-soft: rgba(243, 201, 105, 0.12);
-  --nl-info: #7cb8ff;
-  --nl-info-soft: rgba(124, 184, 255, 0.12);
-
-  /* Shape */
-  --nl-radius-sm: 8px;
-  --nl-radius: 14px;
-  --nl-radius-lg: 20px;
-  --nl-radius-pill: 999px;
-
-  --nl-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
-  --nl-shadow-blue: 0 0 0 1px var(--nl-blue-line), 0 18px 50px rgba(0, 0, 0, 0.6);
-
-  /* Type — three families, one job each (see app/layout.tsx) */
-  --nl-font-display: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --nl-font: var(--font-source-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --nl-font-label: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
-
-  /* Motion + rhythm */
-  --nl-speed: 160ms;
-  --nl-max: 1180px;
-
-  /* Horizontal gutter. The navbar and the page content share it so the nav
-     links stay aligned with the headings underneath them. */
-  --nl-inset: clamp(20px, 5vw, 56px);
-
-  /* Icon masks — inline SVG data URIs, so no icon library is needed. */
+  /* Icon masks — inline SVG data URIs, no icon library needed. */
   --nl-icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.6-3.6'/%3E%3C/svg%3E");
   --nl-icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
   --nl-icon-download: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='M7.5 10.5L12 15l4.5-4.5'/%3E%3Cpath d='M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2'/%3E%3C/svg%3E");
@@ -78,38 +23,6 @@
   --nl-icon-menu: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M4 7h16M4 12h16M4 17h16'/%3E%3C/svg%3E");
   --nl-icon-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='16' rx='2'/%3E%3Ccircle cx='8.5' cy='9.5' r='1.6'/%3E%3Cpath d='M21 15.5l-5-5L5 20'/%3E%3C/svg%3E");
   --nl-icon-trash: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 7h16'/%3E%3Cpath d='M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2'/%3E%3Cpath d='M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13'/%3E%3C/svg%3E");
-  --background: oklch(0.07 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.13 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.13 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.07 0 0);
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.19 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.24 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.7 0 0);
-  --chart-3: oklch(0.556 0 0);
-  --chart-4: oklch(0.439 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.875rem;
-  --sidebar: oklch(0.1 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.985 0 0);
-  --sidebar-primary-foreground: oklch(0.07 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 11%);
-  --sidebar-ring: oklch(0.72 0 0);
 }
 
 /* --------------------------------- reset --------------------------------- */
@@ -140,7 +53,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fixed monochrome ambience behind every page. */
 body::before {
   content: "";
   position: fixed;
@@ -148,9 +60,8 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(60rem 40rem at 12% -10%, rgba(255, 255, 255, 0.09), transparent 62%),
-    radial-gradient(45rem 35rem at 96% 4%, rgba(255, 255, 255, 0.045), transparent 68%),
-    radial-gradient(38rem 30rem at 50% 105%, rgba(255, 255, 255, 0.035), transparent 70%);
+    radial-gradient(50rem 32rem at 12% -8%, color-mix(in srgb, var(--ds-white) 6%, transparent), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 2%, color-mix(in srgb, var(--ds-white) 3%, transparent), transparent 68%);
 }
 
 body::after {
@@ -159,7 +70,7 @@ body::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.22;
+  opacity: 0.14;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
 }
 
@@ -182,10 +93,6 @@ a {
   color: var(--nl-white);
   text-decoration: none;
   text-underline-offset: 0.2em;
-}
-
-a:hover {
-  text-decoration-color: var(--nl-border-strong);
 }
 
 img,
@@ -217,14 +124,14 @@ ol {
 }
 
 :focus-visible {
-  outline: 2px solid var(--nl-white);
-  outline-offset: 3px;
+  outline: 2px solid color-mix(in srgb, var(--ds-white) 55%, transparent);
+  outline-offset: 2px;
   border-radius: var(--nl-radius-sm);
 }
 
 ::selection {
-  background: var(--nl-white);
-  color: var(--nl-bg);
+  background: var(--ds-gray-50);
+  color: var(--ds-gray-950);
 }
 
 ::placeholder {
@@ -232,10 +139,9 @@ ol {
   opacity: 1;
 }
 
-/* Custom scrollbar so the black theme stays consistent. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--nl-border-strong) transparent;
+  scrollbar-color: color-mix(in srgb, var(--ds-white) 18%, transparent) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -248,13 +154,13 @@ ol {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--nl-border-strong);
+  background: color-mix(in srgb, var(--ds-white) 16%, transparent);
   border: 2px solid var(--nl-bg);
   border-radius: var(--nl-radius-pill);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--nl-white);
+  background: color-mix(in srgb, var(--ds-white) 28%, transparent);
 }
 
 /* ------------------------------ primitives ------------------------------- */
@@ -274,8 +180,6 @@ ol {
   padding: 0 var(--nl-inset);
 }
 
-/* Page content. It carries its own width and gutter — previously it had
-   neither, so every section sat flush against the viewport edge. */
 .nl-main {
   flex: 1;
   width: 100%;
@@ -302,11 +206,11 @@ ol {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  color: var(--nl-blue-bright);
+  color: var(--nl-muted);
   font-family: var(--nl-font-label);
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -314,7 +218,7 @@ ol {
   content: "";
   width: 18px;
   height: 1px;
-  background: var(--nl-blue-line);
+  background: var(--nl-border-hover);
 }
 
 .nl-title {
@@ -329,13 +233,12 @@ ol {
 }
 
 .nl-panel {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025));
-  border: 1px solid var(--nl-border);
+  background: var(--nl-glass-bg);
+  border: 1px solid var(--nl-glass-border);
   border-radius: var(--nl-radius-lg);
   box-shadow: var(--nl-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(var(--nl-glass-blur));
+  -webkit-backdrop-filter: blur(var(--nl-glass-blur));
 }
 
 .nl-chip {
@@ -343,10 +246,10 @@ ol {
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  background: var(--nl-blue-soft);
-  border: 1px solid var(--nl-blue-line);
+  background: var(--nl-surface-2);
+  border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-pill);
-  color: var(--nl-blue-bright);
+  color: var(--nl-text);
   font-family: var(--nl-font-label);
   font-size: 0.7rem;
   font-weight: 600;
@@ -356,39 +259,46 @@ ol {
 }
 
 .nl-chip--muted {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--nl-border-strong);
+  background: var(--nl-surface);
+  border-color: var(--nl-border-subtle);
   color: var(--nl-muted);
 }
 
-/* Buttons */
+/* Buttons — normal borders, clear hover contrast */
 .nl-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 10px 18px;
-  border: 1px solid var(--nl-border-strong);
+  border: 1px solid var(--nl-btn-border);
   border-radius: var(--nl-radius-sm);
-  background: rgba(255, 255, 255, 0.035);
-  color: var(--nl-white);
+  background: var(--nl-btn-bg);
+  color: var(--nl-btn-text);
   font-size: 0.9rem;
-  font-weight: 650;
+  font-weight: 600;
   white-space: nowrap;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: background var(--nl-speed) ease, border-color var(--nl-speed) ease,
-    color var(--nl-speed) ease, transform var(--nl-speed) ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    background var(--nl-speed) ease,
+    border-color var(--nl-speed) ease,
+    color var(--nl-speed) ease,
+    box-shadow var(--nl-speed) ease;
 }
 
 .nl-btn:hover:not(:disabled) {
-  border-color: var(--nl-blue-line);
-  background: var(--nl-blue-soft);
-  color: var(--nl-white);
+  background: var(--nl-btn-bg-hover);
+  border-color: var(--nl-btn-border-hover);
+  color: var(--ds-white);
 }
 
 .nl-btn:active:not(:disabled) {
-  transform: translateY(1px);
+  background: var(--nl-btn-bg-active);
+}
+
+.nl-btn:focus-visible {
+  box-shadow: var(--nl-ring);
 }
 
 .nl-btn:disabled {
@@ -397,30 +307,38 @@ ol {
 }
 
 .nl-btn--primary {
-  background: var(--nl-white);
-  border-color: var(--nl-white);
-  color: #090909;
-  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.12);
+  background: var(--nl-btn-primary-bg);
+  border-color: var(--nl-btn-primary-border);
+  color: var(--nl-btn-primary-text);
+  box-shadow: none;
 }
 
 .nl-btn--primary:hover:not(:disabled) {
-  background: #e8e8e8;
-  border-color: #e8e8e8;
-  color: #090909;
+  background: var(--nl-btn-primary-bg-hover);
+  border-color: var(--nl-btn-primary-bg-hover);
+  color: var(--ds-gray-950);
+}
+
+.nl-btn--primary:active:not(:disabled) {
+  background: var(--nl-btn-primary-bg-active);
 }
 
 .nl-btn--ghost {
   border-color: transparent;
+  background: transparent;
   color: var(--nl-muted);
+  backdrop-filter: none;
 }
 
 .nl-btn--ghost:hover:not(:disabled) {
-  color: var(--nl-white);
+  background: var(--nl-surface-2);
+  border-color: transparent;
+  color: var(--ds-gray-50);
 }
 
 .nl-btn--danger:hover:not(:disabled) {
   background: var(--nl-danger-soft);
-  border-color: var(--nl-danger);
+  border-color: color-mix(in srgb, var(--nl-danger) 35%, transparent);
   color: var(--nl-danger);
 }
 
@@ -448,55 +366,16 @@ ol {
   mask-size: contain;
 }
 
-.nl-icon--search {
-  -webkit-mask-image: var(--nl-icon-search);
-  mask-image: var(--nl-icon-search);
-}
-
-.nl-icon--close {
-  -webkit-mask-image: var(--nl-icon-close);
-  mask-image: var(--nl-icon-close);
-}
-
-.nl-icon--download {
-  -webkit-mask-image: var(--nl-icon-download);
-  mask-image: var(--nl-icon-download);
-}
-
-.nl-icon--copy {
-  -webkit-mask-image: var(--nl-icon-copy);
-  mask-image: var(--nl-icon-copy);
-}
-
-.nl-icon--check {
-  -webkit-mask-image: var(--nl-icon-check);
-  mask-image: var(--nl-icon-check);
-}
-
-.nl-icon--user {
-  -webkit-mask-image: var(--nl-icon-user);
-  mask-image: var(--nl-icon-user);
-}
-
-.nl-icon--menu {
-  -webkit-mask-image: var(--nl-icon-menu);
-  mask-image: var(--nl-icon-menu);
-}
-
-.nl-icon--image {
-  -webkit-mask-image: var(--nl-icon-image);
-  mask-image: var(--nl-icon-image);
-}
-
-.nl-icon--trash {
-  -webkit-mask-image: var(--nl-icon-trash);
-  mask-image: var(--nl-icon-trash);
-}
-
-.nl-icon--upload {
-  -webkit-mask-image: var(--nl-icon-upload);
-  mask-image: var(--nl-icon-upload);
-}
+.nl-icon--search { -webkit-mask-image: var(--nl-icon-search); mask-image: var(--nl-icon-search); }
+.nl-icon--close { -webkit-mask-image: var(--nl-icon-close); mask-image: var(--nl-icon-close); }
+.nl-icon--download { -webkit-mask-image: var(--nl-icon-download); mask-image: var(--nl-icon-download); }
+.nl-icon--copy { -webkit-mask-image: var(--nl-icon-copy); mask-image: var(--nl-icon-copy); }
+.nl-icon--check { -webkit-mask-image: var(--nl-icon-check); mask-image: var(--nl-icon-check); }
+.nl-icon--user { -webkit-mask-image: var(--nl-icon-user); mask-image: var(--nl-icon-user); }
+.nl-icon--menu { -webkit-mask-image: var(--nl-icon-menu); mask-image: var(--nl-icon-menu); }
+.nl-icon--image { -webkit-mask-image: var(--nl-icon-image); mask-image: var(--nl-icon-image); }
+.nl-icon--trash { -webkit-mask-image: var(--nl-icon-trash); mask-image: var(--nl-icon-trash); }
+.nl-icon--upload { -webkit-mask-image: var(--nl-icon-upload); mask-image: var(--nl-icon-upload); }
 
 .nl-visually-hidden {
   position: absolute;
@@ -512,10 +391,7 @@ ol {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
+  html { scroll-behavior: auto; }
   *,
   *::before,
   *::after {
@@ -526,12 +402,7 @@ ol {
 }
 
 @media (max-width: 640px) {
-  /* Horizontal padding is handled by --nl-inset, which already clamps down to
-     its 20px minimum. Overriding it here is what let the content run flush to
-     the edge on small screens. */
-  .nl-section {
-    margin-top: 48px;
-  }
+  .nl-section { margin-top: 48px; }
 }
 
 @theme inline {
@@ -578,40 +449,6 @@ ol {
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-.dark {
-  --background: oklch(0.07 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.13 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.13 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.07 0 0);
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.19 0 0);
-  --muted-foreground: oklch(0.7 0 0);
-  --accent: oklch(0.24 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.7 0 0);
-  --chart-3: oklch(0.556 0 0);
-  --chart-4: oklch(0.439 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.1 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.985 0 0);
-  --sidebar-primary-foreground: oklch(0.07 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 11%);
-  --sidebar-ring: oklch(0.72 0 0);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -619,7 +456,8 @@ ol {
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   html {
