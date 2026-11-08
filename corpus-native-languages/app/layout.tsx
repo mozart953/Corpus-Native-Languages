@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { DM_Sans, Inter, Source_Sans_3 } from "next/font/google";
+import Providers from "@/components/Auth/Providers.jsx";
 import "./globals.css";
 
 /**
  * Three families, one job each:
  *   DM Sans       -> titles and display text (headings, figures, native words)
  *   Source Sans 3 -> body copy and everything that reads as a sentence
- *   Inter         -> small letter-spaced text (labels, chips, badges, counts)
+ *   Inter         -> small letter-spaced text and shadcn controls
  *
  * Exposed as CSS variables so globals.css can assign them by role instead of
  * every component hard-coding a family name.
@@ -40,11 +41,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body
-        className={`${dmSans.variable} ${sourceSans.variable} ${inter.variable}`}
-      >
-        {children}
+    <html
+      lang="es"
+      className={`dark ${dmSans.variable} ${sourceSans.variable} ${inter.variable}`}
+    >
+      <body>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

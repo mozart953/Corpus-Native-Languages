@@ -1,24 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import {
+  BookOpen,
+  Download,
+  Image as ImageIcon,
+  Languages,
+  PenLine,
+  Settings2,
+} from "lucide-react";
 import { LANGUAGES, WORDS } from "../../data/corpus";
 import { SEARCH_FIELDS, filterWords } from "../../utils/search";
+import { apiFetch, apiAssetUrl } from "../../lib/api";
+import { useCorpusAuth } from "../../lib/useCorpusAuth";
+import { Button } from "@/components/ui/button";
 import NavbarComponent from "../Navbar/Navbar.jsx";
 import SearchBar from "../SearchBar/SearchBar.jsx";
 import LanguageCard from "../LanguageCard/LanguageCard.jsx";
 import WordList from "../WordList/WordList.jsx";
 import DownloadMenu from "../DownloadMenu/DownloadMenu.jsx";
 import LoginDialog from "../Login/LoginDialog.jsx";
-import ImageUploader, { UPLOAD_VARIANTS } from "../ImageUploader/ImageUploader.jsx";
 import { wordsToJson, wordsToPairsTxt, buildFilename, downloadTextFile } from "../../utils/exporters";
 import "./Home.css";
 
 /** Headline numbers, computed from the corpus rather than hard-coded. */
-function summarise() {
-  const speakers = LANGUAGES.reduce((total, language) => total + language.speakers, 0);
-  const endangered = LANGUAGES.filter((language) => language.status !== "active").length;
+function summarise(languages, words) {
+  const speakers = languages.reduce((total, language) => total + language.speakers, 0);
+  const endangered = languages.filter((language) => language.status !== "active").length;
 
-  return { speakers, endangered, words: WORDS.length, languages: LANGUAGES.length };
+  return {
+    speakers,
+    endangered,
+    words: words.length,
+    languages: languages.length,
+  };
 }
 
 /**
@@ -28,29 +44,90 @@ function summarise() {
  * because the corpus is public: reading and downloading words should never be
  * behind an account. Signing in only adds the ability to contribute.
  *
- * `user` is local state and switching it swaps the navbar between its
- * signed-out and signed-in shapes. Nothing here talks to a server.
+ * The corpus is fetched from the Express API. The bundled fixtures remain the
+ * initial render and the fallback when the API is unavailable, so the page
+ * still works during frontend-only development.
  */
 function HomeComponent() {
-  const [user, setUser] = useState(null);
+  const {
+    user,
+    submitting: authSubmitting,
+    error: authError,
+    notice: authNotice,
+    setError: setAuthError,
+    clearNotice: clearAuthNotice,
+    login,
+    logout,
+  } = useCorpusAuth();
+
+  const [languages, setLanguages] = useState(LANGUAGES);
+  const [words, setWords] = useState(WORDS);
+  const [corpusSource, setCorpusSource] = useState("fixtures");
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState(SEARCH_FIELDS.ALL);
   const [languageId, setLanguageId] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
   const [loginMode, setLoginMode] = useState(null);
-  const [heroImage, setHeroImage] = useState(null);
-  const [languageIcons, setLanguageIcons] = useState({});
-  const [iconTarget, setIconTarget] = useState(null);
+  const [siteImage, setSiteImage] = useState(null);
   const [pendingNotice, setPendingNotice] = useState(null);
 
-  const stats = summarise();
+  useEffect(() => {
+    let cancelled = false;
 
-  const visibleWords = filterWords(WORDS, { query, languageId, field: scope });
-  const languageTotal = WORDS.filter(
+    apiFetch("/site-images/home-image")
+      .then((response) => {
+        if (!cancelled && response?.data?.url) setSiteImage(response.data);
+      })
+      .catch(() => {
+        // The corpus still works when presentation media is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCorpus() {
+      try {
+        const [languageResponse, wordResponse] = await Promise.all([
+          apiFetch("/languages?limit=100"),
+          apiFetch("/words?limit=100&page=1"),
+        ]);
+
+        if (cancelled) return;
+
+        const nextLanguages = languageResponse?.data ?? [];
+        const nextWords = wordResponse?.data ?? [];
+
+        if (nextLanguages.length > 0) setLanguages(nextLanguages);
+        if (nextWords.length > 0) setWords(nextWords);
+        setCorpusSource("api");
+      } catch {
+        if (cancelled) return;
+        setCorpusSource("fixtures");
+        setPendingNotice(
+          "The corpus API is unavailable right now — showing the bundled sample data.",
+        );
+      }
+    }
+
+    loadCorpus();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stats = summarise(languages, words);
+
+  const visibleWords = filterWords(words, { query, languageId, field: scope });
+  const languageTotal = words.filter(
     (word) => languageId === "all" || word.languageId === languageId,
   ).length;
 
-  const activeLanguage = LANGUAGES.find((language) => language.id === languageId);
+  const activeLanguage = languages.find((language) => language.id === languageId);
   const languageLabel = activeLanguage?.name ?? "all languages";
 
   const toggleSelect = (id) => {
@@ -65,25 +142,38 @@ function HomeComponent() {
     setSelectedIds([]);
   };
 
-  /** Stand-in for the sign-in request that will be added with the backend. */
-  const handleLogin = ({ name, email }) => {
-    const fallback = email.split("@")[0].replace(/[._-]+/g, " ");
-
-    setUser({
-      name: name || fallback,
-      initials: (name || fallback).slice(0, 2),
-      role: "Contributor",
+  const handleLogin = async ({ name, email, password }) => {
+    const ok = await login({
+      mode: loginMode ?? "signin",
+      name,
+      email,
+      password,
     });
+
+    if (!ok) return;
+
     setLoginMode(null);
-    setPendingNotice("Signed in locally. No request was sent — this is the frontend only.");
+    setPendingNotice(
+      "Signed in. Your session refreshes while you are active and expires after 30 minutes of inactivity.",
+    );
   };
 
-  const handleLogout = () => {
-    setUser(null);
+  const handleLogout = async () => {
+    await logout();
     setSelectedIds([]);
-    setPendingNotice("Signed out. Any images you loaded are cleared from the page.");
-    setHeroImage(null);
-    setLanguageIcons({});
+    setPendingNotice("Signed out.");
+  };
+
+  const openLogin = (mode) => {
+    setAuthError(null);
+    clearAuthNotice();
+    setLoginMode(mode);
+  };
+
+  const closeLogin = () => {
+    setAuthError(null);
+    clearAuthNotice();
+    setLoginMode(null);
   };
 
   const downloadSingle = (word) => {
@@ -106,7 +196,7 @@ function HomeComponent() {
     <div className="nl-page">
       <NavbarComponent
         user={user}
-        onLogin={setLoginMode}
+        onLogin={openLogin}
         onLogout={handleLogout}
         activePath="/"
       />
@@ -114,22 +204,8 @@ function HomeComponent() {
       <main className="nl-main">
         {/* ------------------------------ hero ------------------------------ */}
         <section className="home__hero" aria-labelledby="home-title">
-          {heroImage ? (
-            <div className="home__heroImage">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
-              <img src={heroImage} alt="" />
-              <button
-                type="button"
-                className="home__heroClear"
-                onClick={() => setHeroImage(null)}
-              >
-                <span className="nl-icon nl-icon--close" aria-hidden="true" />
-                Remove image
-              </button>
-            </div>
-          ) : null}
-
-          <div className="home__heroContent">
+          <div className="home__heroPanel">
+            <div className="home__heroContent">
             <span className="nl-eyebrow">Native languages of Guatemala</span>
             <h1 id="home-title" className="home__title">
               Every word is a voice
@@ -143,22 +219,46 @@ function HomeComponent() {
             </p>
 
             <div className="home__heroActions">
-              <a href="#words" className="nl-btn nl-btn--primary">
-                Browse the words
-              </a>
-              <a href="#languages" className="nl-btn">
-                Choose a language
-              </a>
+              <Button asChild size="lg" className="h-11 px-5 text-[0.9rem] font-semibold">
+                <a href="#words">
+                  <BookOpen className="size-4" aria-hidden="true" />
+                  Browse the words
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-11 px-5 text-[0.9rem] font-semibold"
+              >
+                <a href="#languages">
+                  <Languages className="size-4" aria-hidden="true" />
+                  Choose a language
+                </a>
+              </Button>
               {!user ? (
-                <button
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--ghost"
-                  onClick={() => setLoginMode("signin")}
+                  variant="ghost"
+                  size="lg"
+                  className="h-11 px-4 text-[0.9rem]"
+                  onClick={() => openLogin("signin")}
                 >
+                  <PenLine className="size-4" aria-hidden="true" />
                   Contribute
-                </button>
+                </Button>
               ) : (
-                <span className="nl-chip">Signed in as {user.name}</span>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="lg"
+                  className="h-11 px-4 text-[0.9rem]"
+                >
+                  <Link href="/contribute">
+                    <PenLine className="size-4" aria-hidden="true" />
+                    Open my contribution desk
+                  </Link>
+                </Button>
               )}
             </div>
 
@@ -180,6 +280,40 @@ function HomeComponent() {
                 <dd className="home__statsWarn">{stats.endangered}</dd>
               </div>
             </dl>
+            </div>
+
+            {siteImage ? (
+              <figure className="home__heroMedia">
+                {/* eslint-disable-next-line @next/next/no-img-element -- API-hosted asset */}
+                <img
+                  src={apiAssetUrl(siteImage.url)}
+                  alt={siteImage.alt || "Presentation image for the Native Languages corpus"}
+                />
+                <figcaption>
+                  <span className="home__heroMediaLabel">
+                    <ImageIcon className="size-3.5" aria-hidden="true" />
+                    Presentation image
+                  </span>
+                  {user?.roleKey === "admin" ? (
+                    <Link href="/admin" className="home__heroManage">
+                      <Settings2 className="size-3.5" aria-hidden="true" />
+                      Manage
+                    </Link>
+                  ) : (
+                    <span className="home__heroMediaNote">Curated by the admin team</span>
+                  )}
+                </figcaption>
+              </figure>
+            ) : (
+              <div className="home__heroMark" aria-hidden="true">
+                <span>NL</span>
+                <small>
+                  Corpus
+                  <br />
+                  Guatemala
+                </small>
+              </div>
+            )}
           </div>
         </section>
 
@@ -204,22 +338,25 @@ function HomeComponent() {
             </div>
 
             {languageId !== "all" ? (
-              <button type="button" className="nl-btn nl-btn--sm" onClick={() => selectLanguage("all")}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => selectLanguage("all")}
+              >
                 Show all languages
-              </button>
+              </Button>
             ) : null}
           </div>
 
           <ul className="home__languages">
-            {LANGUAGES.map((language) => (
+            {languages.map((language) => (
               <li key={language.id}>
                 <LanguageCard
                   language={language}
                   active={languageId === language.id}
-                  wordCount={WORDS.filter((word) => word.languageId === language.id).length}
+                  wordCount={words.filter((word) => word.languageId === language.id).length}
                   onSelect={selectLanguage}
-                  iconUrl={languageIcons[language.id] ?? null}
-                  onIconUpload={(id) => setIconTarget(id)}
                 />
               </li>
             ))}
@@ -264,13 +401,14 @@ function HomeComponent() {
                   <span>
                     <strong>{selectedIds.length}</strong> selected for export
                   </span>
-                  <button
+                  <Button
                     type="button"
-                    className="nl-btn nl-btn--sm nl-btn--ghost"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setSelectedIds([])}
                   >
                     Clear selection
-                  </button>
+                  </Button>
                 </div>
               ) : null}
 
@@ -285,7 +423,7 @@ function HomeComponent() {
               />
             </div>
 
-            <aside className="home__sidebar" aria-label="Export and media">
+            <aside className="home__sidebar" aria-label="Export">
               <DownloadMenu
                 words={visibleWords}
                 languageName={languageLabel}
@@ -293,48 +431,16 @@ function HomeComponent() {
                 baseName={activeLanguage?.id ?? "native-languages"}
               />
 
-              <button
+              <Button
                 type="button"
-                className="nl-btn nl-btn--block home__downloadSearch"
+                variant="outline"
+                className="home__downloadSearch"
                 onClick={downloadSearchResults}
                 disabled={visibleWords.length === 0}
               >
-                <span className="nl-icon nl-icon--download" aria-hidden="true" />
+                <Download className="size-4" aria-hidden="true" />
                 Download these results
-              </button>
-
-              <ImageUploader
-                variant={UPLOAD_VARIANTS.BANNER}
-                value={heroImage}
-                onChange={(dataUrl) => setHeroImage(dataUrl)}
-                label="Presentation image"
-                description="Shown at the top of this page. Drop an image or choose a file."
-              />
-
-              {iconTarget ? (
-                <ImageUploader
-                  variant={UPLOAD_VARIANTS.ICON}
-                  value={languageIcons[iconTarget] ?? null}
-                  onChange={(dataUrl) =>
-                    setLanguageIcons((current) => ({ ...current, [iconTarget]: dataUrl }))
-                  }
-                  label={`Icon for ${
-                    LANGUAGES.find((language) => language.id === iconTarget)?.name ?? "language"
-                  }`}
-                  description="Square images only, up to 1 MB."
-                  maxSizeMB={1}
-                />
-              ) : null}
-
-              {iconTarget ? (
-                <button
-                  type="button"
-                  className="nl-btn nl-btn--sm nl-btn--ghost nl-btn--block"
-                  onClick={() => setIconTarget(null)}
-                >
-                  Done with icons
-                </button>
-              ) : null}
+              </Button>
             </aside>
           </div>
         </section>
@@ -354,13 +460,20 @@ function HomeComponent() {
               </p>
             </div>
 
-            <button
-              type="button"
-              className="nl-btn nl-btn--primary"
-              onClick={() => setLoginMode(user ? "signup" : "signin")}
-            >
-              {user ? "Invite a contributor" : "Sign in to contribute"}
-            </button>
+            {user ? (
+              <Button asChild size="lg" className="h-11 px-5 text-[0.9rem]">
+                <Link href="/contribute">Go to the contribution desk</Link>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="lg"
+                className="h-11 px-5 text-[0.9rem]"
+                onClick={() => openLogin("signup")}
+              >
+                Create an account to contribute
+              </Button>
+            )}
           </div>
         </section>
       </main>
@@ -369,8 +482,9 @@ function HomeComponent() {
         <div className="nl-container home__footerInner">
           <p>Native Languages — a corpus for the languages of Guatemala.</p>
           <p className="home__footerNote">
-            Frontend demonstration. Sample entries are placeholders and are not yet verified by
-            speakers.
+            {corpusSource === "api"
+              ? "Corpus loaded from the API. Entries marked pending are awaiting community review."
+              : "Sample entries are placeholders and are not yet verified by speakers."}
           </p>
         </div>
       </footer>
@@ -378,8 +492,11 @@ function HomeComponent() {
       <LoginDialog
         open={loginMode !== null}
         mode={loginMode ?? "signin"}
-        onClose={() => setLoginMode(null)}
+        onClose={closeLogin}
         onSubmit={handleLogin}
+        submitting={authSubmitting}
+        error={authError}
+        notice={authNotice}
       />
     </div>
   );

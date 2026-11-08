@@ -4,9 +4,12 @@
   flex-direction: column;
   gap: 12px;
   padding: 20px;
-  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.02));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: border-color var(--nl-speed) ease, transform var(--nl-speed) ease,
     box-shadow var(--nl-speed) ease;
 }
@@ -16,14 +19,14 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(160deg, rgba(47, 139, 255, 0.12), transparent 55%);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.1), transparent 55%);
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--nl-speed) ease;
 }
 
 .wordCard:hover {
-  border-color: var(--nl-border-strong);
+  border-color: var(--nl-border-hover);
   transform: translateY(-2px);
   box-shadow: var(--nl-shadow);
 }
@@ -94,13 +97,13 @@
 }
 
 .wordCard__select input:checked + .wordCard__checkbox {
-  background: var(--nl-blue);
-  border-color: var(--nl-blue);
-  color: var(--nl-white);
+  background: var(--nl-white);
+  border-color: var(--nl-white);
+  color: #080808;
 }
 
 .wordCard__select input:focus-visible + .wordCard__checkbox {
-  outline: 2px solid var(--nl-blue-bright);
+  outline: 2px solid var(--nl-white);
   outline-offset: 2px;
 }
 
@@ -140,22 +143,23 @@
   font-size: 1.32rem;
   font-weight: 500;
   line-height: 1.25;
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
   overflow-wrap: anywhere;
 }
 
 .wordCard__arrow {
+  display: inline-flex;
+  align-items: center;
   color: var(--nl-faint);
-  font-size: 1rem;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .wordCard__mark {
   padding: 0 2px;
-  background: var(--nl-blue-soft);
-  border-bottom: 1px solid var(--nl-blue);
+  background: color-mix(in srgb, var(--ds-white) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ds-white) 22%, transparent);
   border-radius: 3px;
-  color: var(--nl-white);
+  color: var(--ds-gray-50);
 }
 
 /* ------------------------------- metadata -------------------------------- */
@@ -211,7 +215,6 @@
 
 .wordCard__action.is-copied:hover {
   background: var(--nl-success-soft);
-  border-color: var(--nl-success);
   color: var(--nl-success);
 }
 

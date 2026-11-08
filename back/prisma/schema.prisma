@@ -1,0 +1,177 @@
+// Native Languages corpus — Prisma schema.
+//
+// SQLite is used through Prisma so the data layer can move to PostgreSQL,
+// MySQL or another supported provider by changing the datasource block and
+// running a migration. No provider-specific SQL is used in the application.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Corpus
+// ---------------------------------------------------------------------------
+
+model Language {
+  id              String    @id
+  name            String
+  autonym         String
+  region          String
+  speakers        Int
+  words           Int       @default(0)
+  status          String    @default("active")
+  accent          String
+
+  // Review workflow. Public reads only expose APPROVED rows that are not
+  // soft-deleted. A reviewer's approval is a recommendation; an admin's
+  // approval is the final decision.
+  reviewState     String    @default("pending")
+  verified        Boolean   @default(false)
+  rejectionReason String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+
+  // A reviewer may ask an admin to remove content. The request does not hide
+  // the entry; only the admin's logical delete does.
+  removalRequestedAt     DateTime?
+  removalRequestedById   String?
+  removalRequestReason   String?
+
+  // Authorship and logical deletion.
+  createdById     String?
+  deletedAt       DateTime?
+  deletedById     String?
+  deletionReason  String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  entries         Word[]
+
+  @@index([reviewState])
+  @@index([deletedAt])
+  @@index([removalRequestedAt])
+  @@index([name])
+}
+
+model Word {
+  id              String    @id @default(cuid())
+  languageId      String
+  language        Language  @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  word            String
+  translation     String
+  pronunciation   String?
+  partOfSpeech    String?
+  usage           String?
+
+  // Same workflow as Language.
+  verified        Boolean   @default(false)
+  reviewState     String    @default("pending")
+  rejectionReason String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+
+  // Reviewer-raised removal request; visible to reviewers/admins only.
+  removalRequestedAt     DateTime?
+  removalRequestedById   String?
+  removalRequestReason   String?
+
+  createdById     String?
+  deletedAt       DateTime?
+  deletedById     String?
+  deletionReason  String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([languageId])
+  @@index([word])
+  @@index([reviewState])
+  @@index([deletedAt])
+  @@index([removalRequestedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Accounts
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  username     String
+  // Nullable so future OAuth providers (Google, etc.) can create accounts
+  // without a password. Local accounts always have a bcrypt hash.
+  passwordHash String?
+  provider     String    @default("local")
+  providerId   String?
+  role         String    @default("contributor")
+
+  // Account lifecycle: pending -> active | rejected, active <-> deactivated.
+  // Only active accounts can sign in, and the API re-checks this on every
+  // authenticated request so deactivation takes effect immediately.
+  status          String    @default("pending")
+  statusReason    String?
+  statusChangedAt DateTime?
+  approvedAt      DateTime?
+  approvedById    String?
+
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([provider, providerId])
+  @@index([role])
+  @@index([provider])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Site media
+// ---------------------------------------------------------------------------
+
+// Singleton rows for presentation media managed from the admin desk. The file
+// itself lives in the server upload directory; `url` is the public API path
+// stored in the database so the frontend never has to guess a filename.
+model SiteImage {
+  id          String   @id
+  url         String
+  fileName    String
+  mimeType    String
+  size        Int
+  alt         String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Audit trail
+// ---------------------------------------------------------------------------
+
+// Every submit, review, approval, rejection, removal and restore is written
+// here. The snapshot keeps the record as it was at that moment, so logically
+// removed content is never actually lost.
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String
+  entityId   String
+  action     String
+  fromState  String?
+  toState    String?
+  actorId    String?
+  actorEmail String?
+  actorRole  String?
+  reason     String?
+  snapshot   String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
+}

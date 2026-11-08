@@ -1,62 +1,18 @@
-/* =============================================================================
-   Native Languages — global theme
-   Pure CSS only: design tokens, reset, and a few shared primitives.
-   Every component ships its own co-located stylesheet for the rest.
-   ============================================================================= */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "./design-tokens.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Native Languages — global styles.
+  SRP: globals owns reset, shared primitives, and icon masks.
+  Design values come from design-tokens.css (single source of truth).
+*/
 
 :root {
-  color-scheme: dark;
-
-  /* Surfaces */
-  --nl-bg: #000000;
-  --nl-surface: #08090d;
-  --nl-surface-2: #0d1017;
-  --nl-surface-3: #131826;
-  --nl-border: #1b2434;
-  --nl-border-strong: #2a3a55;
-
-  /* Text */
-  --nl-white: #ffffff;
-  --nl-text: #dce6f5;
-  --nl-muted: #93a5c0;
-  --nl-faint: #6b7d99;
-
-  /* Brand */
-  --nl-blue: #2f8bff;
-  --nl-blue-bright: #74b9ff;
-  --nl-blue-soft: rgba(47, 139, 255, 0.14);
-  --nl-blue-line: rgba(47, 139, 255, 0.4);
-  --nl-blue-glow: rgba(47, 139, 255, 0.35);
-
-  /* Feedback */
-  --nl-danger: #ff6b6b;
-  --nl-danger-soft: rgba(255, 107, 107, 0.12);
-  --nl-success: #46e0a0;
-  --nl-success-soft: rgba(70, 224, 160, 0.12);
-
-  /* Shape */
-  --nl-radius-sm: 8px;
-  --nl-radius: 14px;
-  --nl-radius-lg: 20px;
-  --nl-radius-pill: 999px;
-
-  --nl-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-  --nl-shadow-blue: 0 0 0 1px var(--nl-blue-line), 0 16px 40px rgba(0, 0, 0, 0.65);
-
-  /* Type — three families, one job each (see app/layout.tsx) */
-  --nl-font-display: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --nl-font: var(--font-source-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
-  --nl-font-label: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
-
-  /* Motion + rhythm */
-  --nl-speed: 160ms;
-  --nl-max: 1180px;
-
-  /* Horizontal gutter. The navbar and the page content share it so the nav
-     links stay aligned with the headings underneath them. */
-  --nl-inset: clamp(20px, 5vw, 56px);
-
-  /* Icon masks — inline SVG data URIs, so no icon library is needed. */
+  /* Icon masks — inline SVG data URIs, no icon library needed. */
   --nl-icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.6-3.6'/%3E%3C/svg%3E");
   --nl-icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
   --nl-icon-download: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12'/%3E%3Cpath d='M7.5 10.5L12 15l4.5-4.5'/%3E%3Cpath d='M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2'/%3E%3C/svg%3E");
@@ -97,7 +53,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Fixed blue ambience behind every page. */
 body::before {
   content: "";
   position: fixed;
@@ -105,8 +60,18 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(60rem 40rem at 15% -10%, rgba(47, 139, 255, 0.16), transparent 60%),
-    radial-gradient(45rem 35rem at 95% 5%, rgba(47, 139, 255, 0.09), transparent 65%);
+    radial-gradient(50rem 32rem at 12% -8%, color-mix(in srgb, var(--ds-white) 6%, transparent), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 2%, color-mix(in srgb, var(--ds-white) 3%, transparent), transparent 68%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.14;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
 }
 
 h1,
@@ -125,8 +90,9 @@ p {
 }
 
 a {
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
   text-decoration: none;
+  text-underline-offset: 0.2em;
 }
 
 img,
@@ -158,14 +124,14 @@ ol {
 }
 
 :focus-visible {
-  outline: 2px solid var(--nl-blue-bright);
+  outline: 2px solid color-mix(in srgb, var(--ds-white) 55%, transparent);
   outline-offset: 2px;
   border-radius: var(--nl-radius-sm);
 }
 
 ::selection {
-  background: var(--nl-blue);
-  color: var(--nl-white);
+  background: var(--ds-gray-50);
+  color: var(--ds-gray-950);
 }
 
 ::placeholder {
@@ -173,10 +139,9 @@ ol {
   opacity: 1;
 }
 
-/* Custom scrollbar so the black theme stays consistent. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--nl-border-strong) transparent;
+  scrollbar-color: color-mix(in srgb, var(--ds-white) 18%, transparent) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -189,13 +154,13 @@ ol {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--nl-border-strong);
+  background: color-mix(in srgb, var(--ds-white) 16%, transparent);
   border: 2px solid var(--nl-bg);
   border-radius: var(--nl-radius-pill);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--nl-blue-line);
+  background: color-mix(in srgb, var(--ds-white) 28%, transparent);
 }
 
 /* ------------------------------ primitives ------------------------------- */
@@ -215,8 +180,6 @@ ol {
   padding: 0 var(--nl-inset);
 }
 
-/* Page content. It carries its own width and gutter — previously it had
-   neither, so every section sat flush against the viewport edge. */
 .nl-main {
   flex: 1;
   width: 100%;
@@ -243,11 +206,11 @@ ol {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  color: var(--nl-blue-bright);
+  color: var(--nl-muted);
   font-family: var(--nl-font-label);
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -255,7 +218,7 @@ ol {
   content: "";
   width: 18px;
   height: 1px;
-  background: var(--nl-blue-line);
+  background: var(--nl-border-hover);
 }
 
 .nl-title {
@@ -270,10 +233,12 @@ ol {
 }
 
 .nl-panel {
-  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
-  border: 1px solid var(--nl-border);
+  background: var(--nl-glass-bg);
+  border: 1px solid var(--nl-glass-border);
   border-radius: var(--nl-radius-lg);
   box-shadow: var(--nl-shadow);
+  backdrop-filter: blur(var(--nl-glass-blur));
+  -webkit-backdrop-filter: blur(var(--nl-glass-blur));
 }
 
 .nl-chip {
@@ -281,10 +246,10 @@ ol {
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  background: var(--nl-blue-soft);
-  border: 1px solid var(--nl-blue-line);
+  background: var(--nl-surface-2);
+  border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-pill);
-  color: var(--nl-blue-bright);
+  color: var(--nl-text);
   font-family: var(--nl-font-label);
   font-size: 0.7rem;
   font-weight: 600;
@@ -294,37 +259,46 @@ ol {
 }
 
 .nl-chip--muted {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--nl-border-strong);
+  background: var(--nl-surface);
+  border-color: var(--nl-border-subtle);
   color: var(--nl-muted);
 }
 
-/* Buttons */
+/* Buttons — normal borders, clear hover contrast */
 .nl-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 10px 18px;
-  border: 1px solid var(--nl-border-strong);
+  border: 1px solid var(--nl-btn-border);
   border-radius: var(--nl-radius-sm);
-  background: transparent;
-  color: var(--nl-white);
+  background: var(--nl-btn-bg);
+  color: var(--nl-btn-text);
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
-  transition: background var(--nl-speed) ease, border-color var(--nl-speed) ease,
-    color var(--nl-speed) ease, transform var(--nl-speed) ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    background var(--nl-speed) ease,
+    border-color var(--nl-speed) ease,
+    color var(--nl-speed) ease,
+    box-shadow var(--nl-speed) ease;
 }
 
 .nl-btn:hover:not(:disabled) {
-  border-color: var(--nl-blue-line);
-  background: var(--nl-blue-soft);
-  color: var(--nl-white);
+  background: var(--nl-btn-bg-hover);
+  border-color: var(--nl-btn-border-hover);
+  color: var(--ds-white);
 }
 
 .nl-btn:active:not(:disabled) {
-  transform: translateY(1px);
+  background: var(--nl-btn-bg-active);
+}
+
+.nl-btn:focus-visible {
+  box-shadow: var(--nl-ring);
 }
 
 .nl-btn:disabled {
@@ -333,29 +307,38 @@ ol {
 }
 
 .nl-btn--primary {
-  background: var(--nl-blue);
-  border-color: var(--nl-blue);
-  color: var(--nl-white);
-  box-shadow: 0 8px 24px rgba(47, 139, 255, 0.28);
+  background: var(--nl-btn-primary-bg);
+  border-color: var(--nl-btn-primary-border);
+  color: var(--nl-btn-primary-text);
+  box-shadow: none;
 }
 
 .nl-btn--primary:hover:not(:disabled) {
-  background: #1f7bf0;
-  border-color: #1f7bf0;
+  background: var(--nl-btn-primary-bg-hover);
+  border-color: var(--nl-btn-primary-bg-hover);
+  color: var(--ds-gray-950);
+}
+
+.nl-btn--primary:active:not(:disabled) {
+  background: var(--nl-btn-primary-bg-active);
 }
 
 .nl-btn--ghost {
   border-color: transparent;
+  background: transparent;
   color: var(--nl-muted);
+  backdrop-filter: none;
 }
 
 .nl-btn--ghost:hover:not(:disabled) {
-  color: var(--nl-white);
+  background: var(--nl-surface-2);
+  border-color: transparent;
+  color: var(--ds-gray-50);
 }
 
 .nl-btn--danger:hover:not(:disabled) {
   background: var(--nl-danger-soft);
-  border-color: var(--nl-danger);
+  border-color: color-mix(in srgb, var(--nl-danger) 35%, transparent);
   color: var(--nl-danger);
 }
 
@@ -383,55 +366,16 @@ ol {
   mask-size: contain;
 }
 
-.nl-icon--search {
-  -webkit-mask-image: var(--nl-icon-search);
-  mask-image: var(--nl-icon-search);
-}
-
-.nl-icon--close {
-  -webkit-mask-image: var(--nl-icon-close);
-  mask-image: var(--nl-icon-close);
-}
-
-.nl-icon--download {
-  -webkit-mask-image: var(--nl-icon-download);
-  mask-image: var(--nl-icon-download);
-}
-
-.nl-icon--copy {
-  -webkit-mask-image: var(--nl-icon-copy);
-  mask-image: var(--nl-icon-copy);
-}
-
-.nl-icon--check {
-  -webkit-mask-image: var(--nl-icon-check);
-  mask-image: var(--nl-icon-check);
-}
-
-.nl-icon--user {
-  -webkit-mask-image: var(--nl-icon-user);
-  mask-image: var(--nl-icon-user);
-}
-
-.nl-icon--menu {
-  -webkit-mask-image: var(--nl-icon-menu);
-  mask-image: var(--nl-icon-menu);
-}
-
-.nl-icon--image {
-  -webkit-mask-image: var(--nl-icon-image);
-  mask-image: var(--nl-icon-image);
-}
-
-.nl-icon--trash {
-  -webkit-mask-image: var(--nl-icon-trash);
-  mask-image: var(--nl-icon-trash);
-}
-
-.nl-icon--upload {
-  -webkit-mask-image: var(--nl-icon-upload);
-  mask-image: var(--nl-icon-upload);
-}
+.nl-icon--search { -webkit-mask-image: var(--nl-icon-search); mask-image: var(--nl-icon-search); }
+.nl-icon--close { -webkit-mask-image: var(--nl-icon-close); mask-image: var(--nl-icon-close); }
+.nl-icon--download { -webkit-mask-image: var(--nl-icon-download); mask-image: var(--nl-icon-download); }
+.nl-icon--copy { -webkit-mask-image: var(--nl-icon-copy); mask-image: var(--nl-icon-copy); }
+.nl-icon--check { -webkit-mask-image: var(--nl-icon-check); mask-image: var(--nl-icon-check); }
+.nl-icon--user { -webkit-mask-image: var(--nl-icon-user); mask-image: var(--nl-icon-user); }
+.nl-icon--menu { -webkit-mask-image: var(--nl-icon-menu); mask-image: var(--nl-icon-menu); }
+.nl-icon--image { -webkit-mask-image: var(--nl-icon-image); mask-image: var(--nl-icon-image); }
+.nl-icon--trash { -webkit-mask-image: var(--nl-icon-trash); mask-image: var(--nl-icon-trash); }
+.nl-icon--upload { -webkit-mask-image: var(--nl-icon-upload); mask-image: var(--nl-icon-upload); }
 
 .nl-visually-hidden {
   position: absolute;
@@ -447,10 +391,7 @@ ol {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
+  html { scroll-behavior: auto; }
   *,
   *::before,
   *::after {
@@ -461,10 +402,65 @@ ol {
 }
 
 @media (max-width: 640px) {
-  /* Horizontal padding is handled by --nl-inset, which already clamps down to
-     its 20px minimum. Overriding it here is what let the content run flush to
-     the edge on small screens. */
-  .nl-section {
-    margin-top: 48px;
+  .nl-section { margin-top: 48px; }
+}
+
+@theme inline {
+  --font-heading: var(--font-dm-sans);
+  --font-sans: var(--font-inter);
+  --font-body: var(--font-source-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
   }
 }

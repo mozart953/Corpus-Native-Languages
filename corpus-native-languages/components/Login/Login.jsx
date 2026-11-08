@@ -1,6 +1,11 @@
 "use client";
 
 import { useId, useState } from "react";
+import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import "./Login.css";
 
 /**
@@ -17,6 +22,8 @@ function LoginComponent({
   onCancel = null,
   submitting = false,
   error = null,
+  notice = null,
+  compact = false,
 }) {
   const isSignUp = mode === "signup";
   const formId = useId();
@@ -64,11 +71,15 @@ function LoginComponent({
   const message = localError ?? error;
 
   return (
-    <div className="login">
+    <div className={`login ${compact ? "login--compact" : ""}`}>
       <div className="login__aside">
-        <span className="nl-eyebrow">{isSignUp ? "Join the corpus" : "Welcome back"}</span>
+        <span className="nl-eyebrow">
+          {isSignUp ? "Join the corpus" : "Welcome back"}
+        </span>
         <h2 className="login__asideTitle">
-          {isSignUp ? "Help a language outlive its last speaker." : "Sign in to keep contributing."}
+          {isSignUp
+            ? "Help a language outlive its last speaker."
+            : "Sign in to keep contributing."}
         </h2>
         <p className="login__asideText">
           {isSignUp
@@ -76,91 +87,119 @@ function LoginComponent({
             : "Your drafts, reviews and the languages you follow are waiting for you."}
         </p>
         <ul className="login__perks">
-          <li>Record words with audio and usage notes</li>
+          <li>Record words with pronunciation and usage notes</li>
           <li>Review entries submitted by your community</li>
           <li>Download any language as JSON or TXT</li>
         </ul>
       </div>
 
       <form className="login__form" onSubmit={handleSubmit} noValidate>
-        <h3 className="login__title">
-          {isSignUp ? "Create your account" : "Sign in"}
-        </h3>
-        <p className="login__subtitle">
-          {isSignUp
-            ? "It takes a minute, and the corpus needs people like you."
-            : "Enter your details to continue."}
-        </p>
+        <div className="login__heading">
+          <span className="login__mark" aria-hidden="true">
+            NL
+          </span>
+          <div>
+            <h3 className="login__title">
+              {isSignUp ? "Create your account" : "Sign in"}
+            </h3>
+            <p className="login__subtitle">
+              {isSignUp
+                ? "It takes a minute, and the corpus needs people like you."
+                : "Enter your details to continue."}
+            </p>
+          </div>
+        </div>
 
         {isSignUp ? (
           <div className="login__field">
-            <label className="login__label" htmlFor={`${formId}-name`}>
+            <Label className="login__label" htmlFor={`${formId}-name`}>
               Name
-            </label>
-            <input
-              id={`${formId}-name`}
-              name="name"
-              type="text"
-              autoComplete="name"
-              className="login__input"
-              placeholder="How should we credit you?"
-              value={values.name}
-              onChange={update("name")}
-            />
+            </Label>
+            <div className="login__inputWrap">
+              <UserRound className="login__inputIcon" aria-hidden="true" />
+              <Input
+                id={`${formId}-name`}
+                name="name"
+                type="text"
+                autoComplete="name"
+                className="login__input"
+                placeholder="How should we credit you?"
+                value={values.name}
+                onChange={update("name")}
+              />
+            </div>
           </div>
         ) : null}
 
         <div className="login__field">
-          <label className="login__label" htmlFor={`${formId}-email`}>
+          <Label className="login__label" htmlFor={`${formId}-email`}>
             Email
-          </label>
-          <input
-            id={`${formId}-email`}
-            name="email"
-            type="email"
-            autoComplete="email"
-            className="login__input"
-            placeholder="you@community.org"
-            value={values.email}
-            onChange={update("email")}
-          />
+          </Label>
+          <div className="login__inputWrap">
+            <Mail className="login__inputIcon" aria-hidden="true" />
+            <Input
+              id={`${formId}-email`}
+              name="email"
+              type="email"
+              autoComplete="email"
+              className="login__input"
+              placeholder="you@community.org"
+              value={values.email}
+              onChange={update("email")}
+            />
+          </div>
         </div>
 
         <div className="login__field">
-          <label className="login__label" htmlFor={`${formId}-password`}>
+          <Label className="login__label" htmlFor={`${formId}-password`}>
             Password
-          </label>
-          <div className="login__passwordWrap">
-            <input
+          </Label>
+          <div className="login__inputWrap">
+            <LockKeyhole className="login__inputIcon" aria-hidden="true" />
+            <Input
               id={`${formId}-password`}
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete={isSignUp ? "new-password" : "current-password"}
-              className="login__input"
+              className="login__input login__input--password"
               placeholder="At least 8 characters"
               value={values.password}
               onChange={update("password")}
             />
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className="login__reveal"
               onClick={() => setShowPassword((shown) => !shown)}
               aria-pressed={showPassword}
             >
+              {showPassword ? (
+                <EyeOff className="size-3.5" aria-hidden="true" />
+              ) : (
+                <Eye className="size-3.5" aria-hidden="true" />
+              )}
               {showPassword ? "Hide" : "Show"}
-            </button>
+            </Button>
           </div>
         </div>
 
         {message ? (
-          <p className="login__error" id={errorId} role="alert">
-            {message}
-          </p>
+          <Alert variant="destructive" id={errorId} role="alert">
+            <AlertDescription>{message}</AlertDescription>
+          </Alert>
         ) : null}
 
-        <button
+        {notice ? (
+          <Alert className="border-white/10 bg-white/[0.05] text-white">
+            <AlertDescription>{notice}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <Button
           type="submit"
-          className="nl-btn nl-btn--primary nl-btn--block login__submit"
+          size="lg"
+          className="login__submit h-11 w-full text-[0.92rem]"
           disabled={submitting}
           aria-describedby={message ? errorId : undefined}
         >
@@ -169,16 +208,22 @@ function LoginComponent({
             : isSignUp
               ? "Create account"
               : "Sign in"}
-        </button>
+        </Button>
 
         {onCancel ? (
-          <button type="button" className="nl-btn nl-btn--ghost nl-btn--block" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-10 w-full"
+            onClick={onCancel}
+          >
             Cancel
-          </button>
+          </Button>
         ) : null}
 
         <p className="login__fineprint">
-          This is a demonstration form. Nothing is sent anywhere and no account is created.
+          Passwords are hashed with bcrypt on the server. Sessions last 30
+          minutes and refresh while you are active.
         </p>
       </form>
     </div>

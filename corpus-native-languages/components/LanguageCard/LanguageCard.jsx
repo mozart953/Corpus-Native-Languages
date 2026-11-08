@@ -19,14 +19,7 @@ function formatCount(value) {
  * project, and a visitor should understand the stakes of what they are
  * looking at before they start browsing words.
  */
-function LanguageCard({
-  language,
-  active = false,
-  wordCount = null,
-  onSelect = null,
-  iconUrl = null,
-  onIconUpload = null,
-}) {
+function LanguageCard({ language, active = false, wordCount = null, onSelect = null }) {
   const entries = wordCount ?? language.words;
   const status = STATUS_LABELS[language.status] ?? language.status;
   const isCritical = language.status === "critically-endangered";
@@ -36,7 +29,6 @@ function LanguageCard({
       className={`languageCard ${active ? "is-active" : ""} ${
         isCritical ? "is-critical" : ""
       }`}
-      style={{ "--card-accent": language.accent }}
     >
       <button
         type="button"
@@ -45,12 +37,7 @@ function LanguageCard({
         aria-pressed={active}
       >
         <span className="languageCard__icon" aria-hidden="true">
-          {iconUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- user-supplied data URL
-            <img src={iconUrl} alt="" className="languageCard__iconImage" />
-          ) : (
-            language.autonym.charAt(0)
-          )}
+          {language.autonym.charAt(0)}
         </span>
 
         <span className="languageCard__identity">
@@ -86,16 +73,6 @@ function LanguageCard({
         >
           {status}
         </span>
-
-        {onIconUpload ? (
-          <button
-            type="button"
-            className="languageCard__iconAction"
-            onClick={() => onIconUpload(language.id)}
-          >
-            {iconUrl ? "Change icon" : "Add icon"}
-          </button>
-        ) : null}
       </div>
     </article>
   );

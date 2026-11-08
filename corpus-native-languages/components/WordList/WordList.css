@@ -20,10 +20,13 @@
   align-items: center;
   gap: 12px;
   padding: 64px 32px;
-  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
-  border: 1px dashed var(--nl-border-strong);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  border: 1px dashed var(--nl-border-hover);
   border-radius: var(--nl-radius-lg);
   text-align: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .wordList__emptyMark {
@@ -31,10 +34,10 @@
   place-items: center;
   width: 62px;
   height: 62px;
-  background: var(--nl-blue-soft);
-  border: 1px solid var(--nl-blue-line);
+  background: var(--nl-surface-3);
+  border: 1px solid var(--nl-border);
   border-radius: 50%;
-  color: var(--nl-blue-bright);
+  color: var(--ds-gray-50);
   font-family: var(--nl-font-display);
   font-size: 1.6rem;
 }
@@ -49,7 +52,7 @@
   font-size: 0.9rem;
 }
 
-.wordList__empty .nl-btn {
+.wordList__empty > button {
   margin-top: 6px;
 }
 
@@ -70,7 +73,7 @@
 }
 
 .wordList__pageInfo strong {
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
   font-weight: 700;
 }
 

@@ -1,0 +1,10 @@
+.review__comment {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.review__comment .roleTextarea {
+  min-height: 64px;
+}

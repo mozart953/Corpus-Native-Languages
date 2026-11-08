@@ -1,30 +1,51 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import LoginComponent from "@/components/Login/Login.jsx";
 import NavbarComponent from "@/components/Navbar/Navbar.jsx";
+import { Button } from "@/components/ui/button";
+import { useCorpusAuth } from "@/lib/useCorpusAuth";
 import "./page.css";
 
-/**
- * Standalone sign-in page.
- *
- * The home page opens the same form in a dialog, so this route is the
- * deep-link version: useful for sharing a link, and it keeps the navbar
- * consistent with the rest of the site.
- *
- * As on the home page, nothing is sent anywhere — submitting only flips the
- * local state so the signed-in navbar can be seen.
- */
-function LoginPage() {
-  const [user, setUser] = useState(null);
+function rolePath(user) {
+  if (!user) return "/";
+  if (user.roleKey === "admin") return "/admin";
+  if (user.roleKey === "reviewer") return "/review";
+  return "/contribute";
+}
+
+function LoginPageContent() {
+  const params = useSearchParams();
+  const requestedMode = params.get("mode");
+  const [mode, setMode] = useState(
+    requestedMode === "signup" ? "signup" : "signin",
+  );
+
+  const { user, submitting, error, notice, setError, login, logout } =
+    useCorpusAuth();
+
+  const handleLogin = async ({ name, email, password }) => {
+    await login({ mode, name, email, password });
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setMode("signin");
+  };
+
+  const handleNavLogin = (nextMode) => {
+    setError(null);
+    setMode(nextMode === "signup" ? "signup" : "signin");
+  };
 
   return (
     <div className="nl-page">
       <NavbarComponent
         user={user}
-        onLogin={() => setUser(null)}
-        onLogout={() => setUser(null)}
+        onLogin={handleNavLogin}
+        onLogout={handleLogout}
         activePath="/login"
       />
 
@@ -34,29 +55,79 @@ function LoginPage() {
             ← Back to the corpus
           </Link>
 
-          <LoginComponent
-            onSubmit={({ name, email }) => {
-              const fallback = email.split("@")[0].replace(/[._-]+/g, " ");
-              const display = name || fallback;
-
-              setUser({
-                name: display,
-                initials: display.slice(0, 2),
-                role: "Contributor",
-              });
-            }}
-          />
-
           {user ? (
-            <p className="page__loginNote" role="status">
-              Signed in as <strong>{user.name}</strong> on this device only. The navbar above is
-              now showing the signed-in state — try signing out.
-            </p>
-          ) : null}
+            <section className="page__signedIn">
+              <span className="nl-eyebrow">Session active</span>
+              <h1 className="page__signedInTitle">Signed in as {user.name}</h1>
+              <p className="page__loginNote" role="status">
+                Your role is <strong>{user.role}</strong>. The session refreshes
+                while you are active and expires after 30 minutes of inactivity.
+              </p>
+              <div className="page__signedInActions">
+                <Button asChild>
+                  <Link href={rolePath(user)}>
+                    Open my {user.role.toLowerCase()} desk
+                  </Link>
+                </Button>
+                <Button type="button" variant="outline" onClick={handleLogout}>
+                  Sign out
+                </Button>
+              </div>
+            </section>
+          ) : (
+            <>
+              <LoginComponent
+                mode={mode}
+                onSubmit={handleLogin}
+                submitting={submitting}
+                error={error}
+                notice={notice}
+              />
+
+              <div className="page__modeRow">
+                <span>
+                  {mode === "signin"
+                    ? "New here? Accounts are reviewed before they can contribute."
+                    : "Already approved? Use your email and password to sign in."}
+                </span>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="page__modeToggle h-auto p-0"
+                  onClick={() => {
+                    setError(null);
+                    setMode(mode === "signin" ? "signup" : "signin");
+                  }}
+                >
+                  {mode === "signin" ? "Create an account" : "Back to sign in"}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </main>
     </div>
   );
 }
 
-export default LoginPage;
+function LoginPageFallback() {
+  return (
+    <div className="nl-page">
+      <main className="nl-main">
+        <div className="page__loginWrap">
+          <div className="page__signedIn">
+            <p className="page__loginNote">Loading the sign-in form…</p>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
