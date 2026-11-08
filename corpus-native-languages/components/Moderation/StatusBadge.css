@@ -1,0 +1,51 @@
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid var(--nl-border-strong);
+  border-radius: var(--nl-radius-pill);
+  font-family: var(--nl-font-label);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.statusBadge::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.statusBadge--neutral {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--nl-muted);
+}
+
+.statusBadge--success {
+  background: var(--nl-success-soft);
+  border-color: rgba(70, 224, 160, 0.4);
+  color: var(--nl-success);
+}
+
+.statusBadge--info {
+  background: var(--nl-blue-soft);
+  border-color: var(--nl-blue-line);
+  color: var(--nl-blue-bright);
+}
+
+.statusBadge--warning {
+  background: rgba(245, 182, 66, 0.1);
+  border-color: rgba(245, 182, 66, 0.35);
+  color: #ffd98a;
+}
+
+.statusBadge--danger {
+  background: var(--nl-danger-soft);
+  border-color: rgba(255, 107, 107, 0.4);
+  color: var(--nl-danger);
+}

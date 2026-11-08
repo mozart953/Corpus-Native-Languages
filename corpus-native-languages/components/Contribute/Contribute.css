@@ -1,0 +1,14 @@
+/* The contribution desk reuses the shared role-page primitives. These rules
+   only cover the two small entry-type behaviours. */
+
+.contribute__typeNote {
+  margin-top: 8px;
+  color: var(--nl-faint);
+  font-size: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .roleActions .nl-btn {
+    flex: 1 1 150px;
+  }
+}

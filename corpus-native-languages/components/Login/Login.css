@@ -154,6 +154,17 @@
   font-size: 0.85rem;
 }
 
+.login__notice {
+  padding: 10px 14px;
+  background: var(--nl-success-soft);
+  border: 1px solid var(--nl-success);
+  border-left-width: 3px;
+  border-radius: var(--nl-radius-sm);
+  color: #c8ffe8;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 .login__submit {
   margin-top: 4px;
   padding: 12px 18px;

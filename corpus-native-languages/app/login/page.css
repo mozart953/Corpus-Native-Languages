@@ -35,3 +35,47 @@
 .page__loginNote strong {
   color: var(--nl-white);
 }
+
+.page__modeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--nl-muted);
+  font-size: 0.86rem;
+}
+
+.page__modeToggle {
+  color: var(--nl-blue-bright);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.page__modeToggle:hover {
+  color: var(--nl-white);
+}
+
+.page__signedIn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 32px;
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius-lg);
+  box-shadow: var(--nl-shadow);
+}
+
+.page__signedInTitle {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.page__signedInActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}

@@ -17,6 +17,7 @@ function LoginComponent({
   onCancel = null,
   submitting = false,
   error = null,
+  notice = null,
 }) {
   const isSignUp = mode === "signup";
   const formId = useId();
@@ -158,6 +159,12 @@ function LoginComponent({
           </p>
         ) : null}
 
+        {notice ? (
+          <p className="login__notice" role="status">
+            {notice}
+          </p>
+        ) : null}
+
         <button
           type="submit"
           className="nl-btn nl-btn--primary nl-btn--block login__submit"
@@ -178,7 +185,8 @@ function LoginComponent({
         ) : null}
 
         <p className="login__fineprint">
-          This is a demonstration form. Nothing is sent anywhere and no account is created.
+          Passwords are hashed with bcrypt on the server. Sessions last 30 minutes
+          and refresh while you are active.
         </p>
       </form>
     </div>
