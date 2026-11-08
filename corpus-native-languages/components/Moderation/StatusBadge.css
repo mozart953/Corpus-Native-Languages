@@ -2,12 +2,13 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  height: auto;
   padding: 3px 9px;
   border: 1px solid var(--nl-border-strong);
   border-radius: var(--nl-radius-pill);
   font-family: var(--nl-font-label);
   font-size: 0.66rem;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -28,24 +29,24 @@
 
 .statusBadge--success {
   background: var(--nl-success-soft);
-  border-color: rgba(70, 224, 160, 0.4);
+  border-color: rgba(88, 224, 164, 0.4);
   color: var(--nl-success);
 }
 
 .statusBadge--info {
-  background: var(--nl-blue-soft);
-  border-color: var(--nl-blue-line);
-  color: var(--nl-blue-bright);
+  background: var(--nl-info-soft);
+  border-color: rgba(124, 184, 255, 0.4);
+  color: var(--nl-info);
 }
 
 .statusBadge--warning {
-  background: rgba(245, 182, 66, 0.1);
-  border-color: rgba(245, 182, 66, 0.35);
-  color: #ffd98a;
+  background: var(--nl-warning-soft);
+  border-color: rgba(243, 201, 105, 0.4);
+  color: var(--nl-warning);
 }
 
 .statusBadge--danger {
   background: var(--nl-danger-soft);
-  border-color: rgba(255, 107, 107, 0.4);
+  border-color: rgba(255, 112, 112, 0.4);
   color: var(--nl-danger);
 }

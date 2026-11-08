@@ -49,6 +49,13 @@ export function errorHandler(error, _req, res, _next) {
     statusCode = 413;
     code = "BODY_TOO_LARGE";
     message = "The request body is too large.";
+  } else if (error.name === "MulterError") {
+    statusCode = error.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+    code = error.code === "LIMIT_FILE_SIZE" ? "IMAGE_TOO_LARGE" : "UPLOAD_ERROR";
+    message =
+      error.code === "LIMIT_FILE_SIZE"
+        ? "That image is larger than the 5 MB limit."
+        : "The image upload could not be accepted.";
   } else if (error.message === "Not allowed by CORS") {
     statusCode = 403;
     code = "CORS_FORBIDDEN";

@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Copy, Download, MoveRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { splitHighlight } from "../../utils/text";
 import { copyToClipboard } from "../../utils/exporters";
 import "./WordCard.css";
@@ -67,12 +70,23 @@ function WordCard({
           </label>
         ) : null}
 
-        {showLanguage ? <span className="nl-chip wordCard__lang">{word.languageName}</span> : null}
+        {showLanguage ? (
+          <Badge variant="outline" className="wordCard__lang border-white/20 bg-white/[0.04] text-white/80">
+            {word.languageName}
+          </Badge>
+        ) : null}
 
         {word.verified === false ? (
-          <span className="nl-chip nl-chip--muted wordCard__pending">Pending review</span>
+          <Badge variant="outline" className="wordCard__pending border-dashed border-white/20 text-white/55">
+            Pending review
+          </Badge>
         ) : (
-          <span className="nl-chip wordCard__verified">Verified</span>
+          <Badge
+            variant="outline"
+            className="border-[rgba(88,224,164,0.4)] bg-[var(--nl-success-soft)] text-[var(--nl-success)]"
+          >
+            Verified
+          </Badge>
         )}
       </header>
 
@@ -82,7 +96,7 @@ function WordCard({
         </p>
 
         <span className="wordCard__arrow" aria-hidden="true">
-          →
+          <MoveRight className="size-4" />
         </span>
 
         <p className="wordCard__translation">
@@ -97,7 +111,11 @@ function WordCard({
         </p>
       ) : null}
 
-      {word.partOfSpeech ? <span className="nl-chip nl-chip--muted">{word.partOfSpeech}</span> : null}
+      {word.partOfSpeech ? (
+        <Badge variant="outline" className="w-fit border-white/15 bg-white/[0.03] text-white/55">
+          {word.partOfSpeech}
+        </Badge>
+      ) : null}
 
       {word.usage ? (
         <p className="wordCard__usage">
@@ -107,28 +125,33 @@ function WordCard({
       ) : null}
 
       <footer className="wordCard__foot">
-        <button
+        <Button
           type="button"
-          className={`nl-btn nl-btn--sm nl-btn--ghost wordCard__action ${copied ? "is-copied" : ""}`}
+          variant="ghost"
+          size="sm"
+          className={`wordCard__action ${copied ? "is-copied" : ""}`}
           onClick={copyPair}
           aria-live="polite"
         >
-          <span
-            className={`nl-icon ${copied ? "nl-icon--check" : "nl-icon--copy"}`}
-            aria-hidden="true"
-          />
+          {copied ? (
+            <Check className="size-3.5" aria-hidden="true" />
+          ) : (
+            <Copy className="size-3.5" aria-hidden="true" />
+          )}
           {copyLabel}
-        </button>
+        </Button>
 
         {onDownloadSingle ? (
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm nl-btn--ghost wordCard__action"
+            variant="ghost"
+            size="sm"
+            className="wordCard__action"
             onClick={() => onDownloadSingle(word)}
           >
-            <span className="nl-icon nl-icon--download" aria-hidden="true" />
+            <Download className="size-3.5" aria-hidden="true" />
             Download
-          </button>
+          </Button>
         ) : null}
       </footer>
     </article>

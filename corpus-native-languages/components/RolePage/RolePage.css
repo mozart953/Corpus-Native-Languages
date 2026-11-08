@@ -26,10 +26,12 @@
   gap: 14px;
   max-width: 620px;
   padding: 36px;
-  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-lg);
   box-shadow: var(--nl-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .roleGate__icon {
@@ -37,8 +39,8 @@
   place-items: center;
   width: 46px;
   height: 46px;
-  background: linear-gradient(140deg, var(--nl-blue), #0b2a55);
-  border: 1px solid var(--nl-blue-line);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--nl-border-strong);
   border-radius: 12px;
   color: var(--nl-white);
   font-family: var(--nl-font-label);
@@ -66,17 +68,21 @@
 
 .roleTabs {
   display: flex;
+  height: auto;
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 24px;
   padding: 5px;
-  background: var(--nl-surface-2);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
   width: fit-content;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .roleTab {
+  height: auto;
   padding: 8px 16px;
   border: 1px solid transparent;
   border-radius: var(--nl-radius-sm);
@@ -92,13 +98,14 @@
 
 .roleTab:hover {
   color: var(--nl-white);
-  background: var(--nl-blue-soft);
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .roleTab.is-active {
-  background: var(--nl-blue);
-  border-color: var(--nl-blue);
-  color: var(--nl-white);
+  background: var(--nl-white);
+  border-color: var(--nl-white);
+  color: #090909;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
 }
 
 .roleTab__count {
@@ -108,9 +115,13 @@
   height: 20px;
   margin-left: 7px;
   padding: 0 5px;
-  background: rgba(0, 0, 0, 0.28);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: var(--nl-radius-pill);
   font-size: 0.68rem;
+}
+
+.roleTab.is-active .roleTab__count {
+  background: rgba(0, 0, 0, 0.14);
 }
 
 /* ------------------------------ layout ---------------------------------- */
@@ -132,9 +143,12 @@
 
 .rolePanel {
   padding: 22px;
-  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.018));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .roleSection {
@@ -170,14 +184,16 @@
 
 .roleCard {
   padding: 18px 20px;
-  background: var(--nl-surface-2);
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: border-color var(--nl-speed) ease, background var(--nl-speed) ease;
 }
 
 .roleCard:hover {
-  background: var(--nl-surface-3);
+  background: rgba(255, 255, 255, 0.055);
   border-color: var(--nl-border-strong);
 }
 
@@ -299,12 +315,13 @@
 .roleTextarea {
   width: 100%;
   padding: 10px 12px;
-  background: var(--nl-bg);
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-sm);
   color: var(--nl-white);
   font-size: 0.92rem;
-  transition: border-color var(--nl-speed) ease, box-shadow var(--nl-speed) ease;
+  transition: border-color var(--nl-speed) ease, box-shadow var(--nl-speed) ease,
+    background var(--nl-speed) ease;
 }
 
 .roleInput:hover,
@@ -317,8 +334,9 @@
 .roleSelect:focus,
 .roleTextarea:focus {
   outline: none;
-  border-color: var(--nl-blue);
-  box-shadow: 0 0 0 3px var(--nl-blue-soft);
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.09);
 }
 
 .roleTextarea {
@@ -348,8 +366,8 @@
 }
 
 .roleNotice--info {
-  background: var(--nl-blue-soft);
-  border-color: var(--nl-blue-line);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--nl-border-strong);
   color: var(--nl-text);
 }
 
@@ -362,7 +380,7 @@
 
 .roleEmpty {
   padding: 34px 24px;
-  background: var(--nl-surface-2);
+  background: rgba(255, 255, 255, 0.025);
   border: 1px dashed var(--nl-border-strong);
   border-radius: var(--nl-radius);
   color: var(--nl-muted);

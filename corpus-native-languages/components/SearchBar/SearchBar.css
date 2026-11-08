@@ -15,20 +15,23 @@
 .searchBar__icon {
   position: absolute;
   left: 18px;
-  font-size: 1.05rem;
+  z-index: 1;
+  width: 17px;
+  height: 17px;
   color: var(--nl-faint);
   pointer-events: none;
   transition: color var(--nl-speed) ease;
 }
 
 .searchBar__field:focus-within .searchBar__icon {
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
 }
 
 .searchBar__input {
   width: 100%;
-  padding: 16px 58px 16px 52px;
-  background: var(--nl-surface-2);
+  height: 58px;
+  padding: 0 58px 0 52px;
+  background: rgba(255, 255, 255, 0.035);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
   color: var(--nl-white);
@@ -55,30 +58,27 @@
 
 .searchBar__input:focus {
   outline: none;
-  background: var(--nl-surface-3);
-  border-color: var(--nl-blue);
-  box-shadow: 0 0 0 4px var(--nl-blue-soft), 0 18px 44px rgba(0, 0, 0, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.42);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.09), 0 18px 44px rgba(0, 0, 0, 0.55);
 }
 
 .searchBar__clear {
   position: absolute;
-  right: 14px;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--nl-border-strong);
   border-radius: 50%;
   color: var(--nl-muted);
-  font-size: 0.8rem;
   transition: color var(--nl-speed) ease, border-color var(--nl-speed) ease,
     background var(--nl-speed) ease;
 }
 
 .searchBar__clear:hover {
-  background: var(--nl-danger-soft);
-  border-color: var(--nl-danger);
-  color: var(--nl-danger);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--nl-border-strong);
+  color: var(--nl-white);
 }
 
 .searchBar__kbd {
@@ -111,12 +111,15 @@
 .searchBar__scopes {
   display: inline-flex;
   padding: 3px;
-  background: var(--nl-surface-2);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-pill);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .searchBar__scope {
+  height: auto;
   padding: 6px 14px;
   border-radius: var(--nl-radius-pill);
   color: var(--nl-muted);
@@ -130,9 +133,9 @@
 }
 
 .searchBar__scope.is-active {
-  background: var(--nl-blue);
-  color: var(--nl-white);
-  box-shadow: 0 4px 14px rgba(47, 139, 255, 0.35);
+  background: var(--nl-white);
+  color: #080808;
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.15);
 }
 
 .searchBar__count {
@@ -142,7 +145,7 @@
 }
 
 .searchBar__count strong {
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
   font-weight: 700;
 }
 

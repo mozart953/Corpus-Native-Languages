@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LogOut, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import "./Navbar.css";
 
 /**
@@ -85,16 +87,18 @@ function NavbarComponent({
           </span>
         </Link>
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           className="navbar__toggle"
           aria-expanded={menuOpen}
           aria-controls="navbar-menu"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={() => setMenuOpen((open) => !open)}
         >
-          <span className={`nl-icon nl-icon--menu ${menuOpen ? "is-open" : ""}`} aria-hidden="true" />
-        </button>
+          {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </Button>
 
         <div id="navbar-menu" className={`navbar__panel ${menuOpen ? "is-open" : ""}`}>
           <nav className="navbar__links" aria-label="Main">
@@ -132,48 +136,54 @@ function NavbarComponent({
                     aria-label="Confirm sign out"
                   >
                     <span>Sign out?</span>
-                    <button
+                    <Button
                       type="button"
                       ref={confirmRef}
-                      className="nl-btn nl-btn--sm nl-btn--danger"
+                      variant="destructive"
+                      size="sm"
                       onClick={handleSignOut}
                     >
                       Yes, sign out
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="nl-btn nl-btn--sm nl-btn--ghost"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setConfirmingSignOut(false)}
                     >
                       Stay
-                    </button>
+                    </Button>
                   </div>
                 ) : (
-                  <button
+                  <Button
                     type="button"
-                    className="nl-btn nl-btn--sm navbar__signOut"
+                    variant="outline"
+                    size="sm"
+                    className="navbar__signOut"
                     onClick={handleSignOut}
                   >
+                    <LogOut className="size-3.5" aria-hidden="true" />
                     Sign out
-                  </button>
+                  </Button>
                 )}
               </>
             ) : (
               <>
-                <button
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm"
+                  variant="outline"
+                  size="sm"
                   onClick={() => onLogin?.("signin")}
                 >
                   Sign in
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm nl-btn--primary"
+                  size="sm"
                   onClick={() => onLogin?.("signup")}
                 >
                   Create account
-                </button>
+                </Button>
               </>
             )}
           </div>

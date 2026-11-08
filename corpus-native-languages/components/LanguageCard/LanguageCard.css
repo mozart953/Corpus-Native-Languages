@@ -1,17 +1,20 @@
 .languageCard {
-  --card-accent: var(--nl-blue);
+  --card-accent: var(--nl-white);
 
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 18px;
-  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.02));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
   overflow: hidden;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: border-color var(--nl-speed) ease, transform var(--nl-speed) ease,
-    box-shadow var(--nl-speed) ease;
+    box-shadow var(--nl-speed) ease, background var(--nl-speed) ease;
 }
 
 /* A thin accent rail keyed to the language colour. */
@@ -61,13 +64,13 @@
   width: 46px;
   height: 46px;
   flex: none;
-  background: color-mix(in srgb, var(--card-accent) 16%, transparent);
-  border: 1px solid color-mix(in srgb, var(--card-accent) 45%, transparent);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 12px;
-  color: var(--card-accent);
+  color: var(--nl-white);
   font-family: var(--nl-font-display);
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   overflow: hidden;
 }
@@ -171,28 +174,15 @@
 }
 
 .languageCard__status.is-warn {
-  background: rgba(255, 176, 32, 0.12);
-  border-color: #ffb020;
-  color: #ffc65c;
+  background: var(--nl-warning-soft);
+  border-color: rgba(243, 201, 105, 0.4);
+  color: var(--nl-warning);
 }
 
 .languageCard__status.is-critical {
   background: var(--nl-danger-soft);
-  border-color: var(--nl-danger);
+  border-color: rgba(255, 112, 112, 0.4);
   color: var(--nl-danger);
-}
-
-.languageCard__iconAction {
-  color: var(--nl-faint);
-  font-size: 0.74rem;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: color var(--nl-speed) ease;
-}
-
-.languageCard__iconAction:hover {
-  color: var(--nl-blue-bright);
 }
 
 @media (max-width: 420px) {

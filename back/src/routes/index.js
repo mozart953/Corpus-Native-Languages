@@ -6,6 +6,7 @@ import { reviewRoutes } from "./review.routes.js";
 import { userRoutes } from "./user.routes.js";
 import { auditRoutes } from "./audit.routes.js";
 import { archiveRoutes } from "./archive.routes.js";
+import { siteImageRoutes } from "./site-image.routes.js";
 
 export const routes = Router();
 
@@ -23,6 +24,7 @@ routes.get("/", (_req, res) => {
       users: "/api/v1/users",
       audit: "/api/v1/audit",
       archive: "/api/v1/archive",
+      siteImages: "/api/v1/site-images",
     },
   });
 });
@@ -34,3 +36,4 @@ routes.use("/reviews", reviewRoutes);
 routes.use("/users", userRoutes);
 routes.use("/audit", auditRoutes);
 routes.use("/archive", archiveRoutes);
+routes.use("/site-images", siteImageRoutes);

@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 const LANGUAGE_STATUSES = [
   { value: "active", label: "Active" },
@@ -28,7 +32,7 @@ function initialValues(kind, entry, languages) {
     region: entry?.region ?? "",
     speakers: entry?.speakers ?? 0,
     status: entry?.status ?? "active",
-    accent: entry?.accent ?? "#2f8bff",
+    accent: entry?.accent ?? "#ffffff",
   };
 }
 
@@ -114,7 +118,7 @@ export default function EntryForm({
           region: values.region.trim(),
           speakers: Number(values.speakers),
           status: values.status,
-          accent: values.accent || "#2f8bff",
+          accent: values.accent || "#ffffff",
         };
         if (!isEdit && values.id.trim()) body.id = values.id.trim();
       }
@@ -143,9 +147,9 @@ export default function EntryForm({
               : `Add a ${isWord ? "word" : "language"}`}
           </h2>
         </div>
-        <button type="button" className="nl-btn nl-btn--sm nl-btn--ghost" onClick={onCancel}>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           Close
-        </button>
+        </Button>
       </div>
 
       {error ? (
@@ -157,9 +161,9 @@ export default function EntryForm({
       {isWord ? (
         <div className="roleFormGrid">
           <div className="roleField roleField--wide">
-            <label className="roleLabel" htmlFor="entry-language">
+            <Label className="roleLabel" htmlFor="entry-language">
               Language
-            </label>
+            </Label>
             <select
               id="entry-language"
               className="roleSelect"
@@ -182,10 +186,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-word">
+            <Label className="roleLabel" htmlFor="entry-word">
               Word
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-word"
               className="roleInput"
               value={values.word}
@@ -195,10 +199,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-translation">
+            <Label className="roleLabel" htmlFor="entry-translation">
               Translation
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-translation"
               className="roleInput"
               value={values.translation}
@@ -208,10 +212,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-pronunciation">
+            <Label className="roleLabel" htmlFor="entry-pronunciation">
               Pronunciation
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-pronunciation"
               className="roleInput"
               value={values.pronunciation}
@@ -221,10 +225,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-pos">
+            <Label className="roleLabel" htmlFor="entry-pos">
               Part of speech
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-pos"
               className="roleInput"
               value={values.partOfSpeech}
@@ -234,10 +238,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField roleField--wide">
-            <label className="roleLabel" htmlFor="entry-usage">
+            <Label className="roleLabel" htmlFor="entry-usage">
               Usage or example
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               id="entry-usage"
               className="roleTextarea"
               value={values.usage}
@@ -250,10 +254,10 @@ export default function EntryForm({
         <div className="roleFormGrid">
           {!isEdit ? (
             <div className="roleField">
-              <label className="roleLabel" htmlFor="entry-id">
+              <Label className="roleLabel" htmlFor="entry-id">
                 URL id (optional)
-              </label>
-              <input
+              </Label>
+              <Input
                 id="entry-id"
                 className="roleInput"
                 value={values.id}
@@ -264,10 +268,10 @@ export default function EntryForm({
           ) : null}
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-name">
+            <Label className="roleLabel" htmlFor="entry-name">
               Name
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-name"
               className="roleInput"
               value={values.name}
@@ -277,10 +281,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-autonym">
+            <Label className="roleLabel" htmlFor="entry-autonym">
               Name in the language
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-autonym"
               className="roleInput"
               value={values.autonym}
@@ -290,10 +294,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-region">
+            <Label className="roleLabel" htmlFor="entry-region">
               Region
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-region"
               className="roleInput"
               value={values.region}
@@ -303,10 +307,10 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-speakers">
+            <Label className="roleLabel" htmlFor="entry-speakers">
               Speakers
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-speakers"
               type="number"
               min="0"
@@ -317,9 +321,9 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-status">
+            <Label className="roleLabel" htmlFor="entry-status">
               Vitality
-            </label>
+            </Label>
             <select
               id="entry-status"
               className="roleSelect"
@@ -335,27 +339,27 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-accent">
+            <Label className="roleLabel" htmlFor="entry-accent">
               Accent colour
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-accent"
               className="roleInput"
               value={values.accent}
               onChange={update("accent")}
-              placeholder="#2f8bff"
+              placeholder="#ffffff"
             />
           </div>
         </div>
       )}
 
       <div className="roleActions">
-        <button type="submit" className="nl-btn nl-btn--primary" disabled={submitting}>
+        <Button type="submit" disabled={submitting}>
           {submitting ? "Saving…" : saveLabel}
-        </button>
-        <button type="button" className="nl-btn" onClick={onCancel} disabled={submitting}>
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
           Cancel
-        </button>
+        </Button>
         <span className="roleHint">{roleHint}</span>
       </div>
     </form>

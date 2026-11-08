@@ -2,17 +2,25 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  BookOpen,
+  Download,
+  Image as ImageIcon,
+  Languages,
+  PenLine,
+  Settings2,
+} from "lucide-react";
 import { LANGUAGES, WORDS } from "../../data/corpus";
 import { SEARCH_FIELDS, filterWords } from "../../utils/search";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, apiAssetUrl } from "../../lib/api";
 import { useCorpusAuth } from "../../lib/useCorpusAuth";
+import { Button } from "@/components/ui/button";
 import NavbarComponent from "../Navbar/Navbar.jsx";
 import SearchBar from "../SearchBar/SearchBar.jsx";
 import LanguageCard from "../LanguageCard/LanguageCard.jsx";
 import WordList from "../WordList/WordList.jsx";
 import DownloadMenu from "../DownloadMenu/DownloadMenu.jsx";
 import LoginDialog from "../Login/LoginDialog.jsx";
-import ImageUploader, { UPLOAD_VARIANTS } from "../ImageUploader/ImageUploader.jsx";
 import { wordsToJson, wordsToPairsTxt, buildFilename, downloadTextFile } from "../../utils/exporters";
 import "./Home.css";
 
@@ -60,10 +68,24 @@ function HomeComponent() {
   const [languageId, setLanguageId] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
   const [loginMode, setLoginMode] = useState(null);
-  const [heroImage, setHeroImage] = useState(null);
-  const [languageIcons, setLanguageIcons] = useState({});
-  const [iconTarget, setIconTarget] = useState(null);
+  const [siteImage, setSiteImage] = useState(null);
   const [pendingNotice, setPendingNotice] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiFetch("/site-images/home-image")
+      .then((response) => {
+        if (!cancelled && response?.data?.url) setSiteImage(response.data);
+      })
+      .catch(() => {
+        // The corpus still works when presentation media is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -139,9 +161,7 @@ function HomeComponent() {
   const handleLogout = async () => {
     await logout();
     setSelectedIds([]);
-    setPendingNotice("Signed out. Any images you loaded are cleared from the page.");
-    setHeroImage(null);
-    setLanguageIcons({});
+    setPendingNotice("Signed out.");
   };
 
   const openLogin = (mode) => {
@@ -184,22 +204,8 @@ function HomeComponent() {
       <main className="nl-main">
         {/* ------------------------------ hero ------------------------------ */}
         <section className="home__hero" aria-labelledby="home-title">
-          {heroImage ? (
-            <div className="home__heroImage">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
-              <img src={heroImage} alt="" />
-              <button
-                type="button"
-                className="home__heroClear"
-                onClick={() => setHeroImage(null)}
-              >
-                <span className="nl-icon nl-icon--close" aria-hidden="true" />
-                Remove image
-              </button>
-            </div>
-          ) : null}
-
-          <div className="home__heroContent">
+          <div className="home__heroPanel">
+            <div className="home__heroContent">
             <span className="nl-eyebrow">Native languages of Guatemala</span>
             <h1 id="home-title" className="home__title">
               Every word is a voice
@@ -213,24 +219,46 @@ function HomeComponent() {
             </p>
 
             <div className="home__heroActions">
-              <a href="#words" className="nl-btn nl-btn--primary">
-                Browse the words
-              </a>
-              <a href="#languages" className="nl-btn">
-                Choose a language
-              </a>
+              <Button asChild size="lg" className="h-11 px-5 text-[0.9rem] font-semibold">
+                <a href="#words">
+                  <BookOpen className="size-4" aria-hidden="true" />
+                  Browse the words
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-11 px-5 text-[0.9rem] font-semibold"
+              >
+                <a href="#languages">
+                  <Languages className="size-4" aria-hidden="true" />
+                  Choose a language
+                </a>
+              </Button>
               {!user ? (
-                <button
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--ghost"
+                  variant="ghost"
+                  size="lg"
+                  className="h-11 px-4 text-[0.9rem]"
                   onClick={() => openLogin("signin")}
                 >
+                  <PenLine className="size-4" aria-hidden="true" />
                   Contribute
-                </button>
+                </Button>
               ) : (
-                <Link href="/contribute" className="nl-btn nl-btn--ghost">
-                  Open my contribution desk
-                </Link>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="lg"
+                  className="h-11 px-4 text-[0.9rem]"
+                >
+                  <Link href="/contribute">
+                    <PenLine className="size-4" aria-hidden="true" />
+                    Open my contribution desk
+                  </Link>
+                </Button>
               )}
             </div>
 
@@ -252,6 +280,40 @@ function HomeComponent() {
                 <dd className="home__statsWarn">{stats.endangered}</dd>
               </div>
             </dl>
+            </div>
+
+            {siteImage ? (
+              <figure className="home__heroMedia">
+                {/* eslint-disable-next-line @next/next/no-img-element -- API-hosted asset */}
+                <img
+                  src={apiAssetUrl(siteImage.url)}
+                  alt={siteImage.alt || "Presentation image for the Native Languages corpus"}
+                />
+                <figcaption>
+                  <span className="home__heroMediaLabel">
+                    <ImageIcon className="size-3.5" aria-hidden="true" />
+                    Presentation image
+                  </span>
+                  {user?.roleKey === "admin" ? (
+                    <Link href="/admin" className="home__heroManage">
+                      <Settings2 className="size-3.5" aria-hidden="true" />
+                      Manage
+                    </Link>
+                  ) : (
+                    <span className="home__heroMediaNote">Curated by the admin team</span>
+                  )}
+                </figcaption>
+              </figure>
+            ) : (
+              <div className="home__heroMark" aria-hidden="true">
+                <span>NL</span>
+                <small>
+                  Corpus
+                  <br />
+                  Guatemala
+                </small>
+              </div>
+            )}
           </div>
         </section>
 
@@ -276,9 +338,14 @@ function HomeComponent() {
             </div>
 
             {languageId !== "all" ? (
-              <button type="button" className="nl-btn nl-btn--sm" onClick={() => selectLanguage("all")}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => selectLanguage("all")}
+              >
                 Show all languages
-              </button>
+              </Button>
             ) : null}
           </div>
 
@@ -290,8 +357,6 @@ function HomeComponent() {
                   active={languageId === language.id}
                   wordCount={words.filter((word) => word.languageId === language.id).length}
                   onSelect={selectLanguage}
-                  iconUrl={languageIcons[language.id] ?? null}
-                  onIconUpload={(id) => setIconTarget(id)}
                 />
               </li>
             ))}
@@ -336,13 +401,14 @@ function HomeComponent() {
                   <span>
                     <strong>{selectedIds.length}</strong> selected for export
                   </span>
-                  <button
+                  <Button
                     type="button"
-                    className="nl-btn nl-btn--sm nl-btn--ghost"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setSelectedIds([])}
                   >
                     Clear selection
-                  </button>
+                  </Button>
                 </div>
               ) : null}
 
@@ -357,7 +423,7 @@ function HomeComponent() {
               />
             </div>
 
-            <aside className="home__sidebar" aria-label="Export and media">
+            <aside className="home__sidebar" aria-label="Export">
               <DownloadMenu
                 words={visibleWords}
                 languageName={languageLabel}
@@ -365,48 +431,16 @@ function HomeComponent() {
                 baseName={activeLanguage?.id ?? "native-languages"}
               />
 
-              <button
+              <Button
                 type="button"
-                className="nl-btn nl-btn--block home__downloadSearch"
+                variant="outline"
+                className="home__downloadSearch"
                 onClick={downloadSearchResults}
                 disabled={visibleWords.length === 0}
               >
-                <span className="nl-icon nl-icon--download" aria-hidden="true" />
+                <Download className="size-4" aria-hidden="true" />
                 Download these results
-              </button>
-
-              <ImageUploader
-                variant={UPLOAD_VARIANTS.BANNER}
-                value={heroImage}
-                onChange={(dataUrl) => setHeroImage(dataUrl)}
-                label="Presentation image"
-                description="Shown at the top of this page. Drop an image or choose a file."
-              />
-
-              {iconTarget ? (
-                <ImageUploader
-                  variant={UPLOAD_VARIANTS.ICON}
-                  value={languageIcons[iconTarget] ?? null}
-                  onChange={(dataUrl) =>
-                    setLanguageIcons((current) => ({ ...current, [iconTarget]: dataUrl }))
-                  }
-                  label={`Icon for ${
-                    languages.find((language) => language.id === iconTarget)?.name ?? "language"
-                  }`}
-                  description="Square images only, up to 1 MB."
-                  maxSizeMB={1}
-                />
-              ) : null}
-
-              {iconTarget ? (
-                <button
-                  type="button"
-                  className="nl-btn nl-btn--sm nl-btn--ghost nl-btn--block"
-                  onClick={() => setIconTarget(null)}
-                >
-                  Done with icons
-                </button>
-              ) : null}
+              </Button>
             </aside>
           </div>
         </section>
@@ -427,17 +461,18 @@ function HomeComponent() {
             </div>
 
             {user ? (
-              <Link href="/contribute" className="nl-btn nl-btn--primary">
-                Go to the contribution desk
-              </Link>
+              <Button asChild size="lg" className="h-11 px-5 text-[0.9rem]">
+                <Link href="/contribute">Go to the contribution desk</Link>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
-                className="nl-btn nl-btn--primary"
+                size="lg"
+                className="h-11 px-5 text-[0.9rem]"
                 onClick={() => openLogin("signup")}
               >
                 Create an account to contribute
-              </button>
+              </Button>
             )}
           </div>
         </section>

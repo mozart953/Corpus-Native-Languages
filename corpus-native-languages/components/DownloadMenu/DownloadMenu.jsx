@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Copy, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   buildFilename,
   copyToClipboard,
@@ -93,51 +96,52 @@ function DownloadMenu({
         </div>
 
         {useSelection ? (
-          <span className="nl-chip downloadMenu__scope">
+          <Badge variant="outline" className="downloadMenu__scope border-white/25 bg-white/[0.06] text-white">
             {selectedWords.length} selected
-          </span>
+          </Badge>
         ) : (
-          <span className="nl-chip nl-chip--muted downloadMenu__scope">
+          <Badge variant="outline" className="downloadMenu__scope border-white/15 bg-white/[0.03] text-white/55">
             {words.length} in view
-          </span>
+          </Badge>
         )}
       </div>
 
       <div className="downloadMenu__formats" role="group" aria-label="Export format">
         {Object.values(FORMATS).map((id) => (
-          <button
+          <Button
             key={id}
             type="button"
+            variant="outline"
             className={`downloadMenu__format ${format === id ? "is-active" : ""}`}
             onClick={() => setFormat(id)}
             aria-pressed={format === id}
           >
             <span className="downloadMenu__formatName">{FORMAT_META[id].label}</span>
             <span className="downloadMenu__formatHint">{FORMAT_META[id].hint}</span>
-          </button>
+          </Button>
         ))}
       </div>
 
       <div className="downloadMenu__actions">
-        <button
+        <Button
           type="button"
-          className="nl-btn nl-btn--primary downloadMenu__download"
+          className="downloadMenu__download"
           onClick={handleDownload}
           disabled={isEmpty}
         >
-          <span className="nl-icon nl-icon--download" aria-hidden="true" />
+          <Download className="size-4" aria-hidden="true" />
           Download {FORMAT_META[format].label}
-        </button>
+        </Button>
 
-        <button
+        <Button
           type="button"
-          className="nl-btn"
+          variant="outline"
           onClick={handleCopy}
           disabled={isEmpty}
         >
-          <span className="nl-icon nl-icon--copy" aria-hidden="true" />
+          <Copy className="size-4" aria-hidden="true" />
           Copy
-        </button>
+        </Button>
       </div>
 
       <p className="downloadMenu__note">

@@ -5,6 +5,7 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import LoginComponent from "@/components/Login/Login.jsx";
 import NavbarComponent from "@/components/Navbar/Navbar.jsx";
+import { Button } from "@/components/ui/button";
 import { useCorpusAuth } from "@/lib/useCorpusAuth";
 import "./page.css";
 
@@ -63,12 +64,14 @@ function LoginPageContent() {
                 while you are active and expires after 30 minutes of inactivity.
               </p>
               <div className="page__signedInActions">
-                <Link href={rolePath(user)} className="nl-btn nl-btn--primary">
-                  Open my {user.role.toLowerCase()} desk
-                </Link>
-                <button type="button" className="nl-btn" onClick={handleLogout}>
+                <Button asChild>
+                  <Link href={rolePath(user)}>
+                    Open my {user.role.toLowerCase()} desk
+                  </Link>
+                </Button>
+                <Button type="button" variant="outline" onClick={handleLogout}>
                   Sign out
-                </button>
+                </Button>
               </div>
             </section>
           ) : (
@@ -87,16 +90,17 @@ function LoginPageContent() {
                     ? "New here? Accounts are reviewed before they can contribute."
                     : "Already approved? Use your email and password to sign in."}
                 </span>
-                <button
+                <Button
                   type="button"
-                  className="page__modeToggle"
+                  variant="link"
+                  className="page__modeToggle h-auto p-0"
                   onClick={() => {
                     setError(null);
                     setMode(mode === "signin" ? "signup" : "signin");
                   }}
                 >
                   {mode === "signin" ? "Create an account" : "Back to sign in"}
-                </button>
+                </Button>
               </div>
             </>
           )}

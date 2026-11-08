@@ -5,3 +5,4 @@
 /prisma/dev.db-journal
 /prisma/dev.db-wal
 /prisma/dev.db-shm
+/uploads/

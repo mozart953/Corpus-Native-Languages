@@ -8,6 +8,7 @@ import { routes } from "./routes/index.js";
 import { globalLimiter } from "./middlewares/rate-limit.js";
 import { errorHandler, notFound } from "./middlewares/error-handler.js";
 import { asyncHandler } from "./utils/async-handler.js";
+import { uploadDir, uploadUrlPrefix } from "./config/uploads.js";
 
 export const app = express();
 
@@ -44,6 +45,19 @@ app.use(
 
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
+
+// Presentation images are non-sensitive public assets, so serve them before
+// the general API limiter. Helmet still adds nosniff and the other headers.
+app.use(
+  `/api/v1${uploadUrlPrefix}`,
+  express.static(uploadDir, {
+    maxAge: "30d",
+    immutable: true,
+    index: false,
+    dotfiles: "ignore",
+  }),
+);
+
 app.use(globalLimiter);
 
 const healthCheck = asyncHandler(async (_req, res) => {

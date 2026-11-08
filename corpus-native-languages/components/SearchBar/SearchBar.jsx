@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SEARCH_FIELDS } from "../../utils/search";
 import "./SearchBar.css";
 
@@ -62,8 +65,8 @@ function SearchBar({
   return (
     <div className="searchBar">
       <div className="searchBar__field">
-        <span className="nl-icon nl-icon--search searchBar__icon" aria-hidden="true" />
-        <input
+        <Search className="searchBar__icon" aria-hidden="true" />
+        <Input
           ref={inputRef}
           type="search"
           className="searchBar__input"
@@ -79,8 +82,10 @@ function SearchBar({
         />
 
         {value ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="searchBar__clear"
             onClick={() => {
               onChange?.("");
@@ -88,8 +93,8 @@ function SearchBar({
             }}
             aria-label="Clear search"
           >
-            <span className="nl-icon nl-icon--close" aria-hidden="true" />
-          </button>
+            <X className="size-4" aria-hidden="true" />
+          </Button>
         ) : (
           <kbd className="searchBar__kbd" aria-hidden="true">
             /
@@ -104,16 +109,18 @@ function SearchBar({
           aria-label="Choose which fields to search"
         >
           {SCOPES.map((option) => (
-            <button
+            <Button
               key={option.id}
               type="button"
+              variant="ghost"
+              size="sm"
               className={`searchBar__scope ${scope === option.id ? "is-active" : ""}`}
               onClick={() => onScopeChange?.(option.id)}
               aria-pressed={scope === option.id}
               title={option.hint}
             >
               {option.label}
-            </button>
+            </Button>
           ))}
         </div>
 

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import StatusBadge from "../Moderation/StatusBadge.jsx";
 import EntryForm from "../Contribute/EntryForm.jsx";
 import "./Review.css";
@@ -67,7 +69,7 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
         <label className="roleLabel" htmlFor={`comment-${key}`}>
           Reviewer note (optional for approval, useful for a rejection)
         </label>
-        <textarea
+        <Textarea
           id={`comment-${key}`}
           className="roleTextarea"
           value={comment}
@@ -77,30 +79,33 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
       </div>
 
       <div className="roleActions">
-        <button
+        <Button
           type="button"
-          className="nl-btn nl-btn--sm nl-btn--primary"
+          size="sm"
           disabled={busy}
           onClick={() => onReview(kind, entry, "approve")}
         >
           {busy ? "Saving…" : approveLabel}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="nl-btn nl-btn--sm nl-btn--danger"
+          variant="outline"
+          size="sm"
           disabled={busy}
           onClick={() => onReview(kind, entry, "reject")}
+          className="border-white/20 bg-transparent text-white hover:bg-white/10"
         >
           Reject
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="nl-btn nl-btn--sm"
+          variant="ghost"
+          size="sm"
           disabled={busy}
           onClick={() => onEdit(kind, entry)}
         >
           Edit entry
-        </button>
+        </Button>
         {!isAdmin ? (
           <span className="roleHint">
             Your approval is a recommendation; an admin still makes the final call.
@@ -135,35 +140,39 @@ function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
       <div className="roleActions">
         {isAdmin ? (
           <>
-            <button
+            <Button
               type="button"
-              className="nl-btn nl-btn--sm nl-btn--danger"
+              variant="outline"
+              size="sm"
               disabled={busy}
               onClick={() => onApprove(kind, entry)}
+              className="border-white/20 bg-transparent text-white hover:bg-white/10"
             >
               {busy ? "Removing…" : "Approve removal"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="nl-btn nl-btn--sm"
+              variant="ghost"
+              size="sm"
               disabled={busy}
               onClick={() => onDismiss(kind, entry)}
             >
               Reject request
-            </button>
+            </Button>
             <span className="roleHint">
               Approving is a logical delete; the entry moves to the admin archive.
             </span>
           </>
         ) : (
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm"
+            variant="ghost"
+            size="sm"
             disabled={busy}
             onClick={() => onDismiss(kind, entry)}
           >
             Withdraw request
-          </button>
+          </Button>
         )}
       </div>
     </article>

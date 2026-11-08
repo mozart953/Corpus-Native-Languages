@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "../Moderation/StatusBadge.jsx";
 import EntryForm from "../Contribute/EntryForm.jsx";
+import SiteImageManager from "./SiteImageManager.jsx";
 import "./Admin.css";
 
 const STATUS_FILTERS = [
@@ -112,23 +116,25 @@ function AccountCard({
             </select>
           </label>
           <div className="roleActions adminAccount__buttons">
-            <button
+            <Button
               type="button"
-              className="nl-btn nl-btn--sm nl-btn--primary"
+              size="sm"
               disabled={busy}
               onClick={() => onApprove(account)}
             >
               {busy ? "Saving…" : "Approve account"}
-            </button>
+            </Button>
             {account.status === "pending" ? (
-              <button
+              <Button
                 type="button"
-                className="nl-btn nl-btn--sm nl-btn--danger"
+                variant="outline"
+                size="sm"
                 disabled={busy}
                 onClick={() => onReject(account)}
+                className="border-white/20 bg-transparent text-white hover:bg-white/10"
               >
                 Reject
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
@@ -152,22 +158,25 @@ function AccountCard({
             </select>
           </label>
           <div className="roleActions adminAccount__buttons">
-            <button
+            <Button
               type="button"
-              className="nl-btn nl-btn--sm"
+              variant="outline"
+              size="sm"
               disabled={busy || isSelf || roleDraft === account.role}
               onClick={() => onSaveRole(account)}
             >
               Save role
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="nl-btn nl-btn--sm nl-btn--danger"
+              variant="outline"
+              size="sm"
               disabled={busy || isSelf}
               onClick={() => onDeactivate(account)}
+              className="border-white/20 bg-transparent text-white hover:bg-white/10"
             >
               Deactivate
-            </button>
+            </Button>
           </div>
           {isSelf ? (
             <p className="roleHint adminAccount__hint">
@@ -179,14 +188,14 @@ function AccountCard({
 
       {isDeactivated ? (
         <div className="roleActions adminAccount__buttons">
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm nl-btn--primary"
+            size="sm"
             disabled={busy}
             onClick={() => onReactivate(account)}
           >
             {busy ? "Saving…" : "Reactivate account"}
-          </button>
+          </Button>
           <span className="roleHint">
             The account returns with its previous {account.role} role; change the
             role afterwards if needed.
@@ -225,22 +234,25 @@ function ContentCard({ kind, entry, busy, onEdit, onRemove }) {
       </div>
 
       <div className="roleActions">
-        <button
+        <Button
           type="button"
-          className="nl-btn nl-btn--sm"
+          variant="outline"
+          size="sm"
           disabled={busy}
           onClick={() => onEdit(kind, entry)}
         >
           Edit entry
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="nl-btn nl-btn--sm nl-btn--danger"
+          variant="outline"
+          size="sm"
           disabled={busy}
           onClick={() => onRemove(kind, entry)}
+          className="border-white/20 bg-transparent text-white hover:bg-white/10"
         >
           Remove (logical)
-        </button>
+        </Button>
         <span className="roleHint">
           Removing hides it from the public corpus and moves it to the archive.
         </span>
@@ -282,14 +294,14 @@ function ArchivedCard({ kind, entry, busy, onRestore }) {
       ) : null}
 
       <div className="roleActions">
-        <button
+        <Button
           type="button"
-          className="nl-btn nl-btn--sm nl-btn--primary"
+          size="sm"
           disabled={busy}
           onClick={() => onRestore(kind, entry)}
         >
           {busy ? "Restoring…" : "Restore to review queue"}
-        </button>
+        </Button>
         <span className="roleHint">
           Restored content returns as pending and needs a final approval again.
         </span>
@@ -559,43 +571,42 @@ export default function AdminDashboard({ user }) {
   };
 
   return (
-    <div>
-      <div className="roleTabs" role="tablist" aria-label="Admin views">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "accounts"}
+    <Tabs value={tab} onValueChange={setTab} className="gap-0">
+      <TabsList className="roleTabs" aria-label="Admin views">
+        <TabsTrigger
+          value="accounts"
           className={`roleTab ${tab === "accounts" ? "is-active" : ""}`}
-          onClick={() => setTab("accounts")}
         >
           Accounts <span className="roleTab__count">{accounts.length}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "content"}
+        </TabsTrigger>
+        <TabsTrigger
+          value="content"
           className={`roleTab ${tab === "content" ? "is-active" : ""}`}
-          onClick={() => setTab("content")}
         >
           Content <span className="roleTab__count">{contentCount}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "archive"}
+        </TabsTrigger>
+        <TabsTrigger
+          value="presentation"
+          className={`roleTab ${tab === "presentation" ? "is-active" : ""}`}
+        >
+          Home image
+        </TabsTrigger>
+        <TabsTrigger
+          value="archive"
           className={`roleTab ${tab === "archive" ? "is-active" : ""}`}
-          onClick={() => setTab("archive")}
         >
           Archive <span className="roleTab__count">{archiveCount}</span>
-        </button>
-      </div>
+        </TabsTrigger>
+      </TabsList>
 
       <p className="roleNotice roleNotice--info">
         {tab === "accounts"
           ? "New accounts cannot sign in until you approve them. Deactivation takes effect on the next API request, even for an open session."
           : tab === "content"
             ? "Browse published content, fix entries directly, or remove something logically. Removed content moves to the archive and can be restored."
-            : "Removed words and languages stay here instead of being destroyed. The audit log keeps the full snapshot and removal date."}
+            : tab === "presentation"
+              ? "The home presentation image is public. Uploads replace the current file for every visitor; removing it falls back to the NL mark."
+              : "Removed words and languages stay here instead of being destroyed. The audit log keeps the full snapshot and removal date."}
       </p>
 
       {error ? (
@@ -617,7 +628,7 @@ export default function AdminDashboard({ user }) {
           <div className="adminFilters">
             <label className="roleField adminFilters__field">
               <span className="roleLabel">Search</span>
-              <input
+              <Input
                 className="roleInput"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -690,16 +701,16 @@ export default function AdminDashboard({ user }) {
           <div className="roleToolbar">
             <label className="roleField adminContentSearch">
               <span className="roleLabel">Search published content</span>
-              <input
+              <Input
                 className="roleInput"
                 value={contentSearch}
                 onChange={(event) => setContentSearch(event.target.value)}
                 placeholder="Word, translation, language or region"
               />
             </label>
-            <Link href="/contribute" className="nl-btn nl-btn--sm">
-              Create a new entry
-            </Link>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/contribute">Create a new entry</Link>
+            </Button>
           </div>
 
           {editor ? (
@@ -772,6 +783,8 @@ export default function AdminDashboard({ user }) {
             </>
           )}
         </>
+      ) : tab === "presentation" ? (
+        <SiteImageManager />
       ) : archiveCount === 0 ? (
         <div className="roleEmpty">
           Nothing has been removed yet. Logically deleted content will appear
@@ -820,6 +833,6 @@ export default function AdminDashboard({ user }) {
           ) : null}
         </>
       )}
-    </div>
+    </Tabs>
   );
 }

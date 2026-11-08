@@ -3,9 +3,12 @@
   flex-direction: column;
   gap: 16px;
   padding: 22px;
-  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-lg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .downloadMenu__head {
@@ -38,24 +41,27 @@
 
 .downloadMenu__format {
   display: flex;
+  height: auto;
   flex-direction: column;
+  align-items: flex-start;
   gap: 3px;
   padding: 12px 14px;
-  background: var(--nl-bg);
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-sm);
   text-align: left;
+  white-space: normal;
   transition: border-color var(--nl-speed) ease, background var(--nl-speed) ease;
 }
 
 .downloadMenu__format:hover {
   border-color: var(--nl-border-strong);
-  background: var(--nl-surface-3);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .downloadMenu__format.is-active {
-  background: var(--nl-blue-soft);
-  border-color: var(--nl-blue);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 .downloadMenu__formatName {
@@ -66,7 +72,7 @@
 }
 
 .downloadMenu__format.is-active .downloadMenu__formatName {
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
 }
 
 .downloadMenu__formatHint {
@@ -95,7 +101,7 @@
 
 .downloadMenu__message {
   min-height: 1.2em;
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
   font-family: var(--nl-font-label);
   font-size: 0.76rem;
 }
@@ -113,7 +119,7 @@
     margin-top: 0;
   }
 
-  .downloadMenu__actions .nl-btn {
+  .downloadMenu__actions > * {
     flex: 1 1 100%;
   }
 }

@@ -132,6 +132,25 @@ model User {
 }
 
 // ---------------------------------------------------------------------------
+// Site media
+// ---------------------------------------------------------------------------
+
+// Singleton rows for presentation media managed from the admin desk. The file
+// itself lives in the server upload directory; `url` is the public API path
+// stored in the database so the frontend never has to guess a filename.
+model SiteImage {
+  id          String   @id
+  url         String
+  fileName    String
+  mimeType    String
+  size        Int
+  alt         String?
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
 // Audit trail
 // ---------------------------------------------------------------------------
 

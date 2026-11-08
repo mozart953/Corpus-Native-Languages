@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import NavbarComponent from "../Navbar/Navbar.jsx";
 import { useCorpusAuth } from "../../lib/useCorpusAuth";
 import "./RolePage.css";
@@ -59,20 +60,16 @@ export default function RolePage({
           Public reading and downloads never require an account.
         </p>
         <div className="roleGate__actions">
-          <button
-            type="button"
-            className="nl-btn nl-btn--primary"
-            onClick={() => handleLogin("signin")}
-          >
+          <Button type="button" onClick={() => handleLogin("signin")}>
             Sign in
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="nl-btn"
+            variant="outline"
             onClick={() => handleLogin("signup")}
           >
             Create an account
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -88,9 +85,9 @@ export default function RolePage({
         <p className="roleGate__text">
           {user.statusReason || labels[user.status] || "Your account is not active."}
         </p>
-        <Link href="/" className="nl-btn">
-          Back to the corpus
-        </Link>
+        <Button asChild variant="outline">
+          <Link href="/">Back to the corpus</Link>
+        </Button>
       </div>
     );
   } else if (!hasRole) {
@@ -101,9 +98,9 @@ export default function RolePage({
           You are signed in as <strong>{user.role}</strong>. Ask an admin if you
           need a different role.
         </p>
-        <Link href="/contribute" className="nl-btn nl-btn--primary">
-          Go to my contributions
-        </Link>
+        <Button asChild>
+          <Link href="/contribute">Go to my contributions</Link>
+        </Button>
       </div>
     );
   }

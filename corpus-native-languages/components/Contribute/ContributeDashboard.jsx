@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "../Moderation/StatusBadge.jsx";
 import EntryForm from "./EntryForm.jsx";
 import "./Contribute.css";
@@ -91,43 +93,46 @@ function EntryCard({
 
       <div className="roleActions">
         {isTrash ? (
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm nl-btn--primary"
+            size="sm"
             onClick={() => onRestore(kind, entry)}
             disabled={busy}
           >
             {busy ? "Restoring…" : "Restore draft"}
-          </button>
+          </Button>
         ) : (
           <>
-            <button
+            <Button
               type="button"
-              className="nl-btn nl-btn--sm"
+              variant="outline"
+              size="sm"
               onClick={() => onEdit(kind, entry)}
               disabled={busy}
             >
               Edit
-            </button>
+            </Button>
 
             {isDraft ? (
               <>
-                <button
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm nl-btn--primary"
+                  size="sm"
                   onClick={() => onSubmit(kind, entry)}
                   disabled={busy}
                 >
                   {busy ? "Submitting…" : "Submit for review"}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm nl-btn--danger"
+                  variant="outline"
+                  size="sm"
                   onClick={() => onDelete(kind, entry)}
                   disabled={busy}
+                  className="border-white/20 bg-transparent text-white hover:bg-white/10"
                 >
                   Delete draft
-                </button>
+                </Button>
               </>
             ) : (
               <span className="roleHint">
@@ -278,27 +283,21 @@ export default function ContributeDashboard({ user }) {
         : "Your drafts stay private until you submit them for review.";
 
   return (
-    <div>
-      <div className="roleTabs" role="tablist" aria-label="Contribution views">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "entries"}
+    <Tabs value={tab} onValueChange={setTab} className="gap-0">
+      <TabsList className="roleTabs" aria-label="Contribution views">
+        <TabsTrigger
+          value="entries"
           className={`roleTab ${tab === "entries" ? "is-active" : ""}`}
-          onClick={() => setTab("entries")}
         >
           My contributions <span className="roleTab__count">{entryCount}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "trash"}
+        </TabsTrigger>
+        <TabsTrigger
+          value="trash"
           className={`roleTab ${tab === "trash" ? "is-active" : ""}`}
-          onClick={() => setTab("trash")}
         >
           Private trash <span className="roleTab__count">{trashCount}</span>
-        </button>
-      </div>
+        </TabsTrigger>
+      </TabsList>
 
       <p className="roleNotice roleNotice--info">{roleHint}</p>
 
@@ -315,22 +314,21 @@ export default function ContributeDashboard({ user }) {
       ) : null}
 
       {tab === "entries" ? (
-        <div className="roleToolbar">
+          <div className="roleToolbar">
           <div className="roleToolbar__group">
-            <button
+            <Button
               type="button"
-              className="nl-btn nl-btn--primary"
               onClick={() => setEditor({ kind: "word", entry: null })}
             >
               New word
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="nl-btn"
+              variant="outline"
               onClick={() => setEditor({ kind: "language", entry: null })}
             >
               New language
-            </button>
+            </Button>
           </div>
           <span className="roleHint">
             {languages.length} language{languages.length === 1 ? "" : "s"} available
@@ -470,6 +468,6 @@ export default function ContributeDashboard({ user }) {
           ) : null}
         </>
       )}
-    </div>
+    </Tabs>
   );
 }

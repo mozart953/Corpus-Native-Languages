@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import WordCard from "../WordCard/WordCard.jsx";
 import "./WordList.css";
 
@@ -61,13 +62,9 @@ function WordList({
             : "This language has no entries yet. Contributions from its speakers are what build the corpus."}
         </p>
         {isFiltered && onClearSearch ? (
-          <button
-            type="button"
-            className="nl-btn nl-btn--sm nl-btn--primary"
-            onClick={onClearSearch}
-          >
+          <Button type="button" size="sm" onClick={onClearSearch}>
             Clear search
-          </button>
+          </Button>
         ) : null}
       </div>
     );
@@ -92,27 +89,29 @@ function WordList({
 
       {pageCount > 1 ? (
         <nav className="wordList__pager" aria-label="Word pages">
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm"
+            variant="outline"
+            size="sm"
             onClick={() => setPage((current) => Math.max(1, current - 1))}
             disabled={safePage === 1}
           >
             Previous
-          </button>
+          </Button>
 
           <span className="wordList__pageInfo">
             Page <strong>{safePage}</strong> of {pageCount}
           </span>
 
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm"
+            variant="outline"
+            size="sm"
             onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
             disabled={safePage === pageCount}
           >
             Next
-          </button>
+          </Button>
         </nav>
       ) : null}
     </>

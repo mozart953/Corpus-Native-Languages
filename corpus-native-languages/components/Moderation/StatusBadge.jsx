@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import "./StatusBadge.css";
 
 const LABELS = {
@@ -26,8 +27,11 @@ const TONES = {
 /** Small, consistent state chip used by every role dashboard. */
 export default function StatusBadge({ state = "unknown", label = null }) {
   return (
-    <span className={`statusBadge statusBadge--${TONES[state] ?? "neutral"}`}>
+    <Badge
+      variant="outline"
+      className={`statusBadge statusBadge--${TONES[state] ?? "neutral"}`}
+    >
       {label ?? LABELS[state] ?? state}
-    </span>
+    </Badge>
   );
 }
