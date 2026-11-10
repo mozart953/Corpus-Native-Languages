@@ -18,13 +18,13 @@
 }
 
 .page__back:hover {
-  color: var(--nl-white);
+  color: var(--nl-primary);
 }
 
 .page__loginNote {
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--nl-border-strong);
+  background: var(--nl-info-soft);
+  border: 1px solid var(--nl-info-line);
   border-left-width: 3px;
   border-radius: var(--nl-radius-sm);
   color: var(--nl-text);
@@ -47,7 +47,7 @@
 }
 
 .page__modeToggle {
-  color: var(--nl-white);
+  color: var(--nl-primary);
   font-size: 0.86rem;
   font-weight: 600;
   text-decoration: underline;
@@ -55,7 +55,7 @@
 }
 
 .page__modeToggle:hover {
-  color: var(--nl-white);
+  color: var(--nl-primary-strong);
 }
 
 .page__signedIn {
@@ -64,13 +64,10 @@
   align-items: flex-start;
   gap: 16px;
   padding: 32px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-lg);
   box-shadow: var(--nl-shadow);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 
 .page__signedInTitle {

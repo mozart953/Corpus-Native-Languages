@@ -34,7 +34,7 @@ function LoginDialog({
         if (!nextOpen) onClose?.();
       }}
     >
-      <DialogContent className="max-h-[92vh] w-[calc(100%-2rem)] max-w-3xl overflow-y-auto border-white/10 bg-[#080808] p-0 shadow-2xl sm:max-w-3xl">
+      <DialogContent className="max-h-[92vh] w-[calc(100%-2rem)] max-w-3xl overflow-y-auto border border-border bg-popover p-0 shadow-2xl sm:max-w-3xl">
         <DialogTitle className="sr-only">
           {isSignUp ? "Create account" : "Sign in"}
         </DialogTitle>

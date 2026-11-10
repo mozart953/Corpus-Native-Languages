@@ -71,20 +71,17 @@ function WordCard({
         ) : null}
 
         {showLanguage ? (
-          <Badge variant="outline" className="wordCard__lang border-white/10 bg-white/[0.04] text-white/80">
+          <Badge variant="outline" className="wordCard__lang">
             {word.languageName}
           </Badge>
         ) : null}
 
         {word.verified === false ? (
-          <Badge variant="outline" className="wordCard__pending border-dashed border-white/10 text-white/55">
+          <Badge variant="outline" className="wordCard__pending">
             Pending review
           </Badge>
         ) : (
-          <Badge
-            variant="outline"
-            className="border-[rgba(88,224,164,0.4)] bg-[var(--nl-success-soft)] text-[var(--nl-success)]"
-          >
+          <Badge variant="outline" className="wordCard__verified">
             Verified
           </Badge>
         )}
@@ -112,7 +109,7 @@ function WordCard({
       ) : null}
 
       {word.partOfSpeech ? (
-        <Badge variant="outline" className="w-fit border-white/10 bg-white/[0.03] text-white/55">
+        <Badge variant="outline" className="w-fit">
           {word.partOfSpeech}
         </Badge>
       ) : null}

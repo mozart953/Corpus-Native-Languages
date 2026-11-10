@@ -9,16 +9,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-[var(--ds-white)] active:bg-[oklch(0.88_0_0)]",
+          "border-primary bg-primary text-primary-foreground hover:border-[var(--nl-primary-strong)] hover:bg-[var(--nl-primary-strong)] active:bg-[var(--nl-primary-strong)]",
         outline:
-          "border-border bg-transparent text-foreground hover:border-[color-mix(in_srgb,white_14%,transparent)] hover:bg-accent/70 aria-expanded:bg-accent aria-expanded:text-foreground dark:border-input dark:bg-transparent dark:hover:bg-accent/70",
+          "border-border bg-transparent text-foreground hover:border-[var(--nl-border-hover)] hover:bg-accent/70 aria-expanded:bg-accent aria-expanded:text-foreground dark:border-input dark:bg-transparent dark:hover:bg-accent/70",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground aria-expanded:bg-accent aria-expanded:text-accent-foreground",
         ghost:
           "text-muted-foreground hover:bg-accent/60 hover:text-foreground aria-expanded:bg-accent/60 aria-expanded:text-foreground",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/15 dark:hover:bg-destructive/25 dark:focus-visible:ring-destructive/40",
-        link: "text-foreground underline-offset-4 hover:text-[var(--ds-white)] hover:underline",
+        link: "text-foreground underline-offset-4 hover:text-primary hover:underline",
       },
       size: {
         default:

@@ -32,7 +32,7 @@ function initialValues(kind, entry, languages) {
     region: entry?.region ?? "",
     speakers: entry?.speakers ?? 0,
     status: entry?.status ?? "active",
-    accent: entry?.accent ?? "#ffffff",
+    accent: entry?.accent ?? "#2dd4bf",
   };
 }
 
@@ -118,7 +118,7 @@ export default function EntryForm({
           region: values.region.trim(),
           speakers: Number(values.speakers),
           status: values.status,
-          accent: values.accent || "#ffffff",
+          accent: values.accent || "#2dd4bf",
         };
         if (!isEdit && values.id.trim()) body.id = values.id.trim();
       }
@@ -347,7 +347,7 @@ export default function EntryForm({
               className="roleInput"
               value={values.accent}
               onChange={update("accent")}
-              placeholder="#ffffff"
+              placeholder="#2dd4bf"
             />
           </div>
         </div>

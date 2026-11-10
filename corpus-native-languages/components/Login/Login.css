@@ -3,13 +3,15 @@
   grid-template-columns: 1.02fr 1fr;
   overflow: hidden;
   background:
-    radial-gradient(32rem 24rem at 0% 0%, rgba(255, 255, 255, 0.08), transparent 65%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    radial-gradient(
+      32rem 24rem at 0% 0%,
+      color-mix(in srgb, var(--nl-primary) 12%, transparent),
+      transparent 65%
+    ),
+    linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-lg);
   box-shadow: var(--nl-shadow);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 /* ------------------------------- aside ---------------------------------- */
@@ -19,8 +21,12 @@
   overflow: hidden;
   padding: 48px 40px;
   background:
-    radial-gradient(28rem 22rem at 0% 0%, rgba(255, 255, 255, 0.16), transparent 64%),
-    linear-gradient(155deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.12));
+    radial-gradient(
+      28rem 22rem at 0% 0%,
+      color-mix(in srgb, var(--nl-primary) 18%, transparent),
+      transparent 64%
+    ),
+    linear-gradient(155deg, var(--nl-surface-3), var(--nl-surface));
   border-right: 1px solid var(--nl-border);
 }
 
@@ -29,7 +35,7 @@
   position: absolute;
   right: -10px;
   bottom: -34px;
-  color: rgba(255, 255, 255, 0.045);
+  color: color-mix(in srgb, var(--nl-primary) 9%, transparent);
   font-family: var(--nl-font-display);
   font-size: 11rem;
   font-weight: 800;
@@ -81,8 +87,8 @@
   top: 0.55em;
   width: 11px;
   height: 6px;
-  border-left: 2px solid var(--nl-white);
-  border-bottom: 2px solid var(--nl-white);
+  border-left: 2px solid var(--nl-primary);
+  border-bottom: 2px solid var(--nl-primary);
   transform: rotate(-45deg);
 }
 
@@ -93,7 +99,7 @@
   flex-direction: column;
   gap: 16px;
   padding: 44px 40px;
-  background: rgba(0, 0, 0, 0.14);
+  background: var(--nl-bg-elevated);
 }
 
 .login__heading {
@@ -109,10 +115,10 @@
   width: 44px;
   height: 44px;
   flex: none;
-  background: linear-gradient(145deg, var(--ds-gray-50), #c4c4c4);
-  border: 1px solid color-mix(in srgb, var(--ds-white) 18%, transparent);
+  background: linear-gradient(145deg, var(--nl-primary), var(--nl-primary-strong));
+  border: 1px solid var(--nl-primary-line);
   border-radius: 12px;
-  color: var(--ds-gray-950);
+  color: var(--nl-primary-foreground);
   font-family: var(--nl-font-label);
   font-size: 0.8rem;
   font-weight: 800;
@@ -165,7 +171,7 @@
   width: 100%;
   height: 45px;
   padding: 0 14px 0 40px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--nl-surface-2);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-sm);
   color: var(--nl-white);
@@ -179,7 +185,7 @@
 }
 
 .login__input:focus-visible {
-  background: var(--nl-surface-2);
+  background: var(--nl-surface-3);
   border-color: var(--nl-border-focus);
   box-shadow: var(--nl-ring);
   outline: none;
@@ -203,7 +209,7 @@
 }
 
 .login__reveal:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--nl-surface-hover);
   color: var(--nl-white);
 }
 
@@ -218,6 +224,12 @@
   text-align: center;
 }
 
+.login__notice {
+  background: var(--nl-info-soft);
+  border-color: var(--nl-info-line);
+  color: var(--nl-text);
+}
+
 /* -------------------------- stacked (dialog) ----------------------------- */
 
 .login--compact {
@@ -226,8 +238,6 @@
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 .login--compact .login__aside {

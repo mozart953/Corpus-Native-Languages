@@ -23,30 +23,30 @@
 }
 
 .statusBadge--neutral {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--nl-surface-3);
   color: var(--nl-muted);
 }
 
 .statusBadge--success {
   background: var(--nl-success-soft);
-  border-color: rgba(88, 224, 164, 0.4);
+  border-color: var(--nl-success-line);
   color: var(--nl-success);
 }
 
 .statusBadge--info {
   background: var(--nl-info-soft);
-  border-color: rgba(124, 184, 255, 0.4);
+  border-color: var(--nl-info-line);
   color: var(--nl-info);
 }
 
 .statusBadge--warning {
   background: var(--nl-warning-soft);
-  border-color: rgba(243, 201, 105, 0.4);
+  border-color: var(--nl-warning-line);
   color: var(--nl-warning);
 }
 
 .statusBadge--danger {
   background: var(--nl-danger-soft);
-  border-color: rgba(255, 112, 112, 0.4);
+  border-color: var(--nl-danger-line);
   color: var(--nl-danger);
 }

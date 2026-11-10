@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/ThemeToggle/ThemeToggle.jsx";
 import "./Navbar.css";
 
 /**
@@ -117,6 +118,8 @@ function NavbarComponent({
           </nav>
 
           <div className="navbar__actions">
+            <ThemeToggle />
+
             {isSignedIn ? (
               <>
                 <div className="navbar__user">

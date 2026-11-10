@@ -26,12 +26,10 @@
   gap: 14px;
   max-width: 620px;
   padding: 36px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-lg);
   box-shadow: var(--nl-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 
 .roleGate__icon {
@@ -39,10 +37,10 @@
   place-items: center;
   width: 46px;
   height: 46px;
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--nl-border-strong);
+  background: var(--nl-primary-soft);
+  border: 1px solid var(--nl-primary-line);
   border-radius: 12px;
-  color: var(--nl-white);
+  color: var(--nl-primary);
   font-family: var(--nl-font-label);
   font-size: 0.8rem;
   font-weight: 700;
@@ -73,12 +71,10 @@
   gap: 6px;
   margin-bottom: 24px;
   padding: 5px;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--nl-surface-2);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
   width: fit-content;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .roleTab {
@@ -98,14 +94,14 @@
 
 .roleTab:hover {
   color: var(--nl-white);
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--nl-surface-hover);
 }
 
 .roleTab.is-active {
-  background: var(--ds-gray-50);
-  border-color: color-mix(in srgb, var(--ds-gray-50) 80%, transparent);
-  color: var(--ds-gray-950);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  background: var(--nl-primary);
+  border-color: var(--nl-primary);
+  color: var(--nl-primary-foreground);
+  box-shadow: 0 2px 12px var(--nl-primary-glow);
 }
 
 .roleTab__count {
@@ -115,13 +111,13 @@
   height: 20px;
   margin-left: 7px;
   padding: 0 5px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--nl-surface-3);
   border-radius: var(--nl-radius-pill);
   font-size: 0.68rem;
 }
 
 .roleTab.is-active .roleTab__count {
-  background: rgba(0, 0, 0, 0.14);
+  background: color-mix(in srgb, var(--nl-primary-foreground) 18%, transparent);
 }
 
 /* ------------------------------ layout ---------------------------------- */
@@ -143,12 +139,9 @@
 
 .rolePanel {
   padding: 22px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.018));
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-lg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
 }
 
 .roleSection {
@@ -184,11 +177,9 @@
 
 .roleCard {
   padding: 18px 20px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--nl-surface-2);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   transition: border-color var(--nl-speed) ease, background var(--nl-speed) ease;
 }
 
@@ -202,7 +193,7 @@
 }
 
 .roleCard--request {
-  border-left: 3px solid #f5b642;
+  border-left: 3px solid var(--nl-warning);
 }
 
 .roleCard__head {
@@ -243,17 +234,17 @@
 .roleCard__note {
   margin-top: 10px;
   padding: 8px 12px;
-  background: rgba(245, 182, 66, 0.1);
-  border: 1px solid rgba(245, 182, 66, 0.35);
+  background: var(--nl-warning-soft);
+  border: 1px solid var(--nl-warning-line);
   border-radius: var(--nl-radius-sm);
-  color: #ffe0a1;
+  color: var(--nl-warning);
   font-size: 0.82rem;
 }
 
 .roleCard__note--danger {
   background: var(--nl-danger-soft);
-  border-color: rgba(255, 107, 107, 0.4);
-  color: #ffc9c9;
+  border-color: var(--nl-danger-line);
+  color: var(--nl-danger);
 }
 
 .roleActions {
@@ -315,7 +306,7 @@
 .roleTextarea {
   width: 100%;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--nl-surface-2);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius-sm);
   color: var(--nl-white);
@@ -334,7 +325,7 @@
 .roleSelect:focus,
 .roleTextarea:focus {
   outline: none;
-  background: var(--nl-surface-2);
+  background: var(--nl-surface-3);
   border-color: var(--nl-border-focus);
   box-shadow: var(--nl-ring);
 }
@@ -360,27 +351,27 @@
 
 .roleNotice {
   background: var(--nl-success-soft);
-  border: 1px solid var(--nl-success);
+  border: 1px solid var(--nl-success-line);
   border-left-width: 3px;
-  color: #c8ffe8;
+  color: var(--nl-success);
 }
 
 .roleNotice--info {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--nl-border-strong);
+  background: var(--nl-info-soft);
+  border-color: var(--nl-info-line);
   color: var(--nl-text);
 }
 
 .roleError {
   background: var(--nl-danger-soft);
-  border: 1px solid var(--nl-danger);
+  border: 1px solid var(--nl-danger-line);
   border-left-width: 3px;
-  color: #ffc9c9;
+  color: var(--nl-danger);
 }
 
 .roleEmpty {
   padding: 34px 24px;
-  background: rgba(255, 255, 255, 0.025);
+  background: var(--nl-surface-2);
   border: 1px dashed var(--nl-border-strong);
   border-radius: var(--nl-radius);
   color: var(--nl-muted);
@@ -393,7 +384,7 @@
   align-items: center;
   gap: 6px;
   padding: 2px 9px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--nl-surface-3);
   border: 1px solid var(--nl-border-strong);
   border-radius: var(--nl-radius-pill);
   color: var(--nl-muted);

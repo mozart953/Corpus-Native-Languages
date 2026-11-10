@@ -14,13 +14,15 @@
   overflow: hidden;
   padding: clamp(26px, 4.5vw, 54px);
   background:
-    radial-gradient(42rem 26rem at 10% -20%, rgba(255, 255, 255, 0.11), transparent 62%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.018));
+    radial-gradient(
+      40rem 24rem at 6% -18%,
+      color-mix(in srgb, var(--nl-primary) 14%, transparent),
+      transparent 62%
+    ),
+    linear-gradient(155deg, var(--nl-surface-2) 0%, var(--nl-surface) 58%, var(--nl-bg-elevated) 100%);
   border: 1px solid var(--nl-border);
   border-radius: calc(var(--nl-radius-lg) + 6px);
   box-shadow: var(--nl-shadow);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
 }
 
 .home__heroPanel::after {
@@ -29,8 +31,12 @@
   inset: 0;
   pointer-events: none;
   border-radius: inherit;
-  background: linear-gradient(110deg, rgba(255, 255, 255, 0.08), transparent 38%);
-  mask-image: linear-gradient(to bottom, black, transparent 70%);
+  background: linear-gradient(
+    112deg,
+    color-mix(in srgb, var(--nl-primary) 10%, transparent),
+    transparent 42%
+  );
+  mask-image: linear-gradient(to bottom, black, transparent 72%);
 }
 
 .home__heroContent {
@@ -47,8 +53,8 @@
 }
 
 .home__titleAccent {
-  color: var(--nl-white);
-  text-shadow: 0 0 52px rgba(255, 255, 255, 0.2);
+  color: var(--nl-primary);
+  text-shadow: 0 0 46px var(--nl-primary-glow);
 }
 
 .home__lead {
@@ -95,7 +101,7 @@
 }
 
 .home__statsWarn {
-  color: var(--nl-white) !important;
+  color: var(--nl-warning) !important;
 }
 
 .home__heroMedia {
@@ -104,10 +110,10 @@
   overflow: hidden;
   margin: 0;
   aspect-ratio: 4 / 3;
-  background: var(--ds-gray-900);
+  background: var(--nl-surface-3);
   border: 1px solid var(--nl-border-hover);
   border-radius: var(--nl-radius-lg);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--nl-shadow-strong);
 }
 
 .home__heroMedia::after {
@@ -115,7 +121,7 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ds-white) 6%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nl-primary) 12%, transparent);
   border-radius: inherit;
 }
 
@@ -123,7 +129,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(100%) contrast(1.04);
+  filter: saturate(0.92) contrast(1.03);
 }
 
 .home__heroMedia figcaption {
@@ -135,8 +141,8 @@
   justify-content: space-between;
   gap: 8px;
   padding: 34px 14px 12px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
-  color: var(--nl-white);
+  background: linear-gradient(transparent, rgba(3, 8, 16, 0.92));
+  color: var(--nl-on-media);
   font-family: var(--nl-font-label);
   font-size: 0.66rem;
   font-weight: 600;
@@ -151,7 +157,7 @@
 }
 
 .home__heroMediaNote {
-  color: var(--nl-muted);
+  color: var(--nl-on-media-muted);
   font-size: 0.6rem;
   letter-spacing: 0.04em;
 }
@@ -161,16 +167,16 @@
   align-items: center;
   gap: 5px;
   padding: 4px 8px;
-  background: color-mix(in srgb, var(--ds-white) 8%, transparent);
-  border: 1px solid var(--nl-border-hover);
+  background: rgba(3, 8, 16, 0.58);
+  border: 1px solid color-mix(in srgb, var(--nl-on-media) 24%, transparent);
   border-radius: var(--nl-radius-pill);
-  color: var(--ds-gray-50);
+  color: var(--nl-on-media);
   transition: background var(--nl-speed) ease, border-color var(--nl-speed) ease;
 }
 
 .home__heroManage:hover {
-  background: color-mix(in srgb, var(--ds-white) 14%, transparent);
-  border-color: color-mix(in srgb, var(--ds-white) 20%, transparent);
+  background: rgba(3, 8, 16, 0.78);
+  border-color: color-mix(in srgb, var(--nl-on-media) 40%, transparent);
 }
 
 .home__heroMark {
@@ -183,15 +189,19 @@
   padding: 20px;
   overflow: hidden;
   background:
-    radial-gradient(22rem 18rem at 78% 14%, rgba(255, 255, 255, 0.09), transparent 66%),
-    linear-gradient(150deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015));
+    radial-gradient(
+      22rem 18rem at 78% 14%,
+      color-mix(in srgb, var(--nl-primary) 18%, transparent),
+      transparent 66%
+    ),
+    linear-gradient(150deg, var(--nl-surface-2), var(--nl-bg-elevated));
   border: 1px solid var(--nl-border-hover);
   border-radius: var(--nl-radius-lg);
 }
 
 .home__heroMark span {
   align-self: flex-start;
-  color: var(--nl-white);
+  color: var(--nl-primary);
   font-family: var(--nl-font-display);
   font-size: clamp(4rem, 11vw, 7rem);
   font-weight: 800;
@@ -215,11 +225,11 @@
 .home__notice {
   margin-top: 28px;
   padding: 12px 16px;
-  background: var(--nl-surface-2);
-  border: 1px solid var(--nl-border-hover);
+  background: var(--nl-info-soft);
+  border: 1px solid var(--nl-info-line);
   border-left-width: 3px;
   border-radius: var(--nl-radius-sm);
-  color: var(--ds-gray-50);
+  color: var(--nl-text);
   font-size: 0.87rem;
 }
 
@@ -260,15 +270,15 @@
   gap: 10px;
   margin-bottom: 16px;
   padding: 10px 16px;
-  background: var(--nl-surface-2);
-  border: 1px solid var(--nl-border-hover);
+  background: var(--nl-primary-soft);
+  border: 1px solid var(--nl-primary-line);
   border-radius: var(--nl-radius-sm);
-  color: var(--ds-gray-50);
+  color: var(--nl-text);
   font-size: 0.86rem;
 }
 
 .home__selectionBar strong {
-  color: var(--nl-white);
+  color: var(--nl-primary);
   font-family: var(--nl-font-label);
 }
 
@@ -304,7 +314,7 @@
 
 .home__footer {
   border-top: 1px solid var(--nl-border);
-  background: var(--nl-surface);
+  background: var(--nl-bg-elevated);
 }
 
 .home__footerInner {

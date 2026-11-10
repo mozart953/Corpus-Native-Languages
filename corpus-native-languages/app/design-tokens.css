@@ -1,100 +1,57 @@
 /**
- * Design tokens — single source of truth for the monochrome glass theme.
+ * Design tokens — single source of truth for the Highland Jade theme.
  *
  * SRP: this file only defines token values.
  * Consumers (globals.css, component CSS, Tailwind/shadcn vars) read these tokens
  * instead of hardcoding colors. To restyle the product, change values here.
  *
- * Palette direction (Next.js-like monochrome): layered near-blacks, stepped grays,
- * and restrained white overlays. Contrast is always dark-vs-light (never white-on-
- * white or black-on-black). Status colors are the only non-grayscale accents.
+ * Palette direction:
+ *   - Deep ink-navy surfaces instead of pure black.
+ *   - Jade (teal) as the primary action colour, cobalt as the secondary,
+ *     maize as the attention/endangered colour.
+ *   - Language identity uses eight theme-aware accent tokens.
+ *   - Light theme keeps the same roles with darker accents for AA contrast.
+ *
+ * Contrast targets: WCAG AA for body text (4.5:1) and UI/large text (3:1).
  */
 
-:root,
-.dark {
-  color-scheme: dark;
+/* ----------------------------- raw palette ------------------------------- */
 
-  /* Base layers (darkest -> lighter). Use a lighter layer on top of a darker one. */
-  --ds-black: #000000;
-  --ds-gray-950: #0a0a0a;
-  --ds-gray-900: #111111;
-  --ds-gray-850: #171717;
-  --ds-gray-800: #1f1f1f;
-  --ds-gray-700: #2e2e2e;
-  --ds-gray-500: #737373;
-  --ds-gray-400: #8f8f8f;
-  --ds-gray-200: #a1a1a1;
-  --ds-gray-100: #c7c7c7;
-  --ds-gray-50: #ededed;
+:root {
   --ds-white: #ffffff;
+  --ds-black: #000000;
 
-  /* App surfaces */
-  --nl-bg: var(--ds-gray-950);
-  --nl-bg-elevated: var(--ds-gray-900);
-  --nl-surface: color-mix(in srgb, var(--ds-white) 3%, transparent);
-  --nl-surface-2: color-mix(in srgb, var(--ds-white) 5%, transparent);
-  --nl-surface-3: color-mix(in srgb, var(--ds-white) 8%, transparent);
-  --nl-surface-hover: color-mix(in srgb, var(--ds-white) 7%, transparent);
-  --nl-surface-active: color-mix(in srgb, var(--ds-white) 10%, transparent);
+  /* Neutral ramp (cool ink-navy) */
+  --ds-slate-950: #070b12;
+  --ds-slate-900: #0a0f1a;
+  --ds-slate-850: #0e1523;
+  --ds-slate-800: #121c2e;
+  --ds-slate-700: #172337;
+  --ds-slate-600: #1e2d45;
+  --ds-slate-400: #94a3b8;
+  --ds-slate-300: #cbd5e1;
+  --ds-slate-200: #e2e8f0;
+  --ds-slate-100: #f1f5f9;
 
-  /* Borders — subtle/normal, never "remarkable". */
-  --nl-border: color-mix(in srgb, var(--ds-white) 8%, transparent);
-  --nl-border-subtle: color-mix(in srgb, var(--ds-white) 6%, transparent);
-  --nl-border-hover: color-mix(in srgb, var(--ds-white) 14%, transparent);
-  --nl-border-focus: color-mix(in srgb, var(--ds-white) 28%, transparent);
-  --nl-border-strong: var(--nl-border-hover);
+  /* Brand hues */
+  --ds-jade-400: #2dd4bf;
+  --ds-jade-500: #14b8a6;
+  --ds-jade-600: #0d9488;
+  --ds-jade-700: #0f766e;
+  --ds-cobalt-400: #60a5fa;
+  --ds-cobalt-500: #3b82f6;
+  --ds-cobalt-600: #2563eb;
+  --ds-maize-400: #fbbf24;
+  --ds-maize-500: #f59e0b;
+  --ds-rose-400: #fb7185;
+  --ds-rose-500: #f43f5e;
+  --ds-rose-600: #be123c;
+  --ds-emerald-400: #34d399;
+  --ds-emerald-600: #047857;
+  --ds-sky-400: #38bdf8;
+  --ds-sky-600: #0369a1;
 
-  /* Text — light on dark surfaces. */
-  --nl-white: var(--ds-gray-50);
-  --nl-text: #d4d4d4;
-  --nl-muted: var(--ds-gray-200);
-  --nl-faint: var(--ds-gray-500);
-
-  /* Interactive monochrome accents (legacy names kept for compatibility). */
-  --nl-blue: var(--ds-gray-50);
-  --nl-blue-bright: var(--ds-gray-50);
-  --nl-blue-soft: color-mix(in srgb, var(--ds-white) 8%, transparent);
-  --nl-blue-line: var(--nl-border-hover);
-  --nl-blue-glow: color-mix(in srgb, var(--ds-white) 10%, transparent);
-
-  /* Glass */
-  --nl-glass-bg: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--ds-white) 5%, transparent),
-    color-mix(in srgb, var(--ds-white) 2%, transparent)
-  );
-  --nl-glass-bg-strong: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--ds-white) 7%, transparent),
-    color-mix(in srgb, var(--ds-white) 3%, transparent)
-  );
-  --nl-glass-blur: 14px;
-  --nl-glass-border: var(--nl-border);
-
-  /* Buttons */
-  --nl-btn-bg: color-mix(in srgb, var(--ds-white) 4%, transparent);
-  --nl-btn-bg-hover: color-mix(in srgb, var(--ds-white) 9%, transparent);
-  --nl-btn-bg-active: color-mix(in srgb, var(--ds-white) 12%, transparent);
-  --nl-btn-border: var(--nl-border);
-  --nl-btn-border-hover: var(--nl-border-hover);
-  --nl-btn-text: var(--ds-gray-50);
-  --nl-btn-primary-bg: var(--ds-gray-50);
-  --nl-btn-primary-bg-hover: var(--ds-white);
-  --nl-btn-primary-bg-active: #d4d4d4;
-  --nl-btn-primary-text: var(--ds-gray-950);
-  --nl-btn-primary-border: color-mix(in srgb, var(--ds-gray-50) 90%, transparent);
-
-  /* Feedback — only status/tag surfaces. */
-  --nl-danger: #f87171;
-  --nl-danger-soft: rgba(248, 113, 113, 0.14);
-  --nl-success: #4ade80;
-  --nl-success-soft: rgba(74, 222, 128, 0.14);
-  --nl-warning: #facc15;
-  --nl-warning-soft: rgba(250, 204, 21, 0.14);
-  --nl-info: #93c5fd;
-  --nl-info-soft: rgba(147, 197, 253, 0.14);
-
-  /* Shape / motion / layout */
+  /* Shape / motion / layout (theme-independent) */
   --nl-radius-sm: 8px;
   --nl-radius: 12px;
   --nl-radius-lg: 16px;
@@ -102,46 +59,248 @@
   --nl-speed: 150ms;
   --nl-max: 1180px;
   --nl-inset: clamp(20px, 5vw, 56px);
-  --nl-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
-  --nl-shadow-blue: 0 0 0 1px var(--nl-border), 0 16px 40px rgba(0, 0, 0, 0.5);
-  --nl-ring: 0 0 0 3px color-mix(in srgb, var(--ds-white) 12%, transparent);
 
   /* Typography */
   --nl-font-display: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
   --nl-font: var(--font-source-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
   --nl-font-label: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* shadcn/Tailwind semantic tokens (monochrome). */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.94 0 0);
-  --card: oklch(0.185 0 0);
-  --card-foreground: oklch(0.94 0 0);
-  --popover: oklch(0.185 0 0);
-  --popover-foreground: oklch(0.94 0 0);
-  --primary: oklch(0.94 0 0);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.235 0 0);
-  --secondary-foreground: oklch(0.94 0 0);
-  --muted: oklch(0.235 0 0);
-  --muted-foreground: oklch(0.68 0 0);
-  --accent: oklch(0.255 0 0);
-  --accent-foreground: oklch(0.94 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 10%);
-  --ring: oklch(0.72 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.7 0 0);
-  --chart-3: oklch(0.556 0 0);
-  --chart-4: oklch(0.439 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* shadcn/Tailwind semantic tokens (mapped to the tokens below). */
+  --background: var(--nl-bg);
+  --foreground: var(--nl-text);
+  --card: var(--nl-surface);
+  --card-foreground: var(--nl-text);
+  --popover: var(--nl-bg-elevated);
+  --popover-foreground: var(--nl-text);
+  --primary: var(--nl-primary);
+  --primary-foreground: var(--nl-primary-foreground);
+  --secondary: var(--nl-surface-2);
+  --secondary-foreground: var(--nl-white);
+  --muted: var(--nl-surface-2);
+  --muted-foreground: var(--nl-muted);
+  --accent: var(--nl-surface-3);
+  --accent-foreground: var(--nl-white);
+  --destructive: var(--nl-danger);
+  --border: var(--nl-border);
+  --input: var(--nl-border);
+  --ring: var(--nl-primary);
+  --chart-1: var(--nl-primary);
+  --chart-2: var(--nl-secondary);
+  --chart-3: var(--nl-highlight);
+  --chart-4: var(--nl-info);
+  --chart-5: var(--nl-danger);
   --radius: 0.75rem;
-  --sidebar: oklch(0.165 0 0);
-  --sidebar-foreground: oklch(0.94 0 0);
-  --sidebar-primary: oklch(0.94 0 0);
-  --sidebar-primary-foreground: oklch(0.145 0 0);
-  --sidebar-accent: oklch(0.235 0 0);
-  --sidebar-accent-foreground: oklch(0.94 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.72 0 0);
+  --sidebar: var(--nl-bg-elevated);
+  --sidebar-foreground: var(--nl-text);
+  --sidebar-primary: var(--nl-primary);
+  --sidebar-primary-foreground: var(--nl-primary-foreground);
+  --sidebar-accent: var(--nl-surface-2);
+  --sidebar-accent-foreground: var(--nl-white);
+  --sidebar-border: var(--nl-border);
+  --sidebar-ring: var(--nl-primary);
+}
+
+/* ------------------------------ dark theme ------------------------------- */
+
+:root,
+.dark {
+  color-scheme: dark;
+
+  /* App surfaces — solid layers, darkest to lightest. */
+  --nl-bg: #080d16;
+  --nl-bg-elevated: #0c1422;
+  --nl-surface: #101a2b;
+  --nl-surface-2: #142033;
+  --nl-surface-3: #1a2940;
+  --nl-surface-hover: #18263a;
+  --nl-surface-active: #1d2e45;
+
+  /* Borders — tinted slate, never pure white. */
+  --nl-border: rgba(148, 163, 184, 0.14);
+  --nl-border-subtle: rgba(148, 163, 184, 0.09);
+  --nl-border-hover: rgba(148, 163, 184, 0.24);
+  --nl-border-focus: rgba(45, 212, 191, 0.55);
+  --nl-border-strong: rgba(148, 163, 184, 0.3);
+
+  /*
+    Text — light on dark surfaces. `--nl-white` is the strongest text colour
+    (near-white here, near-black in the light theme); it is only used for text,
+    never as a surface fill.
+  */
+  --nl-white: #f1f5fb;
+  --nl-text: #d5dfec;
+  --nl-muted: #a7b6cc;
+  --nl-faint: #93a3bb;
+  --nl-on-media: #f8fafc;
+  --nl-on-media-muted: #cbd5e1;
+
+  /* Brand */
+  --nl-primary: var(--ds-jade-400);
+  --nl-primary-strong: var(--ds-jade-500);
+  --nl-primary-soft: rgba(45, 212, 191, 0.13);
+  --nl-primary-line: rgba(45, 212, 191, 0.38);
+  --nl-primary-glow: rgba(45, 212, 191, 0.2);
+  --nl-primary-foreground: #04231f;
+  --nl-secondary: var(--ds-cobalt-400);
+  --nl-secondary-soft: rgba(96, 165, 250, 0.13);
+  --nl-secondary-line: rgba(96, 165, 250, 0.38);
+  --nl-highlight: var(--ds-maize-400);
+  --nl-highlight-soft: rgba(251, 191, 36, 0.13);
+  --nl-highlight-line: rgba(251, 191, 36, 0.38);
+  --nl-brand-foreground: #04121a;
+
+  /* Language identity accents (bright on dark). */
+  --lang-jade: #2dd4bf;
+  --lang-sky: #38bdf8;
+  --lang-amber: #fbbf24;
+  --lang-rose: #f472b6;
+  --lang-violet: #a78bfa;
+  --lang-orange: #fb923c;
+  --lang-lime: #a3e635;
+  --lang-coral: #fb7185;
+  --nl-accent-ink: #06121f;
+
+  /* Interactive aliases (legacy names kept for compatibility). */
+  --nl-blue: var(--nl-primary);
+  --nl-blue-bright: var(--nl-primary-strong);
+  --nl-blue-soft: var(--nl-primary-soft);
+  --nl-blue-line: var(--nl-primary-line);
+  --nl-blue-glow: var(--nl-primary-glow);
+
+  /* Feedback */
+  --nl-danger: var(--ds-rose-400);
+  --nl-danger-soft: rgba(251, 113, 133, 0.13);
+  --nl-danger-line: rgba(251, 113, 133, 0.4);
+  --nl-success: var(--ds-emerald-400);
+  --nl-success-soft: rgba(52, 211, 153, 0.13);
+  --nl-success-line: rgba(52, 211, 153, 0.4);
+  --nl-warning: var(--ds-maize-400);
+  --nl-warning-soft: rgba(251, 191, 36, 0.13);
+  --nl-warning-line: rgba(251, 191, 36, 0.4);
+  --nl-info: var(--ds-sky-400);
+  --nl-info-soft: rgba(56, 189, 248, 0.13);
+  --nl-info-line: rgba(56, 189, 248, 0.4);
+
+  /* Solid surfaces (blur is reserved for the navbar and modal scrims). */
+  --nl-glass-bg: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  --nl-glass-bg-strong: linear-gradient(180deg, var(--nl-surface-3), var(--nl-surface-2));
+  --nl-glass-border: var(--nl-border);
+
+  /* Modal scrim */
+  --nl-overlay: rgba(3, 8, 16, 0.66);
+
+  /* Buttons */
+  --nl-btn-bg: var(--nl-surface-2);
+  --nl-btn-bg-hover: var(--nl-surface-3);
+  --nl-btn-bg-active: var(--nl-surface-hover);
+  --nl-btn-border: var(--nl-border);
+  --nl-btn-border-hover: var(--nl-border-hover);
+  --nl-btn-text: var(--nl-white);
+  --nl-btn-primary-bg: var(--nl-primary);
+  --nl-btn-primary-bg-hover: var(--nl-primary-strong);
+  --nl-btn-primary-bg-active: var(--nl-primary-strong);
+  --nl-btn-primary-text: var(--nl-primary-foreground);
+  --nl-btn-primary-border: var(--nl-primary-line);
+
+  /* Elevation / focus */
+  --nl-shadow: 0 20px 48px rgba(2, 8, 20, 0.45);
+  --nl-shadow-strong: 0 28px 70px rgba(2, 8, 20, 0.6);
+  --nl-shadow-blue: 0 0 0 1px var(--nl-primary-line), 0 16px 40px rgba(2, 8, 20, 0.5);
+  --nl-ring: 0 0 0 3px color-mix(in srgb, var(--nl-primary) 28%, transparent);
+}
+
+/* ------------------------------ light theme ------------------------------ */
+
+.light {
+  color-scheme: light;
+
+  --nl-bg: #f4f7fb;
+  --nl-bg-elevated: #ffffff;
+  --nl-surface: #ffffff;
+  --nl-surface-2: #f1f5f9;
+  --nl-surface-3: #e6edf6;
+  --nl-surface-hover: #eaf0f8;
+  --nl-surface-active: #dfe8f3;
+
+  --nl-border: rgba(15, 23, 42, 0.12);
+  --nl-border-subtle: rgba(15, 23, 42, 0.08);
+  --nl-border-hover: rgba(15, 23, 42, 0.22);
+  --nl-border-focus: rgba(13, 148, 136, 0.55);
+  --nl-border-strong: rgba(15, 23, 42, 0.28);
+
+  --nl-white: #0b1526;
+  --nl-text: #263449;
+  --nl-muted: #52627a;
+  --nl-faint: #586678;
+  --nl-on-media: #ffffff;
+  --nl-on-media-muted: #e2e8f0;
+
+  /* Deep jade: white button text clears 4.5:1, and jade text stays legible on
+     its own 10% tint (used by badges and chips). */
+  --nl-primary: #0c6a62;
+  --nl-primary-strong: #085750;
+  --nl-primary-soft: rgba(13, 148, 136, 0.1);
+  --nl-primary-line: rgba(13, 148, 136, 0.32);
+  --nl-primary-glow: rgba(13, 148, 136, 0.16);
+  --nl-primary-foreground: #ffffff;
+  --nl-secondary: var(--ds-cobalt-600);
+  --nl-secondary-soft: rgba(37, 99, 235, 0.1);
+  --nl-secondary-line: rgba(37, 99, 235, 0.32);
+  --nl-highlight: #92400e;
+  --nl-highlight-soft: rgba(180, 83, 9, 0.1);
+  --nl-highlight-line: rgba(180, 83, 9, 0.32);
+  --nl-brand-foreground: #ffffff;
+
+  /* Language identity accents (darker on light for readable text). */
+  --lang-jade: #0f766e;
+  --lang-sky: #0369a1;
+  --lang-amber: #b45309;
+  --lang-rose: #be185d;
+  --lang-violet: #6d28d9;
+  --lang-orange: #c2410c;
+  --lang-lime: #4d7c0f;
+  --lang-coral: #be123c;
+  --nl-accent-ink: #ffffff;
+
+  --nl-blue: var(--nl-primary);
+  --nl-blue-bright: var(--nl-primary-strong);
+  --nl-blue-soft: var(--nl-primary-soft);
+  --nl-blue-line: var(--nl-primary-line);
+  --nl-blue-glow: var(--nl-primary-glow);
+
+  --nl-danger: var(--ds-rose-600);
+  --nl-danger-soft: rgba(190, 18, 60, 0.09);
+  --nl-danger-line: rgba(190, 18, 60, 0.32);
+  --nl-success: #046c4e;
+  --nl-success-soft: rgba(4, 120, 87, 0.09);
+  --nl-success-line: rgba(4, 120, 87, 0.32);
+  --nl-warning: #92400e;
+  --nl-warning-soft: rgba(180, 83, 9, 0.1);
+  --nl-warning-line: rgba(180, 83, 9, 0.32);
+  --nl-info: #075985;
+  --nl-info-soft: rgba(3, 105, 161, 0.09);
+  --nl-info-line: rgba(3, 105, 161, 0.32);
+
+  --nl-glass-bg: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  --nl-glass-bg-strong: linear-gradient(180deg, var(--nl-surface-3), var(--nl-surface-2));
+  --nl-glass-border: var(--nl-border);
+
+  --nl-overlay: rgba(15, 23, 42, 0.3);
+
+  --nl-btn-bg: var(--nl-surface-2);
+  --nl-btn-bg-hover: var(--nl-surface-3);
+  --nl-btn-bg-active: var(--nl-surface-hover);
+  --nl-btn-border: var(--nl-border);
+  --nl-btn-border-hover: var(--nl-border-hover);
+  --nl-btn-text: var(--nl-white);
+  --nl-btn-primary-bg: var(--nl-primary);
+  --nl-btn-primary-bg-hover: var(--nl-primary-strong);
+  --nl-btn-primary-bg-active: var(--nl-primary-strong);
+  --nl-btn-primary-text: var(--nl-primary-foreground);
+  --nl-btn-primary-border: var(--nl-primary-line);
+
+  --nl-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+  --nl-shadow-strong: 0 24px 60px rgba(15, 23, 42, 0.16);
+  --nl-shadow-blue: 0 0 0 1px var(--nl-primary-line), 0 16px 40px rgba(15, 23, 42, 0.1);
+  --nl-ring: 0 0 0 3px color-mix(in srgb, var(--nl-primary) 22%, transparent);
 }

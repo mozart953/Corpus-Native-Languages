@@ -129,7 +129,7 @@ function EntryCard({
                   size="sm"
                   onClick={() => onDelete(kind, entry)}
                   disabled={busy}
-                  className="border-white/10 bg-transparent text-white hover:bg-white/10"
+                  className="border-border text-foreground hover:bg-accent"
                 >
                   Delete draft
                 </Button>

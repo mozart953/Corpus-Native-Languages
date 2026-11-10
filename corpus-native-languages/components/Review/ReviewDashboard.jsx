@@ -93,7 +93,7 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
           size="sm"
           disabled={busy}
           onClick={() => onReview(kind, entry, "reject")}
-          className="border-white/10 bg-transparent text-white hover:bg-white/10"
+          className="border-border text-foreground hover:bg-accent"
         >
           Reject
         </Button>
@@ -146,7 +146,7 @@ function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
               size="sm"
               disabled={busy}
               onClick={() => onApprove(kind, entry)}
-              className="border-white/10 bg-transparent text-white hover:bg-white/10"
+              className="border-border text-foreground hover:bg-accent"
             >
               {busy ? "Removing…" : "Approve removal"}
             </Button>

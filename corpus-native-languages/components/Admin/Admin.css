@@ -4,11 +4,9 @@
   gap: 12px;
   margin-bottom: 20px;
   padding: 16px 18px;
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--nl-surface-2);
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 
 .adminAccount {
@@ -16,9 +14,10 @@
 }
 
 .adminAccount--self {
-  border-left-color: var(--nl-white);
+  border-left-color: var(--nl-primary);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+    linear-gradient(180deg, var(--nl-primary-soft), transparent 80%),
+    var(--nl-surface-2);
 }
 
 .adminAccount__identity {

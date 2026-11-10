@@ -27,6 +27,12 @@
 
 /* --------------------------------- reset --------------------------------- */
 
+/*
+  Element defaults live in the `base` layer. Unlayered rules would outrank every
+  Tailwind utility regardless of specificity, which silently breaks utilities
+  such as `bg-primary` or `text-primary-foreground` on shadcn controls.
+*/
+@layer base {
 *,
 *::before,
 *::after {
@@ -40,6 +46,7 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  background: var(--nl-bg);
 }
 
 body {
@@ -60,8 +67,8 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(50rem 32rem at 12% -8%, color-mix(in srgb, var(--ds-white) 6%, transparent), transparent 62%),
-    radial-gradient(40rem 28rem at 92% 2%, color-mix(in srgb, var(--ds-white) 3%, transparent), transparent 68%);
+    radial-gradient(50rem 32rem at 12% -8%, color-mix(in srgb, var(--nl-primary) 9%, transparent), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 2%, color-mix(in srgb, var(--nl-secondary) 7%, transparent), transparent 68%);
 }
 
 body::after {
@@ -70,8 +77,18 @@ body::after {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.14;
+  opacity: 0.12;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+}
+
+.light body::before {
+  background:
+    radial-gradient(50rem 32rem at 12% -8%, color-mix(in srgb, var(--nl-primary) 7%, transparent), transparent 62%),
+    radial-gradient(40rem 28rem at 92% 2%, color-mix(in srgb, var(--nl-secondary) 5%, transparent), transparent 68%);
+}
+
+.light body::after {
+  opacity: 0.045;
 }
 
 h1,
@@ -124,14 +141,14 @@ ol {
 }
 
 :focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--ds-white) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--nl-primary) 70%, transparent);
   outline-offset: 2px;
   border-radius: var(--nl-radius-sm);
 }
 
 ::selection {
-  background: var(--ds-gray-50);
-  color: var(--ds-gray-950);
+  background: color-mix(in srgb, var(--nl-primary) 32%, transparent);
+  color: var(--nl-white);
 }
 
 ::placeholder {
@@ -141,7 +158,7 @@ ol {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--ds-white) 18%, transparent) transparent;
+  scrollbar-color: var(--nl-border-strong) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -154,14 +171,15 @@ ol {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--ds-white) 16%, transparent);
+  background: var(--nl-border-strong);
   border: 2px solid var(--nl-bg);
   border-radius: var(--nl-radius-pill);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--ds-white) 28%, transparent);
+  background: var(--nl-border-hover);
 }
+} /* @layer base */
 
 /* ------------------------------ primitives ------------------------------- */
 
@@ -237,8 +255,6 @@ ol {
   border: 1px solid var(--nl-glass-border);
   border-radius: var(--nl-radius-lg);
   box-shadow: var(--nl-shadow);
-  backdrop-filter: blur(var(--nl-glass-blur));
-  -webkit-backdrop-filter: blur(var(--nl-glass-blur));
 }
 
 .nl-chip {
@@ -278,8 +294,6 @@ ol {
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   transition:
     background var(--nl-speed) ease,
     border-color var(--nl-speed) ease,
@@ -290,7 +304,7 @@ ol {
 .nl-btn:hover:not(:disabled) {
   background: var(--nl-btn-bg-hover);
   border-color: var(--nl-btn-border-hover);
-  color: var(--ds-white);
+  color: var(--nl-white);
 }
 
 .nl-btn:active:not(:disabled) {
@@ -316,7 +330,7 @@ ol {
 .nl-btn--primary:hover:not(:disabled) {
   background: var(--nl-btn-primary-bg-hover);
   border-color: var(--nl-btn-primary-bg-hover);
-  color: var(--ds-gray-950);
+  color: var(--nl-btn-primary-text);
 }
 
 .nl-btn--primary:active:not(:disabled) {
@@ -333,7 +347,7 @@ ol {
 .nl-btn--ghost:hover:not(:disabled) {
   background: var(--nl-surface-2);
   border-color: transparent;
-  color: var(--ds-gray-50);
+  color: var(--nl-white);
 }
 
 .nl-btn--danger:hover:not(:disabled) {

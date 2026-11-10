@@ -26,6 +26,7 @@ function LanguageCard({ language, active = false, wordCount = null, onSelect = n
 
   return (
     <article
+      data-language={language.id}
       className={`languageCard ${active ? "is-active" : ""} ${
         isCritical ? "is-critical" : ""
       }`}

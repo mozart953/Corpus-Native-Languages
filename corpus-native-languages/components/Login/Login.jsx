@@ -191,7 +191,7 @@ function LoginComponent({
         ) : null}
 
         {notice ? (
-          <Alert className="border-white/10 bg-white/[0.05] text-white">
+          <Alert className="login__notice">
             <AlertDescription>{notice}</AlertDescription>
           </Alert>
         ) : null}

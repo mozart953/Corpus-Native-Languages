@@ -1,21 +1,30 @@
 .languageCard {
-  --card-accent: var(--nl-white);
+  --card-accent: var(--nl-primary);
+  --card-accent-soft: color-mix(in srgb, var(--card-accent) 12%, transparent);
+  --card-accent-line: color-mix(in srgb, var(--card-accent) 32%, transparent);
 
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.02));
+  background: linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
   border: 1px solid var(--nl-border);
   border-radius: var(--nl-radius);
   overflow: hidden;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
   transition: border-color var(--nl-speed) ease, transform var(--nl-speed) ease,
     box-shadow var(--nl-speed) ease, background var(--nl-speed) ease;
 }
+
+/* Each language keeps a stable identity colour across both themes. */
+.languageCard[data-language="kaqchikel"] { --card-accent: var(--lang-jade); }
+.languageCard[data-language="kiche"] { --card-accent: var(--lang-sky); }
+.languageCard[data-language="qeqchi"] { --card-accent: var(--lang-amber); }
+.languageCard[data-language="mam"] { --card-accent: var(--lang-violet); }
+.languageCard[data-language="tzutujil"] { --card-accent: var(--lang-rose); }
+.languageCard[data-language="ixil"] { --card-accent: var(--lang-orange); }
+.languageCard[data-language="xinka"] { --card-accent: var(--lang-coral); }
+.languageCard[data-language="garifuna"] { --card-accent: var(--lang-lime); }
 
 /* A thin accent rail keyed to the language colour. */
 .languageCard::before {
@@ -31,7 +40,7 @@
 }
 
 .languageCard:hover {
-  border-color: var(--nl-border-hover);
+  border-color: var(--card-accent-line);
   transform: translateY(-3px);
   box-shadow: var(--nl-shadow);
 }
@@ -42,7 +51,10 @@
 
 .languageCard.is-active {
   border-color: var(--card-accent);
-  box-shadow: 0 0 0 1px var(--card-accent), 0 18px 42px rgba(0, 0, 0, 0.6);
+  background:
+    linear-gradient(180deg, var(--card-accent-soft), transparent 70%),
+    linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
+  box-shadow: 0 0 0 1px var(--card-accent), var(--nl-shadow);
 }
 
 .languageCard.is-active::before {
@@ -64,10 +76,10 @@
   width: 46px;
   height: 46px;
   flex: none;
-  background: color-mix(in srgb, var(--ds-white) 7%, transparent);
-  border: 1px solid var(--nl-border);
+  background: var(--card-accent-soft);
+  border: 1px solid var(--card-accent-line);
   border-radius: 12px;
-  color: var(--ds-gray-50);
+  color: var(--card-accent);
   font-family: var(--nl-font-display);
   font-size: 1.25rem;
   font-weight: 800;
@@ -109,7 +121,7 @@
   flex: none;
   background: var(--card-accent);
   border-radius: 50%;
-  color: #000;
+  color: var(--nl-accent-ink);
   font-size: 0.8rem;
 }
 
@@ -163,7 +175,7 @@
   gap: 6px;
   padding: 3px 10px;
   background: var(--nl-success-soft);
-  border: 1px solid var(--nl-success);
+  border: 1px solid var(--nl-success-line);
   border-radius: var(--nl-radius-pill);
   color: var(--nl-success);
   font-family: var(--nl-font-label);
@@ -175,13 +187,13 @@
 
 .languageCard__status.is-warn {
   background: var(--nl-warning-soft);
-  border-color: color-mix(in srgb, var(--nl-warning) 35%, transparent);
+  border-color: var(--nl-warning-line);
   color: var(--nl-warning);
 }
 
 .languageCard__status.is-critical {
   background: var(--nl-danger-soft);
-  border-color: color-mix(in srgb, var(--nl-danger) 35%, transparent);
+  border-color: var(--nl-danger-line);
   color: var(--nl-danger);
 }
 

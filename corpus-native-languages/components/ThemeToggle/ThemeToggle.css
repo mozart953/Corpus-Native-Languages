@@ -1,0 +1,39 @@
+.themeToggle {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius-sm);
+  background: var(--nl-surface-2);
+  color: var(--nl-muted);
+  transition: color var(--nl-speed) ease, border-color var(--nl-speed) ease,
+    background var(--nl-speed) ease;
+}
+
+.themeToggle:hover {
+  background: var(--nl-primary-soft);
+  border-color: var(--nl-primary-line);
+  color: var(--nl-primary);
+}
+
+.themeToggle:focus-visible {
+  border-color: var(--nl-primary-line);
+  box-shadow: var(--nl-ring);
+}
+
+.themeToggle__icon {
+  width: 16px;
+  height: 16px;
+}
+
+.themeToggle__icon--moon {
+  display: none;
+}
+
+.light .themeToggle__icon--sun {
+  display: none;
+}
+
+.light .themeToggle__icon--moon {
+  display: block;
+}
