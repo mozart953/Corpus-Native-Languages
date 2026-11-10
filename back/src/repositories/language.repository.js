@@ -1,115 +1,30 @@
-import { prisma } from "../config/database.js";
-import { REVIEW_STATES } from "../models/language.model.js";
+import { REVIEW_STATES } from "../models/content.model.js";
+import { createContentRepository } from "./content.repository.js";
 
 /**
- * Data access for Language. Repositories only build Prisma queries; business
- * rules (who may edit, what state comes next) live in the service layer.
- *
- * Every method accepts an optional transaction client so a service can group
- * an entity write and its audit entry atomically.
+ * Data access for Language. Regions are a many-to-many relation; `_count`
+ * exposes only approved, non-deleted words so the presenter can derive the
+ * public `words` field from real data.
  */
-export const languageRepository = {
-  findMany({ where = {}, orderBy = { name: "asc" }, skip, take } = {}, client = prisma) {
-    return client.language.findMany({ where, orderBy, skip, take });
-  },
-
-  count(where = {}, client = prisma) {
-    return client.language.count({ where });
-  },
-
-  findById(id, client = prisma) {
-    return client.language.findUnique({ where: { id } });
-  },
-
-  findBySlug(id, client = prisma) {
-    return client.language.findUnique({ where: { id } });
-  },
-
-  create(data, client = prisma) {
-    return client.language.create({ data });
-  },
-
-  update(id, data, client = prisma) {
-    return client.language.update({ where: { id }, data });
-  },
-
-  softDelete(id, { deletedById, reason }, client = prisma) {
-    return client.language.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-        deletedById: deletedById ?? null,
-        deletionReason: reason ?? null,
-        reviewState: REVIEW_STATES.REMOVED,
-        verified: false,
-        removalRequestedAt: null,
-        removalRequestedById: null,
-        removalRequestReason: null,
+export const languageRepository = createContentRepository({
+  delegate: "language",
+  defaultOrderBy: { name: "asc" },
+  include: {
+    regions: {
+      orderBy: { position: "asc" },
+      include: { region: true },
+    },
+    status: true,
+    reviewState: true,
+    _count: {
+      select: {
+        entries: {
+          where: {
+            reviewStateCode: REVIEW_STATES.APPROVED,
+            deletedAt: null,
+          },
+        },
       },
-    });
+    },
   },
-
-  restore(id, client = prisma) {
-    return client.language.update({
-      where: { id },
-      data: {
-        deletedAt: null,
-        deletedById: null,
-        deletionReason: null,
-        reviewState: REVIEW_STATES.PENDING,
-        verified: false,
-        rejectionReason: null,
-        reviewedById: null,
-        reviewedAt: null,
-        removalRequestedAt: null,
-        removalRequestedById: null,
-        removalRequestReason: null,
-      },
-    });
-  },
-
-  discardDraft(id, { deletedById, reason }, client = prisma) {
-    return client.language.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-        deletedById: deletedById ?? null,
-        deletionReason: reason ?? null,
-        verified: false,
-      },
-    });
-  },
-
-  restoreDraft(id, client = prisma) {
-    return client.language.update({
-      where: { id },
-      data: {
-        deletedAt: null,
-        deletedById: null,
-        deletionReason: null,
-      },
-    });
-  },
-
-  setRemovalRequest(id, { actorId, reason }, client = prisma) {
-    return client.language.update({
-      where: { id },
-      data: {
-        removalRequestedAt: new Date(),
-        removalRequestedById: actorId,
-        removalRequestReason: reason ?? null,
-      },
-    });
-  },
-
-  clearRemovalRequest(id, client = prisma) {
-    return client.language.update({
-      where: { id },
-      data: {
-        removalRequestedAt: null,
-        removalRequestedById: null,
-        removalRequestReason: null,
-      },
-    });
-  },
-};
+});

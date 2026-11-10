@@ -1,6 +1,11 @@
 import { prisma } from "../config/database.js";
 import { userRepository } from "../repositories/user.repository.js";
-import { DEFAULT_PROVIDER, DEFAULT_ROLE, toPublicUser } from "../models/user.model.js";
+import {
+  DEFAULT_PROVIDER,
+  DEFAULT_ROLE,
+  DEFAULT_STATUS,
+} from "../models/user.model.js";
+import { toPublicUser } from "../presenters/user.presenter.js";
 import { ApiError } from "../utils/ApiError.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { auditService } from "./audit.service.js";
@@ -11,8 +16,8 @@ function normaliseEmail(email) {
 
 /**
  * Authentication is intentionally provider-aware. Today only `local` exists,
- * but an OAuth callback can later create a user with `provider: "google"` and
- * a null passwordHash, and this service will refuse password login for it.
+ * but an OAuth callback can later create a user with `providerCode: "google"`
+ * and a null passwordHash, and this service will refuse password login for it.
  */
 export const authService = {
   async register({ username, email, password }) {
@@ -31,9 +36,9 @@ export const authService = {
           email: normalisedEmail,
           username: username.trim(),
           passwordHash,
-          provider: DEFAULT_PROVIDER,
-          role: DEFAULT_ROLE,
-          status: "pending",
+          providerCode: DEFAULT_PROVIDER,
+          roleCode: DEFAULT_ROLE,
+          statusCode: DEFAULT_STATUS,
           statusChangedAt: new Date(),
         },
         tx,
@@ -44,11 +49,11 @@ export const authService = {
           entityType: "user",
           entityId: created.id,
           action: "registered",
-          toState: created.status,
+          toState: created.statusCode,
           actor: {
             id: created.id,
             email: created.email,
-            role: created.role,
+            role: created.roleCode,
           },
           snapshot: toPublicUser(created),
         },
@@ -75,9 +80,9 @@ export const authService = {
     // endpoint does not reveal which accounts exist.
     if (!user) throw ApiError.unauthorized("Invalid email or password.");
 
-    if (user.provider !== "local") {
+    if (user.providerCode !== "local") {
       throw ApiError.unauthorized(
-        `This account was created with the ${user.provider} provider. Use that provider to sign in.`,
+        `This account was created with the ${user.providerCode} provider. Use that provider to sign in.`,
       );
     }
 
@@ -86,7 +91,7 @@ export const authService = {
 
     // Check the lifecycle only after the password is known to be correct, so a
     // wrong password never reveals whether an account exists or its state.
-    if (user.status !== "active") {
+    if (user.statusCode !== "active") {
       const messages = {
         pending: "Your account is waiting for admin approval.",
         rejected: "Your account registration was rejected.",
@@ -95,8 +100,8 @@ export const authService = {
       const reasons = user.statusReason ? ` Reason: ${user.statusReason}` : "";
       throw new ApiError(
         403,
-        (messages[user.status] ?? "Your account is not active.") + reasons,
-        { code: `ACCOUNT_${String(user.status).toUpperCase()}` },
+        (messages[user.statusCode] ?? "Your account is not active.") + reasons,
+        { code: `ACCOUNT_${String(user.statusCode).toUpperCase()}` },
       );
     }
 

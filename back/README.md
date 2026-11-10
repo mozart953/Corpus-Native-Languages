@@ -48,8 +48,10 @@ curl http://localhost:4000/api/v1/health
 
 Expected: `{"status":"ok","service":"corpus-native-languages-api",...}`.
 
-The seed creates eight approved languages, 28 approved sample words, and three
-local accounts (see [Seed accounts](#seed-accounts)).
+The seed upserts lookup tables, creates eight approved languages, 28 approved
+sample words (each with a primary sense and region links), an initial review
+decision per fixture, and three local accounts (see [Seed accounts](#seed-accounts)).
+It is idempotent: re-running it does not duplicate rows.
 
 ---
 
@@ -77,9 +79,9 @@ response shaping stay independent.
 ```
 back/
 ├── prisma/
-│   ├── schema.prisma          # Language, Word, User, AuditLog
+│   ├── schema.prisma          # normalized 3NF models (see Data model)
 │   ├── migrations/            # committed SQL migrations
-│   ├── seed.js                # accounts + fixture corpus
+│   ├── seed.js                # lookups + accounts + fixture corpus
 │   └── seed-data.js           # copy of the frontend fixtures
 ├── scripts/
 │   ├── sync-fixtures.js       # frontend fixtures -> prisma/seed-data.js
@@ -93,8 +95,12 @@ back/
     ├── validators/            # express-validator chains
     ├── controllers/           # HTTP status + response envelope only
     ├── services/              # workflow, permissions, transactions
-    ├── repositories/          # Prisma queries
-    ├── models/                # enums, sort fields, response mappers
+    │   ├── content.service.js       # shared language/word lifecycle factory
+    │   ├── content-workflow.js      # pure moderation policy
+    │   └── content-history.service.js # latest decision / pending removal
+    ├── repositories/          # Prisma queries (transaction client optional)
+    ├── models/                # workflow vocabulary, sort fields, input helpers
+    ├── presenters/            # DB row -> flat API response
     └── utils/                 # ApiError, pagination, password, session decoding
 ```
 
@@ -102,7 +108,8 @@ Request flow:
 
 ```
 route → guard → role guard → rate limiter → validator → controller
-      → service (permissions + transaction + audit) → repository → Prisma
+      → service (permissions + transaction + audit)
+      → repository → Prisma → presenter → response
 ```
 
 Every JSON success response is wrapped:
@@ -116,6 +123,48 @@ Every error uses:
 ```json
 { "error": { "code": "FORBIDDEN", "message": "..." } }
 ```
+
+---
+
+## Data model
+
+The schema is normalized to third normal form. Repeating text (states, roles,
+statuses, parts of speech, regions) lives in lookup tables referenced by code,
+and one-to-many facts are stored once:
+
+| Model | Purpose |
+| --- | --- |
+| `Language` | Corpus language. `statusCode` → `LanguageStatus`; `reviewStateCode` → `ReviewState`. |
+| `Word` | Word belonging to a `Language`. `partOfSpeechCode` → `PartOfSpeech`; `reviewStateCode` → `ReviewState`. |
+| `Sense` | One gloss + usage for a word (`wordId`, `gloss`, `usage`, `position`). Translation and usage are no longer columns on `Word`. |
+| `Region` | Canonical region name. |
+| `LanguageRegion` | Many-to-many join (`languageId`, `regionName`, `position`) preserving the order regions were entered. |
+| `User` | Account. `roleCode` → `Role`, `statusCode` → `UserStatus`, `providerCode` → `Provider`. |
+| `ReviewState`, `LanguageStatus`, `PartOfSpeech`, `Role`, `UserStatus`, `Provider`, `RemovalStatus` | Lookup tables (`code` PK + `label`). |
+| `ReviewDecision` | Append-only history of moderation decisions (`entityType`, `entityId`, `stateCode`, `reviewerId`, `comment`). |
+| `RemovalRequest` | Append-only removal requests (`entityType`, `entityId`, `reason`, `requestedById`, `statusCode`, `resolvedById`, `resolvedAt`). |
+| `AuditLog` | Full action log with actor, state transition, reason and JSON snapshot. |
+| `SiteImage` | Single-row-per-key uploaded images. |
+
+`ReviewDecision` and `RemovalRequest` use the same polymorphic
+`entityType`/`entityId` convention as `AuditLog`; `entityId` intentionally has no
+foreign key so history survives a hard schema change.
+
+Derived, not stored:
+
+- `verified` = `reviewStateCode === "approved"`.
+- `rejectionReason` = comment of the latest `ReviewDecision`, only when its state
+  is `rejected`.
+- `reviewedAt` = timestamp of the latest `ReviewDecision` that has a reviewer.
+- `removalRequestedAt` / `removalRequestReason` = latest **pending**
+  `RemovalRequest`.
+- `Language.words` = count of approved, non-deleted words.
+- `Language.region` = ordered region names joined with `", "`.
+
+Soft-delete columns (`deletedAt`, `deletedById`, `deletionReason`) are a
+documented pragmatic exception: they keep removed content recoverable and are
+not a repeating group. The flat API responses are unchanged; normalized detail
+(`regions`, `senses`) is additive and safe for existing clients to ignore.
 
 ---
 
@@ -153,7 +202,8 @@ can restore it from their private trash.
 
 Admins never physically delete corpus rows. `DELETE /words/:id` (or
 `/languages/:id`) sets `deletedAt`, `deletedById`, `deletionReason` and
-`reviewState = "removed"`, and appends an `AuditLog` row containing the full
+`reviewStateCode = "removed"`, appends a `ReviewDecision`, resolves any pending
+`RemovalRequest` as `completed`, and appends an `AuditLog` row containing the full
 snapshot. The content disappears from the public API and normal moderation queue,
 but stays recoverable through `GET /archive` and
 `POST /words/:id/restore`. Restored content returns as `pending` so it is reviewed
@@ -164,7 +214,10 @@ gets a private trash move instead: the row keeps `reviewState = "draft"`, gains
 `deletedAt`, and is listed only for its author by `GET /words/trash` (or
 `/languages/trash`). Restoring it returns it to the draft list. Reviewers cannot
 delete content; they open a removal request, and the content stays public until
-an admin performs the logical removal.
+an admin performs the logical removal. Requests are stored in `RemovalRequest`
+with status `pending` → `completed` (admin removal) or `cancelled` (withdrawn),
+so the flat `removalRequestedAt` / `removalRequestReason` fields always reflect
+the latest pending request.
 
 ### Account lifecycle
 
@@ -248,9 +301,11 @@ Base URL: `http://localhost:4000/api/v1`
 | `DELETE` | `/languages/:id` | contributor+ / admin | Contributor: move an own draft to the private trash. Admin: logical removal, `{ reason? }`. |
 | `POST` | `/languages/:id/restore` | owner / admin | Restore a trashed draft (owner) or archived language (admin, returns to `pending`). |
 
-Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `words?`,
-`status?`, `accent?`. `status` is `active`, `endangered` or
-`critically-endangered`; `accent` is a `#rrggbb` colour.
+Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `status?`,
+`accent?`. `status` is `active`, `endangered` or `critically-endangered`; `accent`
+is a `#rrggbb` colour. `region` is a comma-separated list; each name is upserted
+into `Region` and linked through `LanguageRegion` in the order given. The response
+`words` count is derived from approved, non-deleted words and is read-only.
 
 ### Words
 
@@ -270,12 +325,16 @@ Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `words?`,
 | `POST` | `/words/:id/restore` | owner / admin | Restore a trashed draft (owner) or archived word (admin, returns to `pending`). |
 
 Word body: `id?`, `languageId`, `word`, `translation`, `pronunciation?`,
-`partOfSpeech?`, `usage?`. `languageName` is joined from the language at read
-time rather than duplicated.
+`partOfSpeech?`, `usage?`. `translation` and `usage` are stored on the word's
+primary `Sense`; updates replace that sense atomically. `partOfSpeech` is
+normalized to a code and upserted into the `PartOfSpeech` lookup, so free-text
+input still works. `languageName` is joined from the language at read time, and
+responses also include a `senses[]` array.
 
-Sort fields — words: `word`, `translation`, `languageId`, `createdAt`,
-`updatedAt`; languages: `name`, `speakers`, `words`, `status`, `createdAt`,
-`updatedAt`. Pagination defaults to 20 and is capped at 100.
+Sort fields — words: `word`, `languageId`, `createdAt`, `updatedAt`; languages:
+`name`, `speakers`, `status`, `createdAt`, `updatedAt`. `translation` and the
+derived `words` count are not sortable because they are not single columns.
+Pagination defaults to 20 and is capped at 100.
 
 ### Review and audit
 

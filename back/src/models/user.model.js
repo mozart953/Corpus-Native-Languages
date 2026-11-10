@@ -7,6 +7,7 @@ export const PROVIDERS = Object.freeze(["local", "google"]);
 
 export const DEFAULT_PROVIDER = "local";
 export const DEFAULT_ROLE = "contributor";
+export const DEFAULT_STATUS = "pending";
 
 /**
  * Account lifecycle. Only `active` accounts may sign in. New registrations are
@@ -28,21 +29,4 @@ export function isValidRole(role) {
 
 export function isValidStatus(status) {
   return USER_STATUSES.includes(status);
-}
-
-export function toPublicUser(user) {
-  return {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    provider: user.provider,
-    role: user.role,
-    status: user.status,
-    statusReason: user.statusReason ?? null,
-    statusChangedAt: user.statusChangedAt ?? null,
-    approvedAt: user.approvedAt ?? null,
-    lastLoginAt: user.lastLoginAt ?? null,
-    createdAt: user.createdAt,
-    updatedAt: user.updatedAt,
-  };
 }

@@ -18,7 +18,7 @@ export const reviewService = {
 
     const [words, languages, removalWords, removalLanguages] = await Promise.all([
       wantsWords ? wordService.listForQueue({ page, limit, languageId }) : null,
-      wantsLanguages ? wordService.listLanguagesForQueue({ page, limit }) : null,
+      wantsLanguages ? languageService.listForQueue({ page, limit }) : null,
       wantsWords
         ? wordService.listRemovalRequests({ page, limit, languageId })
         : null,

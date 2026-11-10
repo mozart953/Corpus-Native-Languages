@@ -14,8 +14,13 @@ async function resolveActiveUser(sessionUser) {
 
   const user = await userRepository.findById(sessionUser.id);
   if (!user) return { user: null, reason: "missing" };
-  if (user.status !== "active") {
-    return { user: null, reason: "inactive", status: user.status, statusReason: user.statusReason };
+  if (user.statusCode !== "active") {
+    return {
+      user: null,
+      reason: "inactive",
+      status: user.statusCode,
+      statusReason: user.statusReason,
+    };
   }
 
   return {
@@ -23,9 +28,9 @@ async function resolveActiveUser(sessionUser) {
       id: user.id,
       email: user.email,
       username: user.username,
-      role: user.role,
-      provider: user.provider,
-      status: user.status,
+      role: user.roleCode,
+      provider: user.providerCode,
+      status: user.statusCode,
     },
     reason: null,
   };

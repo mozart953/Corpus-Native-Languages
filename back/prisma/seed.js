@@ -2,9 +2,60 @@ import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { LANGUAGES, WORDS } from "./seed-data.js";
+import { normalizePartOfSpeechCode } from "../src/models/word.model.js";
 
 const prisma = new PrismaClient();
 const BCRYPT_ROUNDS = 12;
+
+const REVIEW_STATES = [
+  { code: "draft", label: "Draft" },
+  { code: "pending", label: "Pending review" },
+  { code: "reviewer_approved", label: "Reviewer approved" },
+  { code: "approved", label: "Approved" },
+  { code: "rejected", label: "Rejected" },
+  { code: "removed", label: "Removed" },
+];
+
+const LANGUAGE_STATUSES = [
+  { code: "active", label: "Active" },
+  { code: "endangered", label: "Endangered" },
+  { code: "critically-endangered", label: "Critically endangered" },
+];
+
+const ROLES = [
+  { code: "contributor", label: "Contributor" },
+  { code: "reviewer", label: "Reviewer" },
+  { code: "admin", label: "Administrator" },
+];
+
+const USER_STATUSES = [
+  { code: "pending", label: "Pending approval" },
+  { code: "active", label: "Active" },
+  { code: "rejected", label: "Rejected" },
+  { code: "deactivated", label: "Deactivated" },
+];
+
+const PROVIDERS = [
+  { code: "local", label: "Local" },
+  { code: "google", label: "Google" },
+];
+
+const REMOVAL_STATUSES = [
+  { code: "pending", label: "Pending" },
+  { code: "cancelled", label: "Cancelled" },
+  { code: "completed", label: "Completed" },
+];
+
+const COMMON_PARTS_OF_SPEECH = [
+  { code: "noun", label: "noun" },
+  { code: "verb", label: "verb" },
+  { code: "adjective", label: "adjective" },
+  { code: "numeral", label: "numeral" },
+  { code: "pronoun", label: "pronoun" },
+  { code: "adverb", label: "adverb" },
+  { code: "phrase", label: "phrase" },
+  { code: "greeting", label: "greeting" },
+];
 
 function seedAccount(prefix) {
   return {
@@ -15,29 +66,82 @@ function seedAccount(prefix) {
   };
 }
 
+function splitRegions(value) {
+  return String(value ?? "")
+    .split(",")
+    .map((region) => region.trim())
+    .filter(Boolean);
+}
+
+function regionWrites(region) {
+  return splitRegions(region).map((name, position) => ({
+    position,
+    region: {
+      connectOrCreate: {
+        where: { name },
+        create: { name },
+      },
+    },
+  }));
+}
+
+async function upsertLookup(model, rows) {
+  for (const row of rows) {
+    await prisma[model].upsert({
+      where: { code: row.code },
+      update: { label: row.label },
+      create: row,
+    });
+  }
+}
+
+async function seedLookups() {
+  await upsertLookup("reviewState", REVIEW_STATES);
+  await upsertLookup("languageStatus", LANGUAGE_STATUSES);
+  await upsertLookup("role", ROLES);
+  await upsertLookup("userStatus", USER_STATUSES);
+  await upsertLookup("provider", PROVIDERS);
+  await upsertLookup("removalStatus", REMOVAL_STATUSES);
+
+  const partsOfSpeech = new Map(
+    COMMON_PARTS_OF_SPEECH.map((row) => [row.code, row]),
+  );
+  for (const word of WORDS) {
+    const code = normalizePartOfSpeechCode(word.partOfSpeech);
+    if (code && !partsOfSpeech.has(code)) {
+      partsOfSpeech.set(code, { code, label: String(word.partOfSpeech).trim() });
+    }
+  }
+  await upsertLookup("partOfSpeech", [...partsOfSpeech.values()]);
+}
+
 async function upsertSeedUser({ email, username, password, role }) {
   if (!email || !username || !password) {
-    console.warn(`[seed] Skipping ${role}: missing SEED_${role.toUpperCase()} variables.`);
+    console.warn(
+      `[seed] Skipping ${role}: missing SEED_${role.toUpperCase()} variables.`,
+    );
     return null;
   }
 
   const normalisedEmail = email.trim().toLowerCase();
-  const existing = await prisma.user.findUnique({ where: { email: normalisedEmail } });
+  const existing = await prisma.user.findUnique({
+    where: { email: normalisedEmail },
+  });
 
   if (existing) {
-    if (existing.role !== role) {
+    if (existing.roleCode !== role) {
       console.warn(
-        `[seed] ${normalisedEmail} already exists with role "${existing.role}" (expected "${role}"). Left unchanged.`,
+        `[seed] ${normalisedEmail} already exists with role "${existing.roleCode}" (expected "${role}"). Left unchanged.`,
       );
     }
 
     // Seed accounts must be usable after every reseed, even if the database
     // predates the approval workflow.
-    if (existing.status !== "active" || !existing.approvedAt) {
+    if (existing.statusCode !== "active" || !existing.approvedAt) {
       const repaired = await prisma.user.update({
         where: { id: existing.id },
         data: {
-          status: "active",
+          statusCode: "active",
           statusReason: null,
           statusChangedAt: new Date(),
           approvedAt: existing.approvedAt ?? new Date(),
@@ -57,9 +161,9 @@ async function upsertSeedUser({ email, username, password, role }) {
       email: normalisedEmail,
       username,
       passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS),
-      provider: "local",
-      role,
-      status: "active",
+      providerCode: "local",
+      roleCode: role,
+      statusCode: "active",
       statusChangedAt: now,
       approvedAt: now,
     },
@@ -69,8 +173,7 @@ async function upsertSeedUser({ email, username, password, role }) {
   return user;
 }
 
-async function main() {
-  // Languages -------------------------------------------------------------
+async function seedLanguages() {
   for (const language of LANGUAGES) {
     await prisma.language.upsert({
       where: { id: language.id },
@@ -79,19 +182,18 @@ async function main() {
         id: language.id,
         name: language.name,
         autonym: language.autonym,
-        region: language.region,
         speakers: language.speakers,
-        words: language.words,
-        status: language.status,
         accent: language.accent,
-        reviewState: "approved",
-        verified: false,
+        statusCode: language.status,
+        reviewStateCode: "approved",
+        regions: { create: regionWrites(language.region) },
       },
     });
   }
   console.log(`[seed] = ${LANGUAGES.length} languages`);
+}
 
-  // Words -----------------------------------------------------------------
+async function seedWords() {
   for (const word of WORDS) {
     await prisma.word.upsert({
       where: { id: word.id },
@@ -100,21 +202,63 @@ async function main() {
         id: word.id,
         languageId: word.languageId,
         word: word.word,
-        translation: word.translation,
         pronunciation: word.pronunciation ?? null,
-        partOfSpeech: word.partOfSpeech ?? null,
-        usage: word.usage ?? null,
-        verified: Boolean(word.verified),
-        reviewState: "approved",
+        partOfSpeechCode: normalizePartOfSpeechCode(word.partOfSpeech),
+        reviewStateCode: "approved",
+        senses: {
+          create: [
+            {
+              gloss: word.translation,
+              usage: word.usage ?? null,
+              position: 0,
+            },
+          ],
+        },
       },
     });
   }
   console.log(`[seed] = ${WORDS.length} words`);
+}
 
-  // Accounts --------------------------------------------------------------
+/**
+ * Give every fixture an initial review decision so the derived `reviewedAt`
+ * field is populated, while leaving decisions created by the migration alone.
+ */
+async function seedReviewDecisions(admin) {
+  const entities = [
+    ...LANGUAGES.map((language) => ({
+      entityType: "language",
+      entityId: language.id,
+    })),
+    ...WORDS.map((word) => ({ entityType: "word", entityId: word.id })),
+  ];
+
+  for (const entity of entities) {
+    const existing = await prisma.reviewDecision.findFirst({
+      where: entity,
+    });
+    if (!existing) {
+      await prisma.reviewDecision.create({
+        data: {
+          ...entity,
+          stateCode: "approved",
+          reviewerId: admin?.id ?? null,
+        },
+      });
+    }
+  }
+}
+
+async function main() {
+  await seedLookups();
+
   const admin = await upsertSeedUser(seedAccount("ADMIN"));
   await upsertSeedUser(seedAccount("REVIEWER"));
   await upsertSeedUser(seedAccount("CONTRIBUTOR"));
+
+  await seedLanguages();
+  await seedWords();
+  await seedReviewDecisions(admin);
 
   // One audit marker per fixture import. Keeps re-running the seed quiet.
   const alreadyLogged = await prisma.auditLog.findFirst({
@@ -133,7 +277,7 @@ async function main() {
         action: "seeded",
         actorId: admin?.id ?? null,
         actorEmail: admin?.email ?? null,
-        actorRole: admin?.role ?? null,
+        actorRole: admin?.roleCode ?? null,
         reason: "Imported the frontend placeholder corpus as approved fixtures.",
         snapshot: JSON.stringify({
           languages: LANGUAGES.length,

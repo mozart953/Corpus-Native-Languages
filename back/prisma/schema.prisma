@@ -3,6 +3,21 @@
 // SQLite is used through Prisma so the data layer can move to PostgreSQL,
 // MySQL or another supported provider by changing the datasource block and
 // running a migration. No provider-specific SQL is used in the application.
+//
+// Normal form notes
+// -----------------
+// * Enum-like values live in lookup tables (ReviewState, LanguageStatus,
+//   PartOfSpeech, Role, UserStatus, Provider, RemovalStatus) instead of
+//   unconstrained strings.
+// * Language.region is a many-to-many relationship with Region, so a language
+//   can be filtered or joined by region.
+// * Word translations and usage notes live in Sense, one row per meaning.
+// * Review and removal history live in ReviewDecision / RemovalRequest.
+// * `reviewStateCode` remains on each content row as the authoritative current
+//   workflow state. It is a deliberate, indexed current-state pointer; the full
+//   history is in ReviewDecision.
+// * Soft-delete columns (deletedAt/deletedById/deletionReason) are a documented
+//   pragmatic exception: the app never physically deletes corpus rows.
 
 generator client {
   provider = "prisma-client-js"
@@ -14,87 +29,216 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
+// Lookup tables
+// ---------------------------------------------------------------------------
+
+model ReviewState {
+  code      String           @id
+  label     String
+  languages Language[]
+  words     Word[]
+  decisions ReviewDecision[]
+}
+
+model LanguageStatus {
+  code      String     @id
+  label     String
+  languages Language[]
+}
+
+model PartOfSpeech {
+  code  String @id
+  label String
+  words Word[]
+}
+
+model Role {
+  code  String @id
+  label String
+  users User[]
+}
+
+model UserStatus {
+  code  String @id
+  label String
+  users User[]
+}
+
+model Provider {
+  code  String @id
+  label String
+  users User[]
+}
+
+model RemovalStatus {
+  code     String          @id
+  label    String
+  requests RemovalRequest[]
+}
+
+// ---------------------------------------------------------------------------
 // Corpus
 // ---------------------------------------------------------------------------
 
+model Region {
+  name      String           @id
+  languages LanguageRegion[]
+}
+
+model LanguageRegion {
+  languageId String
+  regionName String
+  position   Int      @default(0)
+
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  region   Region   @relation(fields: [regionName], references: [name], onDelete: Cascade)
+
+  @@id([languageId, regionName])
+  @@index([regionName])
+}
+
 model Language {
-  id              String    @id
-  name            String
-  autonym         String
-  region          String
-  speakers        Int
-  words           Int       @default(0)
-  status          String    @default("active")
-  accent          String
+  id       String @id
+  name     String
+  autonym  String
+  speakers Int
+  accent   String
 
-  // Review workflow. Public reads only expose APPROVED rows that are not
-  // soft-deleted. A reviewer's approval is a recommendation; an admin's
+  statusCode String         @default("active")
+  status     LanguageStatus @relation(fields: [statusCode], references: [code])
+
+  // Current workflow state. Public reads only expose APPROVED rows that are
+  // not soft-deleted. A reviewer's approval is a recommendation; an admin's
   // approval is the final decision.
-  reviewState     String    @default("pending")
-  verified        Boolean   @default(false)
-  rejectionReason String?
-  reviewedById    String?
-  reviewedAt      DateTime?
+  reviewStateCode String      @default("pending")
+  reviewState     ReviewState @relation(fields: [reviewStateCode], references: [code])
 
-  // A reviewer may ask an admin to remove content. The request does not hide
-  // the entry; only the admin's logical delete does.
-  removalRequestedAt     DateTime?
-  removalRequestedById   String?
-  removalRequestReason   String?
+  createdById String?
+  createdBy   User?   @relation("LanguageCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  // Authorship and logical deletion.
-  createdById     String?
-  deletedAt       DateTime?
-  deletedById     String?
-  deletionReason  String?
+  // Logical deletion. Reviewers request removal; only an admin deletes.
+  deletedAt      DateTime?
+  deletedById    String?
+  deletedBy      User?     @relation("LanguageDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletionReason String?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  entries         Word[]
+  regions LanguageRegion[]
+  entries Word[]
 
-  @@index([reviewState])
+  @@index([reviewStateCode])
   @@index([deletedAt])
-  @@index([removalRequestedAt])
   @@index([name])
+  @@index([statusCode])
 }
 
 model Word {
-  id              String    @id @default(cuid())
-  languageId      String
-  language        Language  @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  id String @id @default(cuid())
 
-  word            String
-  translation     String
-  pronunciation   String?
-  partOfSpeech    String?
-  usage           String?
+  languageId String
+  language   Language @relation(fields: [languageId], references: [id], onDelete: Restrict)
+
+  word          String
+  pronunciation String?
+
+  partOfSpeechCode String?
+  partOfSpeech     PartOfSpeech? @relation(fields: [partOfSpeechCode], references: [code])
 
   // Same workflow as Language.
-  verified        Boolean   @default(false)
-  reviewState     String    @default("pending")
-  rejectionReason String?
-  reviewedById    String?
-  reviewedAt      DateTime?
+  reviewStateCode String      @default("pending")
+  reviewState     ReviewState @relation(fields: [reviewStateCode], references: [code])
 
-  // Reviewer-raised removal request; visible to reviewers/admins only.
-  removalRequestedAt     DateTime?
-  removalRequestedById   String?
-  removalRequestReason   String?
+  createdById String?
+  createdBy   User?   @relation("WordCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
 
-  createdById     String?
-  deletedAt       DateTime?
-  deletedById     String?
-  deletionReason  String?
+  deletedAt      DateTime?
+  deletedById    String?
+  deletedBy      User?     @relation("WordDeletedBy", fields: [deletedById], references: [id], onDelete: SetNull)
+  deletionReason String?
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  senses Sense[]
 
   @@index([languageId])
   @@index([word])
-  @@index([reviewState])
+  @@index([reviewStateCode])
   @@index([deletedAt])
-  @@index([removalRequestedAt])
+  @@index([partOfSpeechCode])
+}
+
+model Sense {
+  id     String @id @default(cuid())
+  wordId String
+  word   Word   @relation(fields: [wordId], references: [id], onDelete: Cascade)
+
+  gloss    String
+  usage    String?
+  position Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([wordId, position])
+  @@index([wordId])
+  @@index([gloss])
+}
+
+// ---------------------------------------------------------------------------
+// Moderation history
+// ---------------------------------------------------------------------------
+
+// One row per workflow transition or review decision. entityType/entityId are
+// polymorphic (the same shape as AuditLog) because languages and words share
+// the workflow but are separate tables.
+model ReviewDecision {
+  id         String @id @default(cuid())
+  entityType String
+  entityId   String
+
+  stateCode String
+  state     ReviewState @relation(fields: [stateCode], references: [code])
+
+  reviewerId String?
+  reviewer   User?   @relation("ReviewDecisionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([reviewerId])
+  @@index([stateCode])
+}
+
+// A reviewer asks an admin to remove content. The request is separate from the
+// content row so the full request history is retained.
+model RemovalRequest {
+  id         String @id @default(cuid())
+  entityType String
+  entityId   String
+
+  reason String?
+
+  statusCode String        @default("pending")
+  status     RemovalStatus @relation(fields: [statusCode], references: [code])
+
+  requestedById String?
+  requestedBy   User?   @relation("RemovalRequestRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  resolvedById String?
+  resolvedBy   User?   @relation("RemovalRequestResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([entityType, entityId, statusCode])
+  @@index([requestedById])
+  @@index([resolvedById])
+  @@index([statusCode])
 }
 
 // ---------------------------------------------------------------------------
@@ -102,33 +246,52 @@ model Word {
 // ---------------------------------------------------------------------------
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  username     String
+  id       String  @id @default(cuid())
+  email    String  @unique
+  username String
+
   // Nullable so future OAuth providers (Google, etc.) can create accounts
   // without a password. Local accounts always have a bcrypt hash.
   passwordHash String?
-  provider     String    @default("local")
+
+  providerCode String   @default("local")
+  provider     Provider @relation(fields: [providerCode], references: [code])
   providerId   String?
-  role         String    @default("contributor")
+
+  roleCode String @default("contributor")
+  role     Role   @relation(fields: [roleCode], references: [code])
 
   // Account lifecycle: pending -> active | rejected, active <-> deactivated.
   // Only active accounts can sign in, and the API re-checks this on every
   // authenticated request so deactivation takes effect immediately.
-  status          String    @default("pending")
+  statusCode      String     @default("pending")
+  status          UserStatus @relation(fields: [statusCode], references: [code])
   statusReason    String?
   statusChangedAt DateTime?
   approvedAt      DateTime?
-  approvedById    String?
 
-  lastLoginAt  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  approvedById String?
+  approvedBy   User?   @relation("UserApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedUsers User[] @relation("UserApprovedBy")
 
-  @@unique([provider, providerId])
-  @@index([role])
-  @@index([provider])
-  @@index([status])
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  languagesCreated Language[] @relation("LanguageCreatedBy")
+  languagesDeleted Language[] @relation("LanguageDeletedBy")
+  wordsCreated     Word[]     @relation("WordCreatedBy")
+  wordsDeleted     Word[]     @relation("WordDeletedBy")
+  reviewDecisions  ReviewDecision[] @relation("ReviewDecisionReviewer")
+  removalsRequested RemovalRequest[] @relation("RemovalRequestRequester")
+  removalsResolved  RemovalRequest[] @relation("RemovalRequestResolver")
+  siteImagesUpdated SiteImage[] @relation("SiteImageUpdatedBy")
+  auditLogs         AuditLog[] @relation("AuditLogActor")
+
+  @@unique([providerCode, providerId])
+  @@index([roleCode])
+  @@index([providerCode])
+  @@index([statusCode])
 }
 
 // ---------------------------------------------------------------------------
@@ -139,15 +302,18 @@ model User {
 // itself lives in the server upload directory; `url` is the public API path
 // stored in the database so the frontend never has to guess a filename.
 model SiteImage {
-  id          String   @id
-  url         String
-  fileName    String
-  mimeType    String
-  size        Int
-  alt         String?
+  id       String  @id
+  url      String
+  fileName String
+  mimeType String
+  size     Int
+  alt      String?
+
   updatedById String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedBy   User?   @relation("SiteImageUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ---------------------------------------------------------------------------
@@ -156,22 +322,29 @@ model SiteImage {
 
 // Every submit, review, approval, rejection, removal and restore is written
 // here. The snapshot keeps the record as it was at that moment, so logically
-// removed content is never actually lost.
+// removed content is never actually lost. `actorEmail`/`actorRole` are
+// intentional historical denormalization: they preserve the actor's identity
+// at the time of the action even if the account later changes.
 model AuditLog {
-  id         String   @id @default(cuid())
+  id         String @id @default(cuid())
   entityType String
   entityId   String
   action     String
-  fromState  String?
-  toState    String?
+
+  fromState String?
+  toState   String?
+
   actorId    String?
+  actor      User?   @relation("AuditLogActor", fields: [actorId], references: [id], onDelete: SetNull)
   actorEmail String?
   actorRole  String?
-  reason     String?
-  snapshot   String?
-  createdAt  DateTime @default(now())
+
+  reason    String?
+  snapshot  String?
+  createdAt DateTime @default(now())
 
   @@index([entityType, entityId])
   @@index([action])
   @@index([createdAt])
+  @@index([actorId])
 }

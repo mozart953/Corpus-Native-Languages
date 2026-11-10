@@ -367,12 +367,17 @@ async function main() {
 
     console.log("\nAll moderation and account checks passed.");
   } finally {
-    // The smoke row and its audit trail are removed from the development DB.
+    // The smoke row and its history/audit trail are removed from the
+    // development DB. ReviewDecision and RemovalRequest are polymorphic and
+    // have no foreign key, so they must be deleted explicitly.
     if (wordId) {
+      await prisma.removalRequest.deleteMany({ where: { entityId: wordId } });
+      await prisma.reviewDecision.deleteMany({ where: { entityId: wordId } });
       await prisma.auditLog.deleteMany({ where: { entityId: wordId } });
       await prisma.word.deleteMany({ where: { id: wordId } });
     }
     if (smokeUserId) {
+      await prisma.reviewDecision.deleteMany({ where: { entityId: smokeUserId } });
       await prisma.auditLog.deleteMany({ where: { entityId: smokeUserId } });
       await prisma.user.deleteMany({ where: { id: smokeUserId } });
     }

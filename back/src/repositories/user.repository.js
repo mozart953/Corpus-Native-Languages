@@ -21,8 +21,8 @@ export const userRepository = {
     return client.user.count({ where });
   },
 
-  updateRole(id, role, client = prisma) {
-    return client.user.update({ where: { id }, data: { role } });
+  updateRole(id, roleCode, client = prisma) {
+    return client.user.update({ where: { id }, data: { roleCode } });
   },
 
   updateStatus(id, data, client = prisma) {
