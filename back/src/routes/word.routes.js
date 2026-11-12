@@ -7,10 +7,13 @@ import { reviewLimiter, writeLimiter } from "../middlewares/rate-limit.js";
 import {
   wordCreateValidator,
   wordDeleteValidator,
+  wordGetValidator,
   wordIdValidator,
   wordListMineValidator,
   wordQueryValidator,
   wordRestoreValidator,
+  wordTranslationDeleteValidator,
+  wordTranslationValidator,
   wordUpdateValidator,
 } from "../validators/word.validator.js";
 import { reviewValidator } from "../validators/review.validator.js";
@@ -23,7 +26,7 @@ wordRoutes.get("/", wordQueryValidator, validate, wordController.list);
 // Sign-in-only views. `/trash` and `/mine` must stay above `/:id`.
 wordRoutes.get("/mine", requireAuth, wordListMineValidator, validate, wordController.listMine);
 wordRoutes.get("/trash", requireAuth, wordListMineValidator, validate, wordController.listTrash);
-wordRoutes.get("/:id", wordIdValidator, validate, wordController.get);
+wordRoutes.get("/:id", wordGetValidator, validate, wordController.get);
 
 // Authenticated writes -----------------------------------------------------
 wordRoutes.post(
@@ -54,6 +57,28 @@ wordRoutes.patch(
   wordUpdateValidator,
   validate,
   wordController.update,
+);
+
+// Per-locale translations. Reviewers and admins maintain these; contributors
+// edit the canonical English fields through the regular word update.
+wordRoutes.put(
+  "/:id/translations/:locale",
+  requireAuth,
+  requireRole("reviewer", "admin"),
+  writeLimiter,
+  wordTranslationValidator,
+  validate,
+  wordController.saveTranslation,
+);
+
+wordRoutes.delete(
+  "/:id/translations/:locale",
+  requireAuth,
+  requireRole("reviewer", "admin"),
+  writeLimiter,
+  wordTranslationDeleteValidator,
+  validate,
+  wordController.deleteTranslation,
 );
 
 // Draft lifecycle ----------------------------------------------------------

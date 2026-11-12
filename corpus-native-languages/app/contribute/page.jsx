@@ -2,14 +2,17 @@
 
 import RolePage from "@/components/RolePage/RolePage.jsx";
 import ContributeDashboard from "@/components/Contribute/ContributeDashboard.jsx";
+import { useI18n } from "@/lib/i18n";
 
 export default function ContributePage() {
+  const { t } = useI18n();
+
   return (
     <RolePage
       activePath="/contribute"
-      eyebrow="Contribution desk"
-      title="Add and manage your entries"
-      subtitle="Create words and languages, keep private drafts, submit them for review, and restore anything you discard before submitting."
+      eyebrow={t("contribute.eyebrow")}
+      title={t("contribute.title")}
+      subtitle={t("contribute.subtitle")}
       allowedRoles={["contributor", "reviewer", "admin"]}
     >
       {(user) => <ContributeDashboard user={user} />}

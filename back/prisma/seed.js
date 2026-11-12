@@ -46,6 +46,11 @@ const REMOVAL_STATUSES = [
   { code: "completed", label: "Completed" },
 ];
 
+const LOCALES = [
+  { code: "en", label: "English", isActive: true, isDefault: true, position: 0 },
+  { code: "es", label: "Español", isActive: true, isDefault: false, position: 1 },
+];
+
 const COMMON_PARTS_OF_SPEECH = [
   { code: "noun", label: "noun" },
   { code: "verb", label: "verb" },
@@ -102,6 +107,19 @@ async function seedLookups() {
   await upsertLookup("userStatus", USER_STATUSES);
   await upsertLookup("provider", PROVIDERS);
   await upsertLookup("removalStatus", REMOVAL_STATUSES);
+
+  for (const locale of LOCALES) {
+    await prisma.locale.upsert({
+      where: { code: locale.code },
+      update: {
+        label: locale.label,
+        isActive: locale.isActive,
+        isDefault: locale.isDefault,
+        position: locale.position,
+      },
+      create: locale,
+    });
+  }
 
   const partsOfSpeech = new Map(
     COMMON_PARTS_OF_SPEECH.map((row) => [row.code, row]),
@@ -208,9 +226,16 @@ async function seedWords() {
         senses: {
           create: [
             {
-              gloss: word.translation,
-              usage: word.usage ?? null,
               position: 0,
+              translations: {
+                create: [
+                  {
+                    localeCode: "en",
+                    gloss: word.translation,
+                    usage: word.usage ?? null,
+                  },
+                ],
+              },
             },
           ],
         },
@@ -218,6 +243,59 @@ async function seedWords() {
     });
   }
   console.log(`[seed] = ${WORDS.length} words`);
+}
+
+/**
+ * Keep fixture words readable after the translation split. Fresh databases get
+ * their English row in seedWords; this repairs a database that was seeded
+ * before the SenseTranslation table existed.
+ */
+async function seedWordTranslations() {
+  for (const word of WORDS) {
+    const existing = await prisma.word.findUnique({
+      where: { id: word.id },
+      include: {
+        senses: {
+          orderBy: { position: "asc" },
+          include: { translations: true },
+        },
+      },
+    });
+
+    if (!existing) continue;
+
+    const primary = existing.senses[0];
+    if (!primary) {
+      await prisma.sense.create({
+        data: {
+          wordId: existing.id,
+          position: 0,
+          translations: {
+            create: [
+              {
+                localeCode: "en",
+                gloss: word.translation,
+                usage: word.usage ?? null,
+              },
+            ],
+          },
+        },
+      });
+      continue;
+    }
+
+    if (!primary.translations.some((row) => row.localeCode === "en")) {
+      await prisma.senseTranslation.create({
+        data: {
+          senseId: primary.id,
+          localeCode: "en",
+          gloss: word.translation,
+          usage: word.usage ?? null,
+        },
+      });
+    }
+  }
+  console.log(`[seed] = English sense translations for ${WORDS.length} words`);
 }
 
 /**
@@ -258,6 +336,7 @@ async function main() {
 
   await seedLanguages();
   await seedWords();
+  await seedWordTranslations();
   await seedReviewDecisions(admin);
 
   // One audit marker per fixture import. Keeps re-running the seed quiet.

@@ -7,7 +7,11 @@ export const wordController = {
   }),
 
   get: asyncHandler(async (req, res) => {
-    res.json(await wordService.getPublic(req.validated.id));
+    res.json(
+      await wordService.getPublic(req.validated.id, {
+        locale: req.validated.locale,
+      }),
+    );
   }),
 
   listMine: asyncHandler(async (req, res) => {
@@ -52,5 +56,17 @@ export const wordController = {
 
   cancelRemovalRequest: asyncHandler(async (req, res) => {
     res.json(await wordService.cancelRemovalRequest(req.validated.id, req.user));
+  }),
+
+  saveTranslation: asyncHandler(async (req, res) => {
+    const { id, locale, gloss, usage } = req.validated;
+    res.json(
+      await wordService.saveTranslation(id, locale, { gloss, usage }, req.user),
+    );
+  }),
+
+  deleteTranslation: asyncHandler(async (req, res) => {
+    const { id, locale } = req.validated;
+    res.json(await wordService.deleteTranslation(id, locale, req.user));
   }),
 };

@@ -2,14 +2,17 @@
 
 import RolePage from "@/components/RolePage/RolePage.jsx";
 import ReviewDashboard from "@/components/Review/ReviewDashboard.jsx";
+import { useI18n } from "@/lib/i18n";
 
 export default function ReviewPage() {
+  const { t } = useI18n();
+
   return (
     <RolePage
       activePath="/review"
-      eyebrow="Review desk"
-      title="Moderate the corpus"
-      subtitle="Review submitted words and languages, recommend approval or rejection, and raise removal requests. An admin gives the final approval."
+      eyebrow={t("review.eyebrow")}
+      title={t("review.title")}
+      subtitle={t("review.subtitle")}
       allowedRoles={["reviewer", "admin"]}
     >
       {(user) => <ReviewDashboard user={user} />}

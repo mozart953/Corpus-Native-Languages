@@ -7,6 +7,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useI18n } from "../../lib/i18n";
 
 /**
  * Modal wrapper around the credential form.
@@ -26,6 +27,7 @@ function LoginDialog({
   notice = null,
 }) {
   const isSignUp = mode === "signup";
+  const { t } = useI18n();
 
   return (
     <Dialog
@@ -36,12 +38,10 @@ function LoginDialog({
     >
       <DialogContent className="max-h-[92vh] w-[calc(100%-2rem)] max-w-3xl overflow-y-auto border border-border bg-popover p-0 shadow-2xl sm:max-w-3xl">
         <DialogTitle className="sr-only">
-          {isSignUp ? "Create account" : "Sign in"}
+          {t(isSignUp ? "login.dialog.titleSignup" : "login.dialog.titleSignin")}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          {isSignUp
-            ? "Create an account to contribute words and languages to the corpus."
-            : "Sign in to contribute, review and manage the corpus."}
+          {t(isSignUp ? "login.dialog.descSignup" : "login.dialog.descSignin")}
         </DialogDescription>
 
         <LoginComponent

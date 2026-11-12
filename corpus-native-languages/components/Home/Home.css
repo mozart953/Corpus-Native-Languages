@@ -45,6 +45,15 @@
   max-width: 720px;
 }
 
+.home__heroTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
 .home__title {
   font-size: clamp(2.2rem, 5.4vw, 4.2rem);
   line-height: 0.98;

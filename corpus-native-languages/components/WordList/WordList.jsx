@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import WordCard from "../WordCard/WordCard.jsx";
+import { useI18n } from "../../lib/i18n";
 import "./WordList.css";
 
 /** Cards shown per page. Keeps the DOM small on a large corpus. */
@@ -26,6 +27,7 @@ function WordList({
   showLanguage = true,
 }) {
   const [page, setPage] = useState(1);
+  const { t } = useI18n();
 
   // A new result set should always start from the top of the list. Adjusting
   // during render (rather than in an effect) avoids a second commit and the
@@ -54,16 +56,18 @@ function WordList({
           {isFiltered ? "∅" : "◍"}
         </span>
         <h3 className="wordList__emptyTitle">
-          {isFiltered ? "No words match your search" : "No words here yet"}
+          {isFiltered
+            ? t("wordList.emptySearchTitle")
+            : t("wordList.emptyLanguageTitle")}
         </h3>
         <p className="wordList__emptyText">
           {isFiltered
-            ? `Nothing in this selection contains “${query.trim()}”. Try a shorter fragment, or switch the scope to “All”.`
-            : "This language has no entries yet. Contributions from its speakers are what build the corpus."}
+            ? t("wordList.emptySearchText", { query: query.trim() })
+            : t("wordList.emptyLanguageText")}
         </p>
         {isFiltered && onClearSearch ? (
           <Button type="button" size="sm" onClick={onClearSearch}>
-            Clear search
+            {t("wordList.clearSearch")}
           </Button>
         ) : null}
       </div>
@@ -88,7 +92,7 @@ function WordList({
       </ul>
 
       {pageCount > 1 ? (
-        <nav className="wordList__pager" aria-label="Word pages">
+        <nav className="wordList__pager" aria-label={t("wordList.pager")}>
           <Button
             type="button"
             variant="outline"
@@ -96,11 +100,11 @@ function WordList({
             onClick={() => setPage((current) => Math.max(1, current - 1))}
             disabled={safePage === 1}
           >
-            Previous
+            {t("common.previous")}
           </Button>
 
           <span className="wordList__pageInfo">
-            Page <strong>{safePage}</strong> of {pageCount}
+            {t("wordList.pageInfo", { page: safePage, total: pageCount })}
           </span>
 
           <Button
@@ -110,7 +114,7 @@ function WordList({
             onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
             disabled={safePage === pageCount}
           >
-            Next
+            {t("common.next")}
           </Button>
         </nav>
       ) : null}

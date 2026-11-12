@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiAssetUrl, apiFetch } from "../../lib/api";
+import { useI18n } from "../../lib/i18n";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
@@ -46,6 +47,7 @@ export default function SiteImageManager() {
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const { t } = useI18n();
   const fileInputRef = useRef(null);
   const preview = useMemo(
     () => (file ? URL.createObjectURL(file) : null),
@@ -71,7 +73,7 @@ export default function SiteImageManager() {
         setError(null);
       } catch (cause) {
         if (!cancelled) {
-          setError(cause?.message ?? "Could not load the home image.");
+          setError(cause?.message ?? t("siteImage.error.load"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -82,7 +84,7 @@ export default function SiteImageManager() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const chooseFile = (event) => {
     const chosen = event.target.files?.[0] ?? null;
@@ -95,13 +97,13 @@ export default function SiteImageManager() {
     }
 
     if (!ALLOWED_TYPES.includes(chosen.type)) {
-      setError("Choose a PNG, JPEG, WebP or GIF image.");
+      setError(t("siteImage.error.type"));
       event.target.value = "";
       return;
     }
 
     if (chosen.size > MAX_BYTES) {
-      setError("That image is larger than 5 MB.");
+      setError(t("siteImage.error.size"));
       event.target.value = "";
       return;
     }
@@ -115,7 +117,7 @@ export default function SiteImageManager() {
     setNotice(null);
 
     if (!file && !image) {
-      setError("Choose an image first.");
+      setError(t("siteImage.error.choose"));
       return;
     }
 
@@ -137,11 +139,11 @@ export default function SiteImageManager() {
       if (fileInputRef.current) fileInputRef.current.value = "";
       setNotice(
         file
-          ? "Home image replaced. Every visitor now sees the new image."
-          : "Alt text updated.",
+          ? t("siteImage.notice.replaced")
+          : t("siteImage.notice.alt"),
       );
     } catch (cause) {
-      setError(cause?.message ?? "Could not save the home image.");
+      setError(cause?.message ?? t("siteImage.error.save"));
     } finally {
       setSaving(false);
     }
@@ -150,9 +152,7 @@ export default function SiteImageManager() {
   const remove = async () => {
     if (!image) return;
 
-    const confirmed = window.confirm(
-      "Remove the home presentation image? The home page will fall back to the NL mark until an admin uploads another image.",
-    );
+    const confirmed = window.confirm(t("siteImage.confirmRemove"));
     if (!confirmed) return;
 
     setRemoving(true);
@@ -165,9 +165,9 @@ export default function SiteImageManager() {
       setFile(null);
       setAlt("");
       if (fileInputRef.current) fileInputRef.current.value = "";
-      setNotice("Home image removed.");
+      setNotice(t("siteImage.notice.removed"));
     } catch (cause) {
-      setError(cause?.message ?? "Could not remove the home image.");
+      setError(cause?.message ?? t("siteImage.error.remove"));
     } finally {
       setRemoving(false);
     }
@@ -180,11 +180,10 @@ export default function SiteImageManager() {
       <CardHeader className="border-b border-border pb-4">
         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
           <ImageIcon className="size-5" aria-hidden="true" />
-          Home presentation image
+          {t("siteImage.title")}
         </CardTitle>
         <CardDescription className="max-w-2xl">
-          This is the large image beside the home page introduction. Uploading
-          a new file replaces the current one for every visitor.
+          {t("siteImage.description")}
         </CardDescription>
       </CardHeader>
 
@@ -192,13 +191,13 @@ export default function SiteImageManager() {
         <div className="overflow-hidden rounded-xl border border-border bg-[var(--nl-surface-3)]">
           {loading ? (
             <div className="grid min-h-64 place-items-center text-sm text-muted-foreground">
-              Loading image…
+              {t("siteImage.loading")}
             </div>
           ) : shownUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- API-hosted, user-uploaded image with unknown dimensions
             <img
               src={shownUrl}
-              alt={alt || image?.alt || "Home page presentation image"}
+              alt={alt || image?.alt || t("siteImage.altFallback")}
               className="aspect-[4/3] h-full w-full object-cover"
             />
           ) : (
@@ -207,7 +206,7 @@ export default function SiteImageManager() {
                 NL
               </span>
               <p className="max-w-xs px-6 text-sm text-muted-foreground">
-                No image yet. The home page is using the NL mark as a fallback.
+                {t("siteImage.noImage")}
               </p>
             </div>
           )}
@@ -217,7 +216,9 @@ export default function SiteImageManager() {
           {image ? (
             <div className="rounded-lg border border-border bg-[var(--nl-surface-2)] px-3 py-2.5 text-xs text-muted-foreground">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold text-foreground">Current file</span>
+                <span className="font-semibold text-foreground">
+                  {t("siteImage.currentFile")}
+                </span>
                 <span className="font-mono">{formatBytes(image.size)}</span>
               </div>
               <p className="mt-1 truncate font-mono text-[0.68rem] text-muted-foreground/70">
@@ -228,7 +229,7 @@ export default function SiteImageManager() {
 
           <div className="grid gap-2">
             <Label htmlFor="site-image-file">
-              {image ? "Replace image" : "Choose image"}
+              {t(image ? "siteImage.replace" : "siteImage.choose")}
             </Label>
             <Input
               ref={fileInputRef}
@@ -239,25 +240,24 @@ export default function SiteImageManager() {
               className="h-auto cursor-pointer border-border bg-[var(--nl-surface-2)] py-2 text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-primary-foreground hover:file:bg-[var(--nl-primary-strong)]"
             />
             <p className="text-xs leading-5 text-muted-foreground">
-              PNG, JPEG, WebP or GIF · up to 5 MB. Large landscape images work
-              best.
+              {t("siteImage.help")}
             </p>
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="site-image-alt">
-              Alt text
+              {t("siteImage.alt")}
             </Label>
             <Input
               id="site-image-alt"
               value={alt}
               onChange={(event) => setAlt(event.target.value)}
               maxLength={200}
-              placeholder="A short description for screen readers"
+              placeholder={t("siteImage.altPlaceholder")}
               className="border-border bg-[var(--nl-surface-2)] text-foreground placeholder:text-muted-foreground"
             />
             <p className="text-xs text-muted-foreground">
-              {alt.length}/200 · Describe what the image shows, not the file name.
+              {t("siteImage.altHelp", { count: alt.length })}
             </p>
           </div>
 
@@ -280,7 +280,7 @@ export default function SiteImageManager() {
               ) : (
                 <Upload className="size-4" aria-hidden="true" />
               )}
-              {image ? "Save changes" : "Upload image"}
+              {t(image ? "siteImage.save" : "siteImage.upload")}
             </Button>
 
             {image ? (
@@ -296,7 +296,7 @@ export default function SiteImageManager() {
                 ) : (
                   <Trash2 className="size-4" aria-hidden="true" />
                 )}
-                Remove
+                {t("siteImage.remove")}
               </Button>
             ) : null}
 
@@ -311,7 +311,7 @@ export default function SiteImageManager() {
                 }}
               >
                 <RefreshCw className="size-4" aria-hidden="true" />
-                Clear selection
+                {t("siteImage.clearSelection")}
               </Button>
             ) : null}
           </div>

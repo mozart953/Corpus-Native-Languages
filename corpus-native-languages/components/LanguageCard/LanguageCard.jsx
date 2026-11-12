@@ -1,6 +1,7 @@
 "use client";
 
 import { STATUS_LABELS } from "../../data/corpus";
+import { useI18n } from "../../lib/i18n";
 import "./LanguageCard.css";
 
 /** Format a speaker count as 1.1M / 486K, which reads better on a card. */
@@ -20,8 +21,12 @@ function formatCount(value) {
  * looking at before they start browsing words.
  */
 function LanguageCard({ language, active = false, wordCount = null, onSelect = null }) {
+  const { t, has } = useI18n();
   const entries = wordCount ?? language.words;
-  const status = STATUS_LABELS[language.status] ?? language.status;
+  const statusKey = `languageCard.status.${language.status}`;
+  const status = has(statusKey)
+    ? t(statusKey)
+    : STATUS_LABELS[language.status] ?? language.status;
   const isCritical = language.status === "critically-endangered";
 
   return (
@@ -47,7 +52,7 @@ function LanguageCard({ language, active = false, wordCount = null, onSelect = n
         </span>
 
         {active ? (
-          <span className="languageCard__active" aria-label="Currently selected">
+          <span className="languageCard__active" aria-label={t("languageCard.selected")}>
             <span className="nl-icon nl-icon--check" aria-hidden="true" />
           </span>
         ) : null}
@@ -57,11 +62,11 @@ function LanguageCard({ language, active = false, wordCount = null, onSelect = n
 
       <dl className="languageCard__stats">
         <div>
-          <dt>Speakers</dt>
+          <dt>{t("languageCard.speakers")}</dt>
           <dd>{formatCount(language.speakers)}</dd>
         </div>
         <div>
-          <dt>Words</dt>
+          <dt>{t("languageCard.words")}</dt>
           <dd>{formatCount(entries)}</dd>
         </div>
       </dl>

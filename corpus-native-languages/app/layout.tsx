@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { DM_Sans, Inter, Source_Sans_3 } from "next/font/google";
 import Providers from "@/components/Auth/Providers.jsx";
+import { I18nProvider } from "@/lib/i18n";
+import { fetchPageContent } from "@/lib/content";
+import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocaleCode } from "@/lib/locale";
 import "./globals.css";
 
 /**
@@ -53,14 +57,22 @@ const themeScript = `
 })();
 `;
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The locale cookie is written by the client toggle, so the next server
+  // render already carries the chosen language. Page copy is fetched here
+  // rather than in a client effect to avoid a flash of message keys.
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
+  const locale = isLocaleCode(cookieLocale) ? cookieLocale : DEFAULT_LOCALE;
+  const content = await fetchPageContent(locale);
+
   return (
     <html
-      lang="es"
+      lang={content.locale}
       suppressHydrationWarning
       className={`dark ${dmSans.variable} ${sourceSans.variable} ${inter.variable}`}
     >
@@ -68,7 +80,15 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <I18nProvider
+            initialLocale={content.locale}
+            initialMessages={content.messages}
+            initialLocales={content.locales}
+          >
+            {children}
+          </I18nProvider>
+        </Providers>
       </body>
     </html>
   );

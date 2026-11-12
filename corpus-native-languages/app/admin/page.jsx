@@ -2,14 +2,17 @@
 
 import RolePage from "@/components/RolePage/RolePage.jsx";
 import AdminDashboard from "@/components/Admin/AdminDashboard.jsx";
+import { useI18n } from "@/lib/i18n";
 
 export default function AdminPage() {
+  const { t } = useI18n();
+
   return (
     <RolePage
       activePath="/admin"
-      eyebrow="Administration"
-      title="Accounts, approvals and the archive"
-      subtitle="Approve new contributors and reviewers, manage active accounts, and keep removed content retained but hidden from the public corpus."
+      eyebrow={t("admin.eyebrow")}
+      title={t("admin.title")}
+      subtitle={t("admin.subtitle")}
       allowedRoles={["admin"]}
     >
       {(user) => <AdminDashboard user={user} />}

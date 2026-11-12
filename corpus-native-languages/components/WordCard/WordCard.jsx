@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { splitHighlight } from "../../utils/text";
 import { copyToClipboard } from "../../utils/exporters";
+import { useI18n } from "../../lib/i18n";
 import "./WordCard.css";
 
 /** Render a string with query matches wrapped in <mark>. */
@@ -40,6 +41,7 @@ function WordCard({
   onDownloadSingle = null,
 }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
 
   const copyPair = async () => {
     const ok = await copyToClipboard(`${word.word}\t${word.translation}`);
@@ -48,7 +50,7 @@ function WordCard({
     window.setTimeout(() => setCopied(false), 1600);
   };
 
-  const copyLabel = copied ? "Copied" : "Copy pair";
+  const copyLabel = copied ? t("wordCard.copied") : t("wordCard.copyPair");
 
   return (
     <article
@@ -62,7 +64,7 @@ function WordCard({
               type="checkbox"
               checked={selected}
               onChange={() => onToggleSelect(word.id)}
-              aria-label={`Select ${word.word} for export`}
+              aria-label={t("wordCard.select", { word: word.word })}
             />
             <span className="wordCard__checkbox" aria-hidden="true">
               <span className="nl-icon nl-icon--check" />
@@ -78,11 +80,11 @@ function WordCard({
 
         {word.verified === false ? (
           <Badge variant="outline" className="wordCard__pending">
-            Pending review
+            {t("wordCard.pending")}
           </Badge>
         ) : (
           <Badge variant="outline" className="wordCard__verified">
-            Verified
+            {t("wordCard.verified")}
           </Badge>
         )}
       </header>
@@ -96,14 +98,17 @@ function WordCard({
           <MoveRight className="size-4" />
         </span>
 
-        <p className="wordCard__translation">
+        <p
+          className="wordCard__translation"
+          title={word.translationIsFallback ? t("wordCard.fallback") : undefined}
+        >
           <Highlighted text={word.translation} query={query} />
         </p>
       </div>
 
       {word.pronunciation ? (
         <p className="wordCard__pronunciation">
-          <span className="wordCard__label">Pronunciation</span>
+          <span className="wordCard__label">{t("wordCard.pronunciation")}</span>
           <span className="wordCard__value">{word.pronunciation}</span>
         </p>
       ) : null}
@@ -116,7 +121,7 @@ function WordCard({
 
       {word.usage ? (
         <p className="wordCard__usage">
-          <span className="wordCard__label">Usage</span>
+          <span className="wordCard__label">{t("wordCard.usage")}</span>
           {word.usage}
         </p>
       ) : null}
@@ -147,7 +152,7 @@ function WordCard({
             onClick={() => onDownloadSingle(word)}
           >
             <Download className="size-3.5" aria-hidden="true" />
-            Download
+            {t("wordCard.download")}
           </Button>
         ) : null}
       </footer>

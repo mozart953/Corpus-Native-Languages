@@ -9,32 +9,34 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "../Moderation/StatusBadge.jsx";
 import EntryForm from "../Contribute/EntryForm.jsx";
 import SiteImageManager from "./SiteImageManager.jsx";
+import PageContentManager from "./PageContentManager.jsx";
+import { useI18n } from "../../lib/i18n";
 import "./Admin.css";
 
 const STATUS_FILTERS = [
-  { value: "all", label: "All statuses" },
-  { value: "pending", label: "Pending" },
-  { value: "active", label: "Active" },
-  { value: "rejected", label: "Rejected" },
-  { value: "deactivated", label: "Deactivated" },
+  { value: "all", labelKey: "admin.accounts.allStatuses" },
+  { value: "pending", labelKey: "admin.accounts.pending" },
+  { value: "active", labelKey: "admin.accounts.active" },
+  { value: "rejected", labelKey: "admin.accounts.rejected" },
+  { value: "deactivated", labelKey: "admin.accounts.deactivated" },
 ];
 
 const ROLE_FILTERS = [
-  { value: "all", label: "All roles" },
-  { value: "contributor", label: "Contributors" },
-  { value: "reviewer", label: "Reviewers" },
-  { value: "admin", label: "Admins" },
+  { value: "all", labelKey: "admin.accounts.allRoles" },
+  { value: "contributor", labelKey: "admin.accounts.contributors" },
+  { value: "reviewer", labelKey: "admin.accounts.reviewers" },
+  { value: "admin", labelKey: "admin.accounts.admins" },
 ];
 
 const APPROVAL_ROLES = [
-  { value: "contributor", label: "Contributor" },
-  { value: "reviewer", label: "Reviewer" },
+  { value: "contributor", labelKey: "admin.accounts.contributor" },
+  { value: "reviewer", labelKey: "admin.accounts.reviewer" },
 ];
 
 const ACTIVE_ROLES = [
-  { value: "contributor", label: "Contributor" },
-  { value: "reviewer", label: "Reviewer" },
-  { value: "admin", label: "Admin" },
+  { value: "contributor", labelKey: "admin.accounts.contributor" },
+  { value: "reviewer", labelKey: "admin.accounts.reviewer" },
+  { value: "admin", labelKey: "admin.accounts.admin" },
 ];
 
 const STATUS_ORDER = {
@@ -70,6 +72,7 @@ function AccountCard({
   const canApprove = account.status === "pending" || account.status === "rejected";
   const isActive = account.status === "active";
   const isDeactivated = account.status === "deactivated";
+  const { t } = useI18n();
 
   return (
     <article className={`roleCard adminAccount ${isSelf ? "adminAccount--self" : ""}`}>
@@ -83,13 +86,13 @@ function AccountCard({
 
       <div className="roleCard__meta">
         <span>{account.role}</span>
-        <span>Joined {formatDate(account.createdAt)}</span>
+        <span>{t("admin.accounts.joined", { date: formatDate(account.createdAt) })}</span>
         <span>
           {account.lastLoginAt
-            ? `Last sign-in ${formatDate(account.lastLoginAt)}`
-            : "Never signed in"}
+            ? t("admin.accounts.lastSignIn", { date: formatDate(account.lastLoginAt) })
+            : t("admin.accounts.never")}
         </span>
-        {isSelf ? <span>This is your account</span> : null}
+        {isSelf ? <span>{t("admin.accounts.thisIsYou")}</span> : null}
       </div>
 
       {account.statusReason ? (
@@ -101,7 +104,7 @@ function AccountCard({
       {canApprove ? (
         <div className="adminAccount__actions">
           <label className="roleField adminAccount__roleField">
-            <span className="roleLabel">Approve as</span>
+            <span className="roleLabel">{t("admin.accounts.approveAs")}</span>
             <select
               className="roleSelect"
               value={approvalRole}
@@ -110,7 +113,7 @@ function AccountCard({
             >
               {APPROVAL_ROLES.map((role) => (
                 <option key={role.value} value={role.value}>
-                  {role.label}
+                  {t(role.labelKey)}
                 </option>
               ))}
             </select>
@@ -122,7 +125,7 @@ function AccountCard({
               disabled={busy}
               onClick={() => onApprove(account)}
             >
-              {busy ? "Saving…" : "Approve account"}
+              {busy ? t("admin.accounts.saving") : t("admin.accounts.approve")}
             </Button>
             {account.status === "pending" ? (
               <Button
@@ -133,7 +136,7 @@ function AccountCard({
                 onClick={() => onReject(account)}
                 className="border-border text-foreground hover:bg-accent"
               >
-                Reject
+                {t("admin.accounts.reject")}
               </Button>
             ) : null}
           </div>
@@ -143,7 +146,7 @@ function AccountCard({
       {isActive ? (
         <div className="adminAccount__actions">
           <label className="roleField adminAccount__roleField">
-            <span className="roleLabel">Role</span>
+            <span className="roleLabel">{t("admin.accounts.roleLabel")}</span>
             <select
               className="roleSelect"
               value={roleDraft}
@@ -152,7 +155,7 @@ function AccountCard({
             >
               {ACTIVE_ROLES.map((role) => (
                 <option key={role.value} value={role.value}>
-                  {role.label}
+                  {t(role.labelKey)}
                 </option>
               ))}
             </select>
@@ -165,7 +168,7 @@ function AccountCard({
               disabled={busy || isSelf || roleDraft === account.role}
               onClick={() => onSaveRole(account)}
             >
-              Save role
+              {t("admin.accounts.saveRole")}
             </Button>
             <Button
               type="button"
@@ -175,12 +178,12 @@ function AccountCard({
               onClick={() => onDeactivate(account)}
               className="border-border text-foreground hover:bg-accent"
             >
-              Deactivate
+              {t("admin.accounts.deactivate")}
             </Button>
           </div>
           {isSelf ? (
             <p className="roleHint adminAccount__hint">
-              Your own role and status cannot be changed from this screen.
+              {t("admin.accounts.selfHint")}
             </p>
           ) : null}
         </div>
@@ -194,11 +197,10 @@ function AccountCard({
             disabled={busy}
             onClick={() => onReactivate(account)}
           >
-            {busy ? "Saving…" : "Reactivate account"}
+            {busy ? t("admin.accounts.saving") : t("admin.accounts.reactivate")}
           </Button>
           <span className="roleHint">
-            The account returns with its previous {account.role} role; change the
-            role afterwards if needed.
+            {t("admin.accounts.reactivateHint", { role: account.role })}
           </span>
         </div>
       ) : null}
@@ -207,10 +209,16 @@ function AccountCard({
 }
 
 function ContentCard({ kind, entry, busy, onEdit, onRemove }) {
+  const { t } = useI18n();
   const title = kind === "word" ? entry.word : entry.name;
   const subtitle =
     kind === "word"
-      ? [entry.translation, entry.languageName ? `in ${entry.languageName}` : null]
+      ? [
+          entry.translation,
+          entry.languageName
+            ? t("common.inLanguage", { language: entry.languageName })
+            : null,
+        ]
           .filter(Boolean)
           .join(" · ")
       : `${entry.autonym} · ${entry.region}`;
@@ -225,12 +233,20 @@ function ContentCard({ kind, entry, busy, onEdit, onRemove }) {
       <p className="roleCard__subtitle">{subtitle}</p>
 
       <div className="roleCard__meta">
-        <span>{kind === "word" ? "Word" : "Language"}</span>
-        <span>Updated {formatDate(entry.updatedAt)}</span>
+        <span>
+          {t(kind === "word" ? "common.word" : "common.language")}
+        </span>
+        <span>{t("admin.content.updated", { date: formatDate(entry.updatedAt) })}</span>
         {kind === "language" ? (
-          <span>{Number(entry.speakers).toLocaleString()} speakers</span>
+          <span>
+            {t("admin.content.speakers", {
+              count: Number(entry.speakers).toLocaleString(),
+            })}
+          </span>
         ) : null}
-        {entry.removalRequestedAt ? <span>Removal request open</span> : null}
+        {entry.removalRequestedAt ? (
+          <span>{t("admin.content.removalOpen")}</span>
+        ) : null}
       </div>
 
       <div className="roleActions">
@@ -241,7 +257,7 @@ function ContentCard({ kind, entry, busy, onEdit, onRemove }) {
           disabled={busy}
           onClick={() => onEdit(kind, entry)}
         >
-          Edit entry
+          {t("admin.content.edit")}
         </Button>
         <Button
           type="button"
@@ -251,21 +267,25 @@ function ContentCard({ kind, entry, busy, onEdit, onRemove }) {
           onClick={() => onRemove(kind, entry)}
           className="border-border text-foreground hover:bg-accent"
         >
-          Remove (logical)
+          {t("admin.content.remove")}
         </Button>
-        <span className="roleHint">
-          Removing hides it from the public corpus and moves it to the archive.
-        </span>
+        <span className="roleHint">{t("admin.content.removeHint")}</span>
       </div>
     </article>
   );
 }
 
 function ArchivedCard({ kind, entry, busy, onRestore }) {
+  const { t } = useI18n();
   const title = kind === "word" ? entry.word : entry.name;
   const subtitle =
     kind === "word"
-      ? [entry.translation, entry.languageName ? `in ${entry.languageName}` : null]
+      ? [
+          entry.translation,
+          entry.languageName
+            ? t("common.inLanguage", { language: entry.languageName })
+            : null,
+        ]
           .filter(Boolean)
           .join(" · ")
       : `${entry.autonym} · ${entry.region}`;
@@ -280,16 +300,22 @@ function ArchivedCard({ kind, entry, busy, onRestore }) {
       <p className="roleCard__subtitle">{subtitle}</p>
 
       <div className="roleCard__meta">
-        <span>{kind === "word" ? "Word" : "Language"}</span>
-        <span>Removed {formatDate(entry.deletedAt)}</span>
+        <span>
+          {t(kind === "word" ? "common.word" : "common.language")}
+        </span>
+        <span>{t("admin.archive.removed", { date: formatDate(entry.deletedAt) })}</span>
         {kind === "language" ? (
-          <span>{Number(entry.speakers).toLocaleString()} speakers</span>
+          <span>
+            {t("admin.content.speakers", {
+              count: Number(entry.speakers).toLocaleString(),
+            })}
+          </span>
         ) : null}
       </div>
 
       {entry.deletionReason ? (
         <p className="roleCard__note roleCard__note--danger">
-          Reason: {entry.deletionReason}
+          {t("admin.archive.reason", { reason: entry.deletionReason })}
         </p>
       ) : null}
 
@@ -300,11 +326,9 @@ function ArchivedCard({ kind, entry, busy, onRestore }) {
           disabled={busy}
           onClick={() => onRestore(kind, entry)}
         >
-          {busy ? "Restoring…" : "Restore to review queue"}
+          {busy ? t("admin.archive.restoring") : t("admin.archive.restore")}
         </Button>
-        <span className="roleHint">
-          Restored content returns as pending and needs a final approval again.
-        </span>
+        <span className="roleHint">{t("admin.archive.hint")}</span>
       </div>
     </article>
   );
@@ -332,6 +356,7 @@ export default function AdminDashboard({ user }) {
   const [search, setSearch] = useState("");
   const [approvalRoles, setApprovalRoles] = useState({});
   const [roleDrafts, setRoleDrafts] = useState({});
+  const { t } = useI18n();
 
   const loadAll = useCallback(async () => {
     try {
@@ -355,11 +380,11 @@ export default function AdminDashboard({ user }) {
       setLanguages(languageResponse?.data ?? []);
       setError(null);
     } catch (cause) {
-      setError(cause?.message ?? "Could not load the admin data.");
+      setError(cause?.message ?? t("admin.loadError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount; updates happen after the awaited API call
@@ -439,7 +464,7 @@ export default function AdminDashboard({ user }) {
       setNotice(message);
       await loadAll();
     } catch (cause) {
-      setError(cause?.message ?? "Could not update this account.");
+      setError(cause?.message ?? t("admin.accounts.updateError"));
     } finally {
       setBusyKey(null);
     }
@@ -453,35 +478,35 @@ export default function AdminDashboard({ user }) {
       account,
       "active",
       { role },
-      `${account.username} approved as ${role}.`,
+      t("admin.accounts.approved", { name: account.username, role }),
     );
   };
 
   const reject = (account) => {
     const reason = window.prompt(
-      `Reason for rejecting ${account.username}? This is shown to the account owner.`,
-      "Registration could not be verified.",
+      t("admin.accounts.rejectPrompt", { name: account.username }),
+      t("admin.accounts.rejectDefault"),
     );
     if (reason === null) return;
     return runStatusChange(
       account,
       "rejected",
-      { reason: reason.trim() || "Registration rejected by an admin." },
-      `${account.username} rejected.`,
+      { reason: reason.trim() || t("admin.accounts.rejectFallback") },
+      t("admin.accounts.rejectedNotice", { name: account.username }),
     );
   };
 
   const deactivate = (account) => {
     const reason = window.prompt(
-      `Reason for deactivating ${account.username}?`,
-      "Account deactivated by an admin.",
+      t("admin.accounts.deactivatePrompt", { name: account.username }),
+      t("admin.accounts.deactivateDefault"),
     );
     if (reason === null) return;
     return runStatusChange(
       account,
       "deactivated",
-      { reason: reason.trim() || "Account deactivated by an admin." },
-      `${account.username} deactivated. Existing sessions stop working immediately.`,
+      { reason: reason.trim() || t("admin.accounts.deactivateDefault") },
+      t("admin.accounts.deactivatedNotice", { name: account.username }),
     );
   };
 
@@ -490,7 +515,10 @@ export default function AdminDashboard({ user }) {
       account,
       "active",
       {},
-      `${account.username} reactivated with the ${account.role} role.`,
+      t("admin.accounts.reactivatedNotice", {
+        name: account.username,
+        role: account.role,
+      }),
     );
 
   const saveRole = async (account) => {
@@ -504,10 +532,10 @@ export default function AdminDashboard({ user }) {
         method: "PATCH",
         body: { role },
       });
-      setNotice(`${account.username} is now a ${role}.`);
+      setNotice(t("admin.accounts.roleSaved", { name: account.username, role }));
       await loadAll();
     } catch (cause) {
-      setError(cause?.message ?? "Could not change that role.");
+      setError(cause?.message ?? t("admin.accounts.roleError"));
     } finally {
       setBusyKey(null);
     }
@@ -523,10 +551,10 @@ export default function AdminDashboard({ user }) {
       await apiFetch(`${base}/${encodeURIComponent(entry.id)}/restore`, {
         method: "POST",
       });
-      setNotice("Entry restored to the review queue as pending.");
+      setNotice(t("admin.content.restoredNotice"));
       await loadAll();
     } catch (cause) {
-      setError(cause?.message ?? "Could not restore that entry.");
+      setError(cause?.message ?? t("admin.content.restoreError"));
     } finally {
       setBusyKey(null);
     }
@@ -534,10 +562,10 @@ export default function AdminDashboard({ user }) {
 
   const removeContent = async (kind, entry) => {
     const reason = window.prompt(
-      `Reason for removing "${
-        kind === "word" ? entry.word : entry.name
-      }"? It will be kept in the archive with this note.`,
-      entry.removalRequestReason || "Removed by an administrator.",
+      t("admin.content.removePrompt", {
+        title: kind === "word" ? entry.word : entry.name,
+      }),
+      entry.removalRequestReason || t("admin.content.removeDefault"),
     );
     if (reason === null) return;
 
@@ -549,12 +577,12 @@ export default function AdminDashboard({ user }) {
       const base = kind === "word" ? "/words" : "/languages";
       await apiFetch(`${base}/${encodeURIComponent(entry.id)}`, {
         method: "DELETE",
-        body: { reason: reason.trim() || "Removed by an administrator." },
+        body: { reason: reason.trim() || t("admin.content.removeDefault") },
       });
-      setNotice("Entry removed logically and moved to the archive.");
+      setNotice(t("admin.content.removedNotice"));
       await loadAll();
     } catch (cause) {
-      setError(cause?.message ?? "Could not remove that entry.");
+      setError(cause?.message ?? t("admin.content.removeError"));
     } finally {
       setBusyKey(null);
     }
@@ -563,50 +591,62 @@ export default function AdminDashboard({ user }) {
   const handleSaved = async (_data, kind, isEdit) => {
     setEditor(null);
     setNotice(
-      `${kind === "word" ? "Word" : "Language"} ${
-        isEdit ? "updated" : "created"
-      }. Admin edits keep the current review state.`,
+      t("admin.content.savedNotice", {
+        kind: t(kind === "word" ? "common.word" : "common.language"),
+        action: t(isEdit ? "common.updated" : "common.created"),
+      }),
     );
     await loadAll();
   };
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="gap-0">
-      <TabsList className="roleTabs" aria-label="Admin views">
+      <TabsList className="roleTabs" aria-label={t("admin.title")}>
         <TabsTrigger
           value="accounts"
           className={`roleTab ${tab === "accounts" ? "is-active" : ""}`}
         >
-          Accounts <span className="roleTab__count">{accounts.length}</span>
+          {t("admin.tab.accounts")}{" "}
+          <span className="roleTab__count">{accounts.length}</span>
         </TabsTrigger>
         <TabsTrigger
           value="content"
           className={`roleTab ${tab === "content" ? "is-active" : ""}`}
         >
-          Content <span className="roleTab__count">{contentCount}</span>
+          {t("admin.tab.content")}{" "}
+          <span className="roleTab__count">{contentCount}</span>
         </TabsTrigger>
         <TabsTrigger
           value="presentation"
           className={`roleTab ${tab === "presentation" ? "is-active" : ""}`}
         >
-          Home image
+          {t("admin.tab.presentation")}
+        </TabsTrigger>
+        <TabsTrigger
+          value="pageText"
+          className={`roleTab ${tab === "pageText" ? "is-active" : ""}`}
+        >
+          {t("admin.tab.pageText")}
         </TabsTrigger>
         <TabsTrigger
           value="archive"
           className={`roleTab ${tab === "archive" ? "is-active" : ""}`}
         >
-          Archive <span className="roleTab__count">{archiveCount}</span>
+          {t("admin.tab.archive")}{" "}
+          <span className="roleTab__count">{archiveCount}</span>
         </TabsTrigger>
       </TabsList>
 
       <p className="roleNotice roleNotice--info">
         {tab === "accounts"
-          ? "New accounts cannot sign in until you approve them. Deactivation takes effect on the next API request, even for an open session."
+          ? t("admin.notice.accounts")
           : tab === "content"
-            ? "Browse published content, fix entries directly, or remove something logically. Removed content moves to the archive and can be restored."
+            ? t("admin.notice.content")
             : tab === "presentation"
-              ? "The home presentation image is public. Uploads replace the current file for every visitor; removing it falls back to the NL mark."
-              : "Removed words and languages stay here instead of being destroyed. The audit log keeps the full snapshot and removal date."}
+              ? t("admin.notice.presentation")
+              : tab === "pageText"
+                ? t("admin.notice.pageText")
+                : t("admin.notice.archive")}
       </p>
 
       {error ? (
@@ -622,21 +662,21 @@ export default function AdminDashboard({ user }) {
       ) : null}
 
       {loading ? (
-        <div className="roleEmpty">Loading admin data…</div>
+        <div className="roleEmpty">{t("admin.loading")}</div>
       ) : tab === "accounts" ? (
         <>
           <div className="adminFilters">
             <label className="roleField adminFilters__field">
-              <span className="roleLabel">Search</span>
+              <span className="roleLabel">{t("admin.accounts.search")}</span>
               <Input
                 className="roleInput"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Username or email"
+                placeholder={t("admin.accounts.searchPlaceholder")}
               />
             </label>
             <label className="roleField adminFilters__field">
-              <span className="roleLabel">Status</span>
+              <span className="roleLabel">{t("admin.accounts.status")}</span>
               <select
                 className="roleSelect"
                 value={statusFilter}
@@ -644,13 +684,13 @@ export default function AdminDashboard({ user }) {
               >
                 {STATUS_FILTERS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </option>
                 ))}
               </select>
             </label>
             <label className="roleField adminFilters__field">
-              <span className="roleLabel">Role</span>
+              <span className="roleLabel">{t("admin.accounts.role")}</span>
               <select
                 className="roleSelect"
                 value={roleFilter}
@@ -658,7 +698,7 @@ export default function AdminDashboard({ user }) {
               >
                 {ROLE_FILTERS.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.labelKey)}
                   </option>
                 ))}
               </select>
@@ -666,7 +706,7 @@ export default function AdminDashboard({ user }) {
           </div>
 
           {filteredAccounts.length === 0 ? (
-            <div className="roleEmpty">No accounts match these filters.</div>
+            <div className="roleEmpty">{t("admin.accounts.none")}</div>
           ) : (
             <div className="roleList">
               {filteredAccounts.map((account) => (
@@ -700,16 +740,16 @@ export default function AdminDashboard({ user }) {
         <>
           <div className="roleToolbar">
             <label className="roleField adminContentSearch">
-              <span className="roleLabel">Search published content</span>
+              <span className="roleLabel">{t("admin.content.search")}</span>
               <Input
                 className="roleInput"
                 value={contentSearch}
                 onChange={(event) => setContentSearch(event.target.value)}
-                placeholder="Word, translation, language or region"
+                placeholder={t("admin.content.searchPlaceholder")}
               />
             </label>
             <Button asChild variant="outline" size="sm">
-              <Link href="/contribute">Create a new entry</Link>
+              <Link href="/contribute">{t("admin.content.create")}</Link>
             </Button>
           </div>
 
@@ -726,19 +766,16 @@ export default function AdminDashboard({ user }) {
           ) : null}
 
           {contentCount === 0 ? (
-            <div className="roleEmpty">
-              No published content yet. Use the contribution desk to create a
-              word or language; admin saves publish immediately.
-            </div>
+            <div className="roleEmpty">{t("admin.content.none")}</div>
           ) : filteredContent.words.length === 0 &&
             filteredContent.languages.length === 0 ? (
-            <div className="roleEmpty">No content matches that search.</div>
+            <div className="roleEmpty">{t("admin.content.noMatch")}</div>
           ) : (
             <>
               {filteredContent.languages.length > 0 ? (
                 <section className="roleSection">
                   <div className="roleSection__head">
-                    <h2 className="roleSection__title">Languages</h2>
+                    <h2 className="roleSection__title">{t("admin.content.languages")}</h2>
                     <span className="roleSection__hint">
                       {filteredContent.languages.length}
                     </span>
@@ -761,7 +798,7 @@ export default function AdminDashboard({ user }) {
               {filteredContent.words.length > 0 ? (
                 <section className="roleSection">
                   <div className="roleSection__head">
-                    <h2 className="roleSection__title">Words</h2>
+                    <h2 className="roleSection__title">{t("admin.content.words")}</h2>
                     <span className="roleSection__hint">
                       {filteredContent.words.length}
                     </span>
@@ -785,17 +822,16 @@ export default function AdminDashboard({ user }) {
         </>
       ) : tab === "presentation" ? (
         <SiteImageManager />
+      ) : tab === "pageText" ? (
+        <PageContentManager />
       ) : archiveCount === 0 ? (
-        <div className="roleEmpty">
-          Nothing has been removed yet. Logically deleted content will appear
-          here for review and restoration.
-        </div>
+        <div className="roleEmpty">{t("admin.archive.none")}</div>
       ) : (
         <>
           {archive.languages.length > 0 ? (
             <section className="roleSection">
               <div className="roleSection__head">
-                <h2 className="roleSection__title">Removed languages</h2>
+                <h2 className="roleSection__title">{t("admin.archive.languages")}</h2>
                 <span className="roleSection__hint">{archive.languages.length}</span>
               </div>
               <div className="roleList">
@@ -815,7 +851,7 @@ export default function AdminDashboard({ user }) {
           {archive.words.length > 0 ? (
             <section className="roleSection">
               <div className="roleSection__head">
-                <h2 className="roleSection__title">Removed words</h2>
+                <h2 className="roleSection__title">{t("admin.archive.words")}</h2>
                 <span className="roleSection__hint">{archive.words.length}</span>
               </div>
               <div className="roleList">

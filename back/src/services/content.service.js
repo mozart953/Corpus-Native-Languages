@@ -57,17 +57,17 @@ export function createContentService({
     return { [field]: direction === "desc" ? "desc" : "asc" };
   }
 
-  async function presentRows(rows, client) {
+  async function presentRows(rows, client, { locale } = {}) {
     const decorated = await contentHistory.decorate(entityType, rows, client);
-    return decorated.map(presenter);
+    return decorated.map((row) => presenter(row, { locale }));
   }
 
-  async function presentOne(row, client) {
+  async function presentOne(row, client, { locale } = {}) {
     const decorated = await contentHistory.decorateOne(entityType, row, client);
-    return presenter(decorated);
+    return presenter(decorated, { locale });
   }
 
-  async function listWithWhere({ where, orderBy, page, limit }) {
+  async function listWithWhere({ where, orderBy, page, limit, locale }) {
     const pagination = getPagination({ page, limit });
     const [rows, total] = await Promise.all([
       repository.findMany({
@@ -80,7 +80,7 @@ export function createContentService({
     ]);
 
     return {
-      data: await presentRows(rows),
+      data: await presentRows(rows, undefined, { locale }),
       meta: buildMeta({
         page: pagination.page,
         limit: pagination.limit,
@@ -97,7 +97,7 @@ export function createContentService({
   }
 
   return {
-    async listPublic({ page, limit, q, sort, direction, ...filters } = {}) {
+    async listPublic({ page, limit, q, sort, direction, locale, ...filters } = {}) {
       const where = {
         reviewStateCode: REVIEW_STATES.APPROVED,
         deletedAt: null,
@@ -112,10 +112,11 @@ export function createContentService({
         orderBy: orderByFrom({ sort, direction }),
         page,
         limit,
+        locale,
       });
     },
 
-    async getPublic(id) {
+    async getPublic(id, { locale } = {}) {
       const row = await repository.findById(id);
       if (
         !row ||
@@ -125,7 +126,7 @@ export function createContentService({
       ) {
         throw notFound();
       }
-      return { data: await presentOne(row) };
+      return { data: await presentOne(row, undefined, { locale }) };
     },
 
     async listMine(actor, { page, limit } = {}) {

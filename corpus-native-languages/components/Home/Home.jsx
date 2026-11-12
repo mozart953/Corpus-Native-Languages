@@ -14,6 +14,7 @@ import { LANGUAGES, WORDS } from "../../data/corpus";
 import { SEARCH_FIELDS, filterWords } from "../../utils/search";
 import { apiFetch, apiAssetUrl } from "../../lib/api";
 import { useCorpusAuth } from "../../lib/useCorpusAuth";
+import { useI18n } from "../../lib/i18n";
 import { Button } from "@/components/ui/button";
 import NavbarComponent from "../Navbar/Navbar.jsx";
 import SearchBar from "../SearchBar/SearchBar.jsx";
@@ -21,6 +22,7 @@ import LanguageCard from "../LanguageCard/LanguageCard.jsx";
 import WordList from "../WordList/WordList.jsx";
 import DownloadMenu from "../DownloadMenu/DownloadMenu.jsx";
 import LoginDialog from "../Login/LoginDialog.jsx";
+import LanguageToggle from "../LanguageToggle/LanguageToggle.jsx";
 import { wordsToJson, wordsToPairsTxt, buildFilename, downloadTextFile } from "../../utils/exporters";
 import "./Home.css";
 
@@ -59,6 +61,7 @@ function HomeComponent() {
     login,
     logout,
   } = useCorpusAuth();
+  const { t, locale } = useI18n();
 
   const [languages, setLanguages] = useState(LANGUAGES);
   const [words, setWords] = useState(WORDS);
@@ -92,9 +95,11 @@ function HomeComponent() {
 
     async function loadCorpus() {
       try {
+        // The public list is the only place that follows the interface
+        // language; admin and review desks always read the canonical English.
         const [languageResponse, wordResponse] = await Promise.all([
           apiFetch("/languages?limit=100"),
-          apiFetch("/words?limit=100&page=1"),
+          apiFetch(`/words?limit=100&page=1&locale=${encodeURIComponent(locale)}`),
         ]);
 
         if (cancelled) return;
@@ -108,9 +113,7 @@ function HomeComponent() {
       } catch {
         if (cancelled) return;
         setCorpusSource("fixtures");
-        setPendingNotice(
-          "The corpus API is unavailable right now — showing the bundled sample data.",
-        );
+        setPendingNotice({ key: "home.notice.apiUnavailable" });
       }
     }
 
@@ -118,7 +121,7 @@ function HomeComponent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale]);
 
   const stats = summarise(languages, words);
 
@@ -128,7 +131,7 @@ function HomeComponent() {
   ).length;
 
   const activeLanguage = languages.find((language) => language.id === languageId);
-  const languageLabel = activeLanguage?.name ?? "all languages";
+  const languageLabel = activeLanguage?.name ?? t("home.words.allLanguages");
 
   const toggleSelect = (id) => {
     setSelectedIds((current) =>
@@ -153,15 +156,13 @@ function HomeComponent() {
     if (!ok) return;
 
     setLoginMode(null);
-    setPendingNotice(
-      "Signed in. Your session refreshes while you are active and expires after 30 minutes of inactivity.",
-    );
+    setPendingNotice({ key: "home.notice.signedIn" });
   };
 
   const handleLogout = async () => {
     await logout();
     setSelectedIds([]);
-    setPendingNotice("Signed out.");
+    setPendingNotice({ key: "home.notice.signedOut" });
   };
 
   const openLogin = (mode) => {
@@ -179,7 +180,7 @@ function HomeComponent() {
   const downloadSingle = (word) => {
     const filename = buildFilename(`${word.languageName}-${word.word}`, "json");
     downloadTextFile(filename, wordsToJson([word], { languageName: word.languageName }), "application/json");
-    setPendingNotice(`Downloading ${word.word} as JSON.`);
+    setPendingNotice({ key: "home.notice.downloadingJson", vars: { word: word.word } });
   };
 
   const downloadSearchResults = () => {
@@ -189,7 +190,10 @@ function HomeComponent() {
       wordsToPairsTxt(visibleWords, { meta: { languageName: languageLabel } }),
       "text/plain",
     );
-    setPendingNotice(`Downloading ${visibleWords.length} words as TXT pairs.`);
+    setPendingNotice({
+      key: "home.notice.downloadingResults",
+      vars: { count: visibleWords.length },
+    });
   };
 
   return (
@@ -206,23 +210,22 @@ function HomeComponent() {
         <section className="home__hero" aria-labelledby="home-title">
           <div className="home__heroPanel">
             <div className="home__heroContent">
-            <span className="nl-eyebrow">Native languages of Guatemala</span>
+            <div className="home__heroTop">
+              <span className="nl-eyebrow">{t("home.hero.eyebrow")}</span>
+              <LanguageToggle />
+            </div>
             <h1 id="home-title" className="home__title">
-              Every word is a voice
+              {t("home.hero.titleLine1")}
               <br />
-              <span className="home__titleAccent">that should not be lost</span>
+              <span className="home__titleAccent">{t("home.hero.titleLine2")}</span>
             </h1>
-            <p className="home__lead">
-              A shared corpus of words, pronunciations and usage from the Mayan, Xinka and
-              Garifuna communities of Guatemala — open to read, open to download, and built to
-              train models that finally sound like the people who spoke these words first.
-            </p>
+            <p className="home__lead">{t("home.hero.lead")}</p>
 
             <div className="home__heroActions">
               <Button asChild size="lg" className="h-11 px-5 text-[0.9rem] font-semibold">
                 <a href="#words">
                   <BookOpen className="size-4" aria-hidden="true" />
-                  Browse the words
+                  {t("home.hero.browse")}
                 </a>
               </Button>
               <Button
@@ -233,7 +236,7 @@ function HomeComponent() {
               >
                 <a href="#languages">
                   <Languages className="size-4" aria-hidden="true" />
-                  Choose a language
+                  {t("home.hero.chooseLanguage")}
                 </a>
               </Button>
               {!user ? (
@@ -245,7 +248,7 @@ function HomeComponent() {
                   onClick={() => openLogin("signin")}
                 >
                   <PenLine className="size-4" aria-hidden="true" />
-                  Contribute
+                  {t("home.hero.contribute")}
                 </Button>
               ) : (
                 <Button
@@ -256,7 +259,7 @@ function HomeComponent() {
                 >
                   <Link href="/contribute">
                     <PenLine className="size-4" aria-hidden="true" />
-                    Open my contribution desk
+                    {t("home.hero.openDesk")}
                   </Link>
                 </Button>
               )}
@@ -264,19 +267,19 @@ function HomeComponent() {
 
             <dl className="home__stats">
               <div>
-                <dt>Languages</dt>
+                <dt>{t("home.stats.languages")}</dt>
                 <dd>{stats.languages}</dd>
               </div>
               <div>
-                <dt>Speakers</dt>
+                <dt>{t("home.stats.speakers")}</dt>
                 <dd>{(stats.speakers / 1_000_000).toFixed(1)}M</dd>
               </div>
               <div>
-                <dt>Words recorded</dt>
+                <dt>{t("home.stats.words")}</dt>
                 <dd>{stats.words}</dd>
               </div>
               <div>
-                <dt>At risk</dt>
+                <dt>{t("home.stats.atRisk")}</dt>
                 <dd className="home__statsWarn">{stats.endangered}</dd>
               </div>
             </dl>
@@ -287,20 +290,20 @@ function HomeComponent() {
                 {/* eslint-disable-next-line @next/next/no-img-element -- API-hosted asset */}
                 <img
                   src={apiAssetUrl(siteImage.url)}
-                  alt={siteImage.alt || "Presentation image for the Native Languages corpus"}
+                  alt={siteImage.alt || t("home.image.alt")}
                 />
                 <figcaption>
                   <span className="home__heroMediaLabel">
                     <ImageIcon className="size-3.5" aria-hidden="true" />
-                    Presentation image
+                    {t("home.image.presentation")}
                   </span>
                   {user?.roleKey === "admin" ? (
                     <Link href="/admin" className="home__heroManage">
                       <Settings2 className="size-3.5" aria-hidden="true" />
-                      Manage
+                      {t("home.image.manage")}
                     </Link>
                   ) : (
-                    <span className="home__heroMediaNote">Curated by the admin team</span>
+                    <span className="home__heroMediaNote">{t("home.image.curated")}</span>
                   )}
                 </figcaption>
               </figure>
@@ -308,9 +311,9 @@ function HomeComponent() {
               <div className="home__heroMark" aria-hidden="true">
                 <span>NL</span>
                 <small>
-                  Corpus
+                  {t("home.image.markCorpus")}
                   <br />
-                  Guatemala
+                  {t("home.image.markGuatemala")}
                 </small>
               </div>
             )}
@@ -319,7 +322,7 @@ function HomeComponent() {
 
         {pendingNotice ? (
           <p className="home__notice" role="status" aria-live="polite">
-            {pendingNotice}
+            {t(pendingNotice.key, pendingNotice.vars)}
           </p>
         ) : null}
 
@@ -327,14 +330,11 @@ function HomeComponent() {
         <section id="languages" className="nl-section" aria-labelledby="languages-title">
           <div className="nl-section__head">
             <div>
-              <span className="nl-eyebrow">Step 1</span>
+              <span className="nl-eyebrow">{t("home.languages.eyebrow")}</span>
               <h2 id="languages-title" className="nl-title">
-                Choose a language
+                {t("home.languages.title")}
               </h2>
-              <p className="nl-subtitle">
-                Pick a language to narrow the search, or stay on all of them. Selecting a card
-                below filters the words immediately.
-              </p>
+              <p className="nl-subtitle">{t("home.languages.subtitle")}</p>
             </div>
 
             {languageId !== "all" ? (
@@ -344,7 +344,7 @@ function HomeComponent() {
                 size="sm"
                 onClick={() => selectLanguage("all")}
               >
-                Show all languages
+                {t("home.languages.showAll")}
               </Button>
             ) : null}
           </div>
@@ -367,14 +367,11 @@ function HomeComponent() {
         <section id="words" className="nl-section" aria-labelledby="words-title">
           <div className="nl-section__head">
             <div>
-              <span className="nl-eyebrow">Step 2</span>
+              <span className="nl-eyebrow">{t("home.words.eyebrow")}</span>
               <h2 id="words-title" className="nl-title">
-                Search the corpus
+                {t("home.words.title")}
               </h2>
-              <p className="nl-subtitle">
-                Search a word in its own language, in translation, or both. Searching is open to
-                everyone — no account needed.
-              </p>
+              <p className="nl-subtitle">{t("home.words.subtitle")}</p>
             </div>
           </div>
 
@@ -388,8 +385,8 @@ function HomeComponent() {
               totalCount={languageTotal}
               placeholder={
                 activeLanguage
-                  ? `Search ${activeLanguage.name} — try “jun” or “water”`
-                  : "Search a word or its translation — try “jun” or “water”"
+                  ? t("home.words.placeholderLanguage", { language: activeLanguage.name })
+                  : t("home.words.placeholder")
               }
             />
           </div>
@@ -399,7 +396,7 @@ function HomeComponent() {
               {selectedIds.length > 0 ? (
                 <div className="home__selectionBar">
                   <span>
-                    <strong>{selectedIds.length}</strong> selected for export
+                    {t("home.words.selectedForExport", { count: selectedIds.length })}
                   </span>
                   <Button
                     type="button"
@@ -407,7 +404,7 @@ function HomeComponent() {
                     size="sm"
                     onClick={() => setSelectedIds([])}
                   >
-                    Clear selection
+                    {t("home.words.clearSelection")}
                   </Button>
                 </div>
               ) : null}
@@ -423,7 +420,7 @@ function HomeComponent() {
               />
             </div>
 
-            <aside className="home__sidebar" aria-label="Export">
+            <aside className="home__sidebar" aria-label={t("home.words.exportAside")}>
               <DownloadMenu
                 words={visibleWords}
                 languageName={languageLabel}
@@ -439,7 +436,7 @@ function HomeComponent() {
                 disabled={visibleWords.length === 0}
               >
                 <Download className="size-4" aria-hidden="true" />
-                Download these results
+                {t("home.words.downloadResults")}
               </Button>
             </aside>
           </div>
@@ -449,20 +446,16 @@ function HomeComponent() {
         <section id="contribute" className="nl-section" aria-labelledby="contribute-title">
           <div className="home__contribute nl-panel">
             <div>
-              <span className="nl-eyebrow">Step 3</span>
+              <span className="nl-eyebrow">{t("home.contribute.eyebrow")}</span>
               <h2 id="contribute-title" className="nl-title">
-                Add what you know
+                {t("home.contribute.title")}
               </h2>
-              <p className="nl-subtitle">
-                A word is only safe when several people agree on it. Contributors record the
-                pronunciation they were taught, the situations it is used in, and review what
-                others have added.
-              </p>
+              <p className="nl-subtitle">{t("home.contribute.subtitle")}</p>
             </div>
 
             {user ? (
               <Button asChild size="lg" className="h-11 px-5 text-[0.9rem]">
-                <Link href="/contribute">Go to the contribution desk</Link>
+                <Link href="/contribute">{t("home.contribute.go")}</Link>
               </Button>
             ) : (
               <Button
@@ -471,7 +464,7 @@ function HomeComponent() {
                 className="h-11 px-5 text-[0.9rem]"
                 onClick={() => openLogin("signup")}
               >
-                Create an account to contribute
+                {t("home.contribute.createAccount")}
               </Button>
             )}
           </div>
@@ -480,11 +473,11 @@ function HomeComponent() {
 
       <footer className="home__footer">
         <div className="nl-container home__footerInner">
-          <p>Native Languages — a corpus for the languages of Guatemala.</p>
+          <p>{t("home.footer.tagline")}</p>
           <p className="home__footerNote">
             {corpusSource === "api"
-              ? "Corpus loaded from the API. Entries marked pending are awaiting community review."
-              : "Sample entries are placeholders and are not yet verified by speakers."}
+              ? t("home.footer.apiNote")
+              : t("home.footer.fixtureNote")}
           </p>
         </div>
       </footer>

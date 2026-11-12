@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "../../lib/i18n";
 import "./ThemeToggle.css";
 
 const STORAGE_KEY = "nl-theme";
@@ -15,6 +16,7 @@ const STORAGE_KEY = "nl-theme";
  * that matches the current theme, which keeps server and client markup equal.
  */
 function ThemeToggle({ className = "" }) {
+  const { t } = useI18n();
   const toggle = () => {
     const root = document.documentElement;
     const next = root.classList.contains("light") ? "dark" : "light";
@@ -36,8 +38,8 @@ function ThemeToggle({ className = "" }) {
       size="icon"
       className={`themeToggle ${className}`}
       onClick={toggle}
-      aria-label="Toggle light and dark theme"
-      title="Toggle light and dark theme"
+      aria-label={t("themeToggle.label")}
+      title={t("themeToggle.label")}
     >
       <Sun className="themeToggle__icon themeToggle__icon--sun" aria-hidden="true" />
       <Moon className="themeToggle__icon themeToggle__icon--moon" aria-hidden="true" />

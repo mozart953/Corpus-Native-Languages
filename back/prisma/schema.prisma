@@ -76,6 +76,19 @@ model RemovalStatus {
   requests RemovalRequest[]
 }
 
+// Languages the interface and corpus can be translated into. Rows are data,
+// not schema, so adding a new translation language never needs a migration.
+model Locale {
+  code      String @id
+  label     String
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false)
+  position  Int     @default(0)
+
+  pageContents      PageContent[]
+  senseTranslations SenseTranslation[]
+}
+
 // ---------------------------------------------------------------------------
 // Corpus
 // ---------------------------------------------------------------------------
@@ -170,20 +183,41 @@ model Word {
   @@index([partOfSpeechCode])
 }
 
+// A sense is the meaning itself. Its wording lives in SenseTranslation, one
+// row per locale, so English is no longer special-cased in the schema.
 model Sense {
   id     String @id @default(cuid())
   wordId String
   word   Word   @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
-  gloss    String
-  usage    String?
-  position Int     @default(0)
+  position Int @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  translations SenseTranslation[]
+
   @@unique([wordId, position])
   @@index([wordId])
+}
+
+model SenseTranslation {
+  id      String @id @default(cuid())
+  senseId String
+  sense   Sense  @relation(fields: [senseId], references: [id], onDelete: Cascade)
+
+  localeCode String
+  locale     Locale @relation(fields: [localeCode], references: [code], onDelete: Cascade)
+
+  gloss String
+  usage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([senseId, localeCode])
+  @@index([senseId])
+  @@index([localeCode])
   @@index([gloss])
 }
 
@@ -286,6 +320,7 @@ model User {
   removalsRequested RemovalRequest[] @relation("RemovalRequestRequester")
   removalsResolved  RemovalRequest[] @relation("RemovalRequestResolver")
   siteImagesUpdated SiteImage[] @relation("SiteImageUpdatedBy")
+  pageContentsUpdated PageContent[] @relation("PageContentUpdatedBy")
   auditLogs         AuditLog[] @relation("AuditLogActor")
 
   @@unique([providerCode, providerId])
@@ -314,6 +349,32 @@ model SiteImage {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Editable page copy
+// ---------------------------------------------------------------------------
+
+// Admin overrides for interface strings. The English/Spanish defaults live in
+// back/content/*.json; this table stores only keys an admin has changed, so a
+// reset simply deletes the row and the file default applies again.
+model PageContent {
+  id String @id @default(cuid())
+
+  key        String
+  localeCode String
+  locale     Locale @relation(fields: [localeCode], references: [code], onDelete: Cascade)
+  value      String
+
+  updatedById String?
+  updatedBy   User?   @relation("PageContentUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, localeCode])
+  @@index([localeCode])
+  @@index([updatedById])
 }
 
 // ---------------------------------------------------------------------------

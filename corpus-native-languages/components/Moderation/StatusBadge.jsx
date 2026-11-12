@@ -1,4 +1,7 @@
+"use client";
+
 import { Badge } from "@/components/ui/badge";
+import { useI18n } from "../../lib/i18n";
 import "./StatusBadge.css";
 
 const LABELS = {
@@ -26,12 +29,15 @@ const TONES = {
 
 /** Small, consistent state chip used by every role dashboard. */
 export default function StatusBadge({ state = "unknown", label = null }) {
+  const { t, has } = useI18n();
+  const key = `status.${state}`;
+
   return (
     <Badge
       variant="outline"
       className={`statusBadge statusBadge--${TONES[state] ?? "neutral"}`}
     >
-      {label ?? LABELS[state] ?? state}
+      {label ?? (has(key) ? t(key) : LABELS[state] ?? state)}
     </Badge>
   );
 }

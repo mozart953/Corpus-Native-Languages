@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import StatusBadge from "../Moderation/StatusBadge.jsx";
 import EntryForm from "../Contribute/EntryForm.jsx";
+import { useI18n } from "../../lib/i18n";
 import "./Review.css";
 
 function formatDate(value) {
@@ -21,25 +22,36 @@ function titleFor(kind, entry) {
   return kind === "word" ? entry.word : entry.name;
 }
 
-function detailFor(kind, entry) {
+function detailFor(kind, entry, t) {
   if (kind === "word") {
     return [
       entry.translation,
-      entry.languageName ? `in ${entry.languageName}` : null,
+      entry.languageName
+        ? t("common.inLanguage", { language: entry.languageName })
+        : null,
       entry.partOfSpeech,
     ]
       .filter(Boolean)
       .join(" · ");
   }
-  return [entry.autonym, entry.region, `${Number(entry.speakers).toLocaleString()} speakers`]
+  return [
+    entry.autonym,
+    entry.region,
+    t("common.speakersCount", {
+      count: Number(entry.speakers).toLocaleString(),
+    }),
+  ]
     .filter(Boolean)
     .join(" · ");
 }
 
 function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdit, busy }) {
+  const { t } = useI18n();
   const key = `${kind}:${entry.id}`;
   const isAdmin = roleKey === "admin";
-  const approveLabel = isAdmin ? "Final approve" : "Recommend approval";
+  const approveLabel = isAdmin
+    ? t("review.card.finalApprove")
+    : t("review.card.recommend");
 
   return (
     <article className="roleCard">
@@ -48,33 +60,37 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
         <StatusBadge state={entry.reviewState} />
       </div>
 
-      <p className="roleCard__subtitle">{detailFor(kind, entry)}</p>
+      <p className="roleCard__subtitle">{detailFor(kind, entry, t)}</p>
 
       <div className="roleCard__meta">
-        <span>{kind === "word" ? "Word" : "Language"}</span>
-        <span>Created {formatDate(entry.createdAt)}</span>
-        {entry.reviewedAt ? <span>Reviewed {formatDate(entry.reviewedAt)}</span> : null}
+        <span>
+          {t(kind === "word" ? "review.card.word" : "review.card.language")}
+        </span>
+        <span>{t("review.card.created", { date: formatDate(entry.createdAt) })}</span>
+        {entry.reviewedAt ? (
+          <span>{t("review.card.reviewed", { date: formatDate(entry.reviewedAt) })}</span>
+        ) : null}
       </div>
 
       {entry.usage ? <p className="roleCard__body">{entry.usage}</p> : null}
 
       {entry.removalRequestedAt ? (
         <p className="roleCard__note">
-          A removal request is open for this entry
+          {t("review.card.removalOpen")}
           {entry.removalRequestReason ? ` — ${entry.removalRequestReason}` : ""}
         </p>
       ) : null}
 
       <div className="review__comment">
         <label className="roleLabel" htmlFor={`comment-${key}`}>
-          Reviewer note (optional for approval, useful for a rejection)
+          {t("review.card.noteLabel")}
         </label>
         <Textarea
           id={`comment-${key}`}
           className="roleTextarea"
           value={comment}
           onChange={(event) => onComment(key, event.target.value)}
-          placeholder="Say what is correct, or what the contributor should change."
+          placeholder={t("review.card.notePlaceholder")}
         />
       </div>
 
@@ -85,7 +101,7 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
           disabled={busy}
           onClick={() => onReview(kind, entry, "approve")}
         >
-          {busy ? "Saving…" : approveLabel}
+          {busy ? t("review.card.saving") : approveLabel}
         </Button>
         <Button
           type="button"
@@ -95,7 +111,7 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
           onClick={() => onReview(kind, entry, "reject")}
           className="border-border text-foreground hover:bg-accent"
         >
-          Reject
+          {t("review.card.reject")}
         </Button>
         <Button
           type="button"
@@ -104,12 +120,10 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
           disabled={busy}
           onClick={() => onEdit(kind, entry)}
         >
-          Edit entry
+          {t("review.card.edit")}
         </Button>
         {!isAdmin ? (
-          <span className="roleHint">
-            Your approval is a recommendation; an admin still makes the final call.
-          </span>
+          <span className="roleHint">{t("review.card.recommendHint")}</span>
         ) : null}
       </div>
     </article>
@@ -117,24 +131,35 @@ function ContentCard({ kind, entry, roleKey, comment, onComment, onReview, onEdi
 }
 
 function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
+  const { t } = useI18n();
   const isAdmin = roleKey === "admin";
 
   return (
     <article className="roleCard roleCard--request">
       <div className="roleCard__head">
-        <h3 className="roleCard__title">Remove: {titleFor(kind, entry)}</h3>
-        <StatusBadge state="pending" label="Removal requested" />
+        <h3 className="roleCard__title">
+          {t("review.card.removeTitle", { title: titleFor(kind, entry) })}
+        </h3>
+        <StatusBadge state="pending" label={t("review.card.removalRequested")} />
       </div>
 
-      <p className="roleCard__subtitle">{detailFor(kind, entry)}</p>
+      <p className="roleCard__subtitle">{detailFor(kind, entry, t)}</p>
 
       <div className="roleCard__meta">
-        <span>{kind === "word" ? "Word" : "Language"}</span>
-        <span>Requested {formatDate(entry.removalRequestedAt)}</span>
+        <span>
+          {t(kind === "word" ? "review.card.word" : "review.card.language")}
+        </span>
+        <span>
+          {t("review.card.requested", {
+            date: formatDate(entry.removalRequestedAt),
+          })}
+        </span>
       </div>
 
       {entry.removalRequestReason ? (
-        <p className="roleCard__body">Reason: {entry.removalRequestReason}</p>
+        <p className="roleCard__body">
+          {t("review.card.reason", { reason: entry.removalRequestReason })}
+        </p>
       ) : null}
 
       <div className="roleActions">
@@ -148,7 +173,7 @@ function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
               onClick={() => onApprove(kind, entry)}
               className="border-border text-foreground hover:bg-accent"
             >
-              {busy ? "Removing…" : "Approve removal"}
+              {busy ? t("review.card.removing") : t("review.card.approveRemoval")}
             </Button>
             <Button
               type="button"
@@ -157,11 +182,9 @@ function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
               disabled={busy}
               onClick={() => onDismiss(kind, entry)}
             >
-              Reject request
+              {t("review.card.rejectRequest")}
             </Button>
-            <span className="roleHint">
-              Approving is a logical delete; the entry moves to the admin archive.
-            </span>
+            <span className="roleHint">{t("review.card.approveRemovalHint")}</span>
           </>
         ) : (
           <Button
@@ -171,7 +194,7 @@ function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
             disabled={busy}
             onClick={() => onDismiss(kind, entry)}
           >
-            Withdraw request
+            {t("review.card.withdraw")}
           </Button>
         )}
       </div>
@@ -185,6 +208,7 @@ function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
  * languages and open removal requests.
  */
 export default function ReviewDashboard({ user }) {
+  const { t } = useI18n();
   const [queue, setQueue] = useState({
     words: [],
     languages: [],
@@ -215,11 +239,11 @@ export default function ReviewDashboard({ user }) {
       setLanguages(languageResponse?.data ?? []);
       setError(null);
     } catch (cause) {
-      setError(cause?.message ?? "Could not load the review queue.");
+      setError(cause?.message ?? t("review.error.load"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount; updates happen after the awaited API call
@@ -266,14 +290,14 @@ export default function ReviewDashboard({ user }) {
       setNotice(
         decision === "approve"
           ? user.roleKey === "admin"
-            ? "Final approval saved. The entry is published."
-            : "Recommendation saved. An admin still needs to give the final approval."
-          : "Entry rejected and returned to its author.",
+            ? t("review.notice.final")
+            : t("review.notice.recommend")
+          : t("review.notice.rejected"),
       );
       setComments((current) => ({ ...current, [key]: "" }));
       await load();
     } catch (cause) {
-      setError(cause?.message ?? "Could not save that review.");
+      setError(cause?.message ?? t("review.error.save"));
     } finally {
       setBusyKey(null);
     }
@@ -281,7 +305,7 @@ export default function ReviewDashboard({ user }) {
 
   const approveRemoval = async (kind, entry) => {
     const ok = window.confirm(
-      `Remove "${titleFor(kind, entry)}" logically? It will move to the admin archive and can be restored later.`,
+      t("review.confirmRemove", { title: titleFor(kind, entry) }),
     );
     if (!ok) return;
 
@@ -296,13 +320,14 @@ export default function ReviewDashboard({ user }) {
         method: "DELETE",
         body: {
           reason:
-            entry.removalRequestReason || "Removal approved by an administrator.",
+            entry.removalRequestReason ||
+            "Removal approved by an administrator.",
         },
       });
-      setNotice("Entry removed logically and kept in the admin archive.");
+      setNotice(t("review.notice.removed"));
       await load();
     } catch (cause) {
-      setError(cause?.message ?? "Could not remove that entry.");
+      setError(cause?.message ?? t("review.error.remove"));
     } finally {
       setBusyKey(null);
     }
@@ -321,12 +346,12 @@ export default function ReviewDashboard({ user }) {
       });
       setNotice(
         user.roleKey === "admin"
-          ? "Removal request rejected. The entry stays as it is."
-          : "Removal request withdrawn.",
+          ? t("review.notice.requestRejected")
+          : t("review.notice.withdrawn"),
       );
       await load();
     } catch (cause) {
-      setError(cause?.message ?? "Could not clear that removal request.");
+      setError(cause?.message ?? t("review.error.clear"));
     } finally {
       setBusyKey(null);
     }
@@ -334,33 +359,34 @@ export default function ReviewDashboard({ user }) {
 
   const handleSaved = async (_data, kind, isEdit) => {
     setEditor(null);
-    setNotice(
-      `${kind === "word" ? "Word" : "Language"} ${
-        isEdit ? "updated" : "saved"
-      }. ${
-        user.roleKey === "admin"
-          ? "The current review state was kept."
-          : "It is now marked as reviewer approved and still needs an admin's final approval."
-      }`,
+    const kindLabel = t(
+      kind === "word" ? "review.card.word" : "review.card.language",
     );
+    const action = t(isEdit ? "common.updated" : "common.saved");
+    const suffix =
+      user.roleKey === "admin"
+        ? t("review.notice.savedAdmin")
+        : t("review.notice.savedReviewer");
+
+    setNotice(`${t("review.notice.saved", { kind: kindLabel, action })} ${suffix}`);
     await load();
   };
 
   return (
     <div>
-      <div className="roleTabs" role="tablist" aria-label="Review summary">
+      <div className="roleTabs" role="tablist" aria-label={t("review.summary")}>
         <span className="roleTab is-active">
-          Queue <span className="roleTab__count">{contentCount}</span>
+          {t("review.queue")}{" "}
+          <span className="roleTab__count">{contentCount}</span>
         </span>
         <span className="roleTab">
-          Removal requests <span className="roleTab__count">{removalCount}</span>
+          {t("review.removalRequests")}{" "}
+          <span className="roleTab__count">{removalCount}</span>
         </span>
       </div>
 
       <p className="roleNotice roleNotice--info">
-        {user.roleKey === "admin"
-          ? "You have the final say: approvals publish immediately, and removal requests become archive entries."
-          : "You can recommend approval, reject entries, and raise or withdraw removal requests. An admin makes the final decision."}
+        {t(user.roleKey === "admin" ? "review.hint.admin" : "review.hint.reviewer")}
       </p>
 
       {error ? (
@@ -388,18 +414,15 @@ export default function ReviewDashboard({ user }) {
       ) : null}
 
       {loading ? (
-        <div className="roleEmpty">Loading the review queue…</div>
+        <div className="roleEmpty">{t("review.loading")}</div>
       ) : contentCount === 0 && removalCount === 0 ? (
-        <div className="roleEmpty">
-          The queue is clear. New submissions will appear here after contributors
-          send them for review.
-        </div>
+        <div className="roleEmpty">{t("review.empty")}</div>
       ) : (
         <>
           {queue.languages.length > 0 ? (
             <section className="roleSection">
               <div className="roleSection__head">
-                <h2 className="roleSection__title">Languages waiting</h2>
+                <h2 className="roleSection__title">{t("review.section.languages")}</h2>
                 <span className="roleSection__hint">{queue.languages.length}</span>
               </div>
               <div className="roleList">
@@ -423,7 +446,7 @@ export default function ReviewDashboard({ user }) {
           {queue.words.length > 0 ? (
             <section className="roleSection">
               <div className="roleSection__head">
-                <h2 className="roleSection__title">Words waiting</h2>
+                <h2 className="roleSection__title">{t("review.section.words")}</h2>
                 <span className="roleSection__hint">{queue.words.length}</span>
               </div>
               <div className="roleList">
@@ -447,7 +470,7 @@ export default function ReviewDashboard({ user }) {
           {removalCount > 0 ? (
             <section className="roleSection">
               <div className="roleSection__head">
-                <h2 className="roleSection__title">Removal requests</h2>
+                <h2 className="roleSection__title">{t("review.section.removals")}</h2>
                 <span className="roleSection__hint">{removalCount}</span>
               </div>
               <div className="roleList">

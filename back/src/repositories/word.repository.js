@@ -21,7 +21,10 @@ export const wordRepository = {
     defaultOrderBy: { createdAt: "desc" },
     include: {
       language: languageSelection,
-      senses: { orderBy: { position: "asc" } },
+      senses: {
+        orderBy: { position: "asc" },
+        include: { translations: { orderBy: { localeCode: "asc" } } },
+      },
       partOfSpeech: true,
       reviewState: true,
     },

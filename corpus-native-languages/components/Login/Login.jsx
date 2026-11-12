@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useI18n } from "../../lib/i18n";
 import "./Login.css";
 
 /**
@@ -27,6 +28,7 @@ function LoginComponent({
 }) {
   const isSignUp = mode === "signup";
   const formId = useId();
+  const { t } = useI18n();
   const [values, setValues] = useState({ name: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState(null);
@@ -41,13 +43,13 @@ function LoginComponent({
 
   const validate = () => {
     if (isSignUp && values.name.trim().length < 2) {
-      return "Please enter the name that will appear on your contributions.";
+      return t("login.error.name");
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
-      return "Please enter a valid email address.";
+      return t("login.error.email");
     }
     if (values.password.length < 8) {
-      return "Your password needs at least 8 characters.";
+      return t("login.error.password");
     }
     return null;
   };
@@ -74,22 +76,18 @@ function LoginComponent({
     <div className={`login ${compact ? "login--compact" : ""}`}>
       <div className="login__aside">
         <span className="nl-eyebrow">
-          {isSignUp ? "Join the corpus" : "Welcome back"}
+          {t(isSignUp ? "login.eyebrow.signup" : "login.eyebrow.signin")}
         </span>
         <h2 className="login__asideTitle">
-          {isSignUp
-            ? "Help a language outlive its last speaker."
-            : "Sign in to keep contributing."}
+          {t(isSignUp ? "login.asideTitle.signup" : "login.asideTitle.signin")}
         </h2>
         <p className="login__asideText">
-          {isSignUp
-            ? "Contributors record pronunciations, usage examples and community review. Everything you add is reviewed before it becomes training data."
-            : "Your drafts, reviews and the languages you follow are waiting for you."}
+          {t(isSignUp ? "login.asideText.signup" : "login.asideText.signin")}
         </p>
         <ul className="login__perks">
-          <li>Record words with pronunciation and usage notes</li>
-          <li>Review entries submitted by your community</li>
-          <li>Download any language as JSON or TXT</li>
+          <li>{t("login.perk.record")}</li>
+          <li>{t("login.perk.review")}</li>
+          <li>{t("login.perk.download")}</li>
         </ul>
       </div>
 
@@ -100,12 +98,10 @@ function LoginComponent({
           </span>
           <div>
             <h3 className="login__title">
-              {isSignUp ? "Create your account" : "Sign in"}
+              {t(isSignUp ? "login.title.signup" : "login.title.signin")}
             </h3>
             <p className="login__subtitle">
-              {isSignUp
-                ? "It takes a minute, and the corpus needs people like you."
-                : "Enter your details to continue."}
+              {t(isSignUp ? "login.subtitle.signup" : "login.subtitle.signin")}
             </p>
           </div>
         </div>
@@ -113,7 +109,7 @@ function LoginComponent({
         {isSignUp ? (
           <div className="login__field">
             <Label className="login__label" htmlFor={`${formId}-name`}>
-              Name
+              {t("login.name")}
             </Label>
             <div className="login__inputWrap">
               <UserRound className="login__inputIcon" aria-hidden="true" />
@@ -123,7 +119,7 @@ function LoginComponent({
                 type="text"
                 autoComplete="name"
                 className="login__input"
-                placeholder="How should we credit you?"
+                placeholder={t("login.namePlaceholder")}
                 value={values.name}
                 onChange={update("name")}
               />
@@ -133,7 +129,7 @@ function LoginComponent({
 
         <div className="login__field">
           <Label className="login__label" htmlFor={`${formId}-email`}>
-            Email
+            {t("login.email")}
           </Label>
           <div className="login__inputWrap">
             <Mail className="login__inputIcon" aria-hidden="true" />
@@ -143,7 +139,7 @@ function LoginComponent({
               type="email"
               autoComplete="email"
               className="login__input"
-              placeholder="you@community.org"
+              placeholder={t("login.emailPlaceholder")}
               value={values.email}
               onChange={update("email")}
             />
@@ -152,7 +148,7 @@ function LoginComponent({
 
         <div className="login__field">
           <Label className="login__label" htmlFor={`${formId}-password`}>
-            Password
+            {t("login.password")}
           </Label>
           <div className="login__inputWrap">
             <LockKeyhole className="login__inputIcon" aria-hidden="true" />
@@ -162,7 +158,7 @@ function LoginComponent({
               type={showPassword ? "text" : "password"}
               autoComplete={isSignUp ? "new-password" : "current-password"}
               className="login__input login__input--password"
-              placeholder="At least 8 characters"
+              placeholder={t("login.passwordPlaceholder")}
               value={values.password}
               onChange={update("password")}
             />
@@ -179,7 +175,7 @@ function LoginComponent({
               ) : (
                 <Eye className="size-3.5" aria-hidden="true" />
               )}
-              {showPassword ? "Hide" : "Show"}
+              {showPassword ? t("login.hide") : t("login.show")}
             </Button>
           </div>
         </div>
@@ -204,10 +200,8 @@ function LoginComponent({
           aria-describedby={message ? errorId : undefined}
         >
           {submitting
-            ? "Please wait…"
-            : isSignUp
-              ? "Create account"
-              : "Sign in"}
+            ? t("login.submitting")
+            : t(isSignUp ? "login.submit.signup" : "login.submit.signin")}
         </Button>
 
         {onCancel ? (
@@ -217,14 +211,11 @@ function LoginComponent({
             className="h-10 w-full"
             onClick={onCancel}
           >
-            Cancel
+            {t("login.cancel")}
           </Button>
         ) : null}
 
-        <p className="login__fineprint">
-          Passwords are hashed with bcrypt on the server. Sessions last 30
-          minutes and refresh while you are active.
-        </p>
+        <p className="login__fineprint">{t("login.fineprint")}</p>
       </form>
     </div>
   );

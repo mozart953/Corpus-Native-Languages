@@ -42,7 +42,23 @@ const usage = body("usage")
 const page = query("page").optional().isInt({ min: 1 }).toInt();
 const limit = query("limit").optional().isInt({ min: 1, max: 100 }).toInt();
 
+const localeQuery = query("locale")
+  .optional()
+  .trim()
+  .isLength({ min: 2, max: 20 })
+  .matches(/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/)
+  .withMessage("The locale code is not valid.");
+
+const localeParam = param("locale")
+  .trim()
+  .isLength({ min: 2, max: 20 })
+  .withMessage("A locale code is required.")
+  .matches(/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/)
+  .withMessage("The locale code is not valid.");
+
 export const wordIdValidator = [wordId];
+
+export const wordGetValidator = [wordId, localeQuery];
 
 export const wordCreateValidator = [
   body("id")
@@ -85,6 +101,7 @@ export const wordUpdateValidator = [
 export const wordQueryValidator = [
   page,
   limit,
+  localeQuery,
   query("q").optional().trim().isLength({ max: 200 }),
   query("languageId").optional().trim().isLength({ max: 80 }),
   query("partOfSpeech").optional().trim().isLength({ max: 80 }),
@@ -105,3 +122,19 @@ export const wordDeleteValidator = [
 ];
 
 export const wordRestoreValidator = [wordId];
+
+export const wordTranslationValidator = [
+  wordId,
+  localeParam,
+  body("gloss")
+    .trim()
+    .isLength({ min: 1, max: 300 })
+    .withMessage("Translation must be between 1 and 300 characters."),
+  body("usage")
+    .optional({ values: "falsy" })
+    .trim()
+    .isLength({ max: 2000 })
+    .withMessage("Usage must be at most 2000 characters."),
+];
+
+export const wordTranslationDeleteValidator = [wordId, localeParam];
