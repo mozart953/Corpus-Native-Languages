@@ -29,7 +29,7 @@ function detailFor(kind, entry, t) {
       entry.languageName
         ? t("common.inLanguage", { language: entry.languageName })
         : null,
-      entry.partOfSpeech,
+      entry.partOfSpeechLabel ?? entry.partOfSpeech,
     ]
       .filter(Boolean)
       .join(" · ");
@@ -208,7 +208,7 @@ function RemovalCard({ kind, entry, roleKey, busy, onApprove, onDismiss }) {
  * languages and open removal requests.
  */
 export default function ReviewDashboard({ user }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [queue, setQueue] = useState({
     words: [],
     languages: [],
@@ -225,7 +225,9 @@ export default function ReviewDashboard({ user }) {
   const load = useCallback(async () => {
     try {
       const [response, languageResponse] = await Promise.all([
-        apiFetch("/reviews/queue?type=all&limit=100"),
+        apiFetch(
+          `/reviews/queue?type=all&limit=100&locale=${encodeURIComponent(locale)}`,
+        ),
         apiFetch("/languages?limit=100"),
       ]);
       setQueue({
@@ -243,7 +245,7 @@ export default function ReviewDashboard({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, locale]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount; updates happen after the awaited API call

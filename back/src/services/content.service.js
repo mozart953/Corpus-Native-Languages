@@ -129,17 +129,18 @@ export function createContentService({
       return { data: await presentOne(row, undefined, { locale }) };
     },
 
-    async listMine(actor, { page, limit } = {}) {
+    async listMine(actor, { page, limit, locale } = {}) {
       requireActor(actor);
       return listWithWhere({
         where: { createdById: actor.id, deletedAt: null },
         orderBy: { updatedAt: "desc" },
         page,
         limit,
+        locale,
       });
     },
 
-    async listTrash(actor, { page, limit } = {}) {
+    async listTrash(actor, { page, limit, locale } = {}) {
       requireActor(actor);
       return listWithWhere({
         where: {
@@ -150,10 +151,11 @@ export function createContentService({
         orderBy: { deletedAt: "desc" },
         page,
         limit,
+        locale,
       });
     },
 
-    async listRemoved({ page, limit, q } = {}) {
+    async listRemoved({ page, limit, q, locale } = {}) {
       const where = {
         deletedAt: { not: null },
         reviewStateCode: REVIEW_STATES.REMOVED,
@@ -165,10 +167,11 @@ export function createContentService({
         orderBy: { deletedAt: "desc" },
         page,
         limit,
+        locale,
       });
     },
 
-    async listForQueue({ page, limit, languageId } = {}) {
+    async listForQueue({ page, limit, languageId, locale } = {}) {
       const where = {
         deletedAt: null,
         reviewStateCode: {
@@ -182,10 +185,11 @@ export function createContentService({
         orderBy: { createdAt: "asc" },
         page,
         limit,
+        locale,
       });
     },
 
-    async listRemovalRequests({ page, limit, languageId } = {}) {
+    async listRemovalRequests({ page, limit, languageId, locale } = {}) {
       const pagination = getPagination({ page, limit });
       const where = {
         entityType,
@@ -213,7 +217,7 @@ export function createContentService({
         .filter(Boolean);
 
       return {
-        data: await presentRows(ordered),
+        data: await presentRows(ordered, undefined, { locale }),
         meta: buildMeta({
           page: pagination.page,
           limit: pagination.limit,

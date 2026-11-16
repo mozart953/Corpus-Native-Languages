@@ -110,7 +110,7 @@ export const wordQueryValidator = [
   query("direction").optional().isIn(["asc", "desc"]),
 ];
 
-export const wordListMineValidator = [page, limit];
+export const wordListMineValidator = [page, limit, localeQuery];
 
 export const wordDeleteValidator = [
   wordId,

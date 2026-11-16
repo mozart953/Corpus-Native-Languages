@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -240,10 +240,62 @@ export default function EntryForm({
   const isEdit = Boolean(entry?.id);
   const isWord = kind === "word";
   const role = ["reviewer", "admin"].includes(roleKey) ? roleKey : "contributor";
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [values, setValues] = useState(() => initialValues(kind, entry, languages));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [partOfSpeechOptions, setPartOfSpeechOptions] = useState([]);
+  const [partOfSpeechLoading, setPartOfSpeechLoading] = useState(isWord);
+  const [partOfSpeechError, setPartOfSpeechError] = useState(null);
+
+  useEffect(() => {
+    if (!isWord) return undefined;
+
+    let cancelled = false;
+
+    const load = async () => {
+      setPartOfSpeechLoading(true);
+      setPartOfSpeechError(null);
+
+      try {
+        const response = await apiFetch(
+          `/part-of-speech?locale=${encodeURIComponent(locale)}`,
+        );
+        if (!cancelled) setPartOfSpeechOptions(response?.data ?? []);
+      } catch (cause) {
+        if (!cancelled) {
+          setPartOfSpeechError(
+            cause?.message ?? t("form.partOfSpeechLoadError"),
+          );
+        }
+      } finally {
+        if (!cancelled) setPartOfSpeechLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isWord, locale, t]);
+
+  // A word saved before its part of speech was deactivated keeps that value in
+  // the form so an unrelated edit cannot silently clear it.
+  const selectablePartsOfSpeech = useMemo(() => {
+    const list = [...partOfSpeechOptions];
+    const currentCode = entry?.partOfSpeech;
+
+    if (currentCode && !list.some((option) => option.code === currentCode)) {
+      list.push({
+        code: currentCode,
+        label: entry?.partOfSpeechLabel ?? currentCode,
+        isActive: false,
+      });
+    }
+
+    return list;
+  }, [partOfSpeechOptions, entry]);
 
   const saveLabel = isEdit
     ? t("form.saveChanges")
@@ -428,13 +480,28 @@ export default function EntryForm({
             <Label className="roleLabel" htmlFor="entry-pos">
               {t("form.partOfSpeech")}
             </Label>
-            <Input
+            <select
               id="entry-pos"
-              className="roleInput"
+              className="roleSelect"
               value={values.partOfSpeech}
               onChange={update("partOfSpeech")}
-              placeholder={t("form.partOfSpeechPlaceholder")}
-            />
+              disabled={partOfSpeechLoading}
+            >
+              <option value="">{t("form.partOfSpeechNone")}</option>
+              {selectablePartsOfSpeech.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                  {option.isActive === false
+                    ? ` — ${t("form.partOfSpeechInactive")}`
+                    : ""}
+                </option>
+              ))}
+            </select>
+            {partOfSpeechError ? (
+              <span className="roleHint roleHint--danger">
+                {partOfSpeechError}
+              </span>
+            ) : null}
           </div>
 
           <div className="roleField roleField--wide">

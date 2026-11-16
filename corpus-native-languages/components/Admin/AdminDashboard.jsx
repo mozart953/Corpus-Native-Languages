@@ -10,6 +10,7 @@ import StatusBadge from "../Moderation/StatusBadge.jsx";
 import EntryForm from "../Contribute/EntryForm.jsx";
 import SiteImageManager from "./SiteImageManager.jsx";
 import PageContentManager from "./PageContentManager.jsx";
+import PartOfSpeechManager from "./PartOfSpeechManager.jsx";
 import { useI18n } from "../../lib/i18n";
 import "./Admin.css";
 
@@ -356,15 +357,17 @@ export default function AdminDashboard({ user }) {
   const [search, setSearch] = useState("");
   const [approvalRoles, setApprovalRoles] = useState({});
   const [roleDrafts, setRoleDrafts] = useState({});
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const loadAll = useCallback(async () => {
     try {
       const [userResponse, archiveResponse, wordResponse, languageResponse] =
         await Promise.all([
           apiFetch("/users?limit=100"),
-          apiFetch("/archive?type=all&limit=100"),
-          apiFetch("/words?limit=100"),
+          apiFetch(
+            `/archive?type=all&limit=100&locale=${encodeURIComponent(locale)}`,
+          ),
+          apiFetch(`/words?limit=100&locale=${encodeURIComponent(locale)}`),
           apiFetch("/languages?limit=100"),
         ]);
 
@@ -384,7 +387,7 @@ export default function AdminDashboard({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, locale]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount; updates happen after the awaited API call
@@ -629,6 +632,12 @@ export default function AdminDashboard({ user }) {
           {t("admin.tab.pageText")}
         </TabsTrigger>
         <TabsTrigger
+          value="partsOfSpeech"
+          className={`roleTab ${tab === "partsOfSpeech" ? "is-active" : ""}`}
+        >
+          {t("admin.tab.partsOfSpeech")}
+        </TabsTrigger>
+        <TabsTrigger
           value="archive"
           className={`roleTab ${tab === "archive" ? "is-active" : ""}`}
         >
@@ -646,7 +655,9 @@ export default function AdminDashboard({ user }) {
               ? t("admin.notice.presentation")
               : tab === "pageText"
                 ? t("admin.notice.pageText")
-                : t("admin.notice.archive")}
+                : tab === "partsOfSpeech"
+                  ? t("admin.notice.partsOfSpeech")
+                  : t("admin.notice.archive")}
       </p>
 
       {error ? (
@@ -824,6 +835,8 @@ export default function AdminDashboard({ user }) {
         <SiteImageManager />
       ) : tab === "pageText" ? (
         <PageContentManager />
+      ) : tab === "partsOfSpeech" ? (
+        <PartOfSpeechManager />
       ) : archiveCount === 0 ? (
         <div className="roleEmpty">{t("admin.archive.none")}</div>
       ) : (

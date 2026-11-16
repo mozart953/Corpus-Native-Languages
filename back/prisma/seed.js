@@ -52,14 +52,15 @@ const LOCALES = [
 ];
 
 const COMMON_PARTS_OF_SPEECH = [
-  { code: "noun", label: "noun" },
-  { code: "verb", label: "verb" },
-  { code: "adjective", label: "adjective" },
-  { code: "numeral", label: "numeral" },
-  { code: "pronoun", label: "pronoun" },
-  { code: "adverb", label: "adverb" },
-  { code: "phrase", label: "phrase" },
-  { code: "greeting", label: "greeting" },
+  { code: "noun", label: "noun", labelEs: "sustantivo" },
+  { code: "verb", label: "verb", labelEs: "verbo" },
+  { code: "adjective", label: "adjective", labelEs: "adjetivo" },
+  { code: "numeral", label: "numeral", labelEs: "numeral" },
+  { code: "pronoun", label: "pronoun", labelEs: "pronombre" },
+  { code: "adverb", label: "adverb", labelEs: "adverbio" },
+  { code: "phrase", label: "phrase", labelEs: "frase" },
+  { code: "greeting", label: "greeting", labelEs: "saludo" },
+  { code: "sustantivo", label: "sustantivo", labelEs: "sustantivo" },
 ];
 
 function seedAccount(prefix) {
@@ -127,10 +128,59 @@ async function seedLookups() {
   for (const word of WORDS) {
     const code = normalizePartOfSpeechCode(word.partOfSpeech);
     if (code && !partsOfSpeech.has(code)) {
-      partsOfSpeech.set(code, { code, label: String(word.partOfSpeech).trim() });
+      partsOfSpeech.set(code, {
+        code,
+        label: String(word.partOfSpeech).trim(),
+        labelEs: null,
+      });
     }
   }
-  await upsertLookup("partOfSpeech", [...partsOfSpeech.values()]);
+
+  for (const row of partsOfSpeech.values()) {
+    await prisma.partOfSpeech.upsert({
+      where: { code: row.code },
+      // Administrators may have renamed a row, so only create missing rows.
+      update: {},
+      create: { code: row.code, label: row.label },
+    });
+  }
+
+  // Backfill both locales for every row, including rows an administrator added.
+  // Existing translations win so re-running the seed never undoes edits.
+  const rows = await prisma.partOfSpeech.findMany();
+  for (const row of rows) {
+    const seeded = partsOfSpeech.get(row.code);
+    const english = seeded?.label ?? row.label;
+    const spanish = seeded?.labelEs ?? (row.code === "sustantivo" ? row.label : null);
+
+    await prisma.partOfSpeechTranslation.upsert({
+      where: {
+        partOfSpeechCode_localeCode: {
+          partOfSpeechCode: row.code,
+          localeCode: "en",
+        },
+      },
+      update: {},
+      create: { partOfSpeechCode: row.code, localeCode: "en", label: english },
+    });
+
+    if (spanish) {
+      await prisma.partOfSpeechTranslation.upsert({
+        where: {
+          partOfSpeechCode_localeCode: {
+            partOfSpeechCode: row.code,
+            localeCode: "es",
+          },
+        },
+        update: {},
+        create: {
+          partOfSpeechCode: row.code,
+          localeCode: "es",
+          label: spanish,
+        },
+      });
+    }
+  }
 }
 
 async function upsertSeedUser({ email, username, password, role }) {

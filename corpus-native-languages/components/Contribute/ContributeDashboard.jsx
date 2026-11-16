@@ -78,7 +78,9 @@ function EntryCard({
           </span>
         ) : null}
         <span>{t("contribute.card.updated", { date: formatDate(entry.updatedAt) })}</span>
-        {entry.partOfSpeech ? <span>{entry.partOfSpeech}</span> : null}
+        {entry.partOfSpeech
+          ? <span>{entry.partOfSpeechLabel ?? entry.partOfSpeech}</span>
+          : null}
       </div>
 
       {entry.rejectionReason ? (
@@ -174,7 +176,7 @@ export default function ContributeDashboard({ user }) {
   const [editor, setEditor] = useState(null);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   const load = useCallback(async () => {
     try {
@@ -185,9 +187,9 @@ export default function ContributeDashboard({ user }) {
         trashLanguages,
         publicLanguages,
       ] = await Promise.all([
-        apiFetch("/words/mine?limit=100"),
+        apiFetch(`/words/mine?limit=100&locale=${encodeURIComponent(locale)}`),
         apiFetch("/languages/mine?limit=100"),
-        apiFetch("/words/trash?limit=100"),
+        apiFetch(`/words/trash?limit=100&locale=${encodeURIComponent(locale)}`),
         apiFetch("/languages/trash?limit=100"),
         apiFetch("/languages?limit=100"),
       ]);
@@ -209,7 +211,7 @@ export default function ContributeDashboard({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, [t, locale]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount; updates happen after the awaited API call

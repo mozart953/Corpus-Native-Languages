@@ -17,6 +17,7 @@
     "db:studio": "prisma studio",
     "db:sync-fixtures": "node scripts/sync-fixtures.js",
     "test:flow": "node scripts/test-api-flow.mjs",
+    "test:part-of-speech": "node scripts/test-part-of-speech.mjs",
     "setup": "prisma generate && prisma migrate dev --name init && node prisma/seed.js"
   },
   "prisma": {

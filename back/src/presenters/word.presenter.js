@@ -21,6 +21,22 @@ function translationFor(sense, locale) {
 }
 
 /**
+ * Part-of-speech wording for the requested locale. English is the canonical
+ * fallback; the legacy `label` column covers rows that predate translations.
+ */
+function partOfSpeechLabel(partOfSpeech, locale) {
+  if (!partOfSpeech) return null;
+
+  const translations = partOfSpeech.translations ?? [];
+  const chosen =
+    translations.find((row) => row.localeCode === locale) ??
+    translations.find((row) => row.localeCode === DEFAULT_LOCALE) ??
+    null;
+
+  return chosen?.label ?? partOfSpeech.label ?? null;
+}
+
+/**
  * Public representation of a word. `languageName` is derived from the joined
  * language, and the flat translation/usage fields stay compatible with the
  * existing frontend. Pass `locale` to read a translated sense; when that locale
@@ -78,7 +94,7 @@ export function toWordResponse(word, { locale = DEFAULT_LOCALE } = {}) {
         })),
       };
     }),
-    partOfSpeechLabel: word.partOfSpeech?.label ?? null,
+    partOfSpeechLabel: partOfSpeechLabel(word.partOfSpeech, locale),
     reviewStateLabel: word.reviewState?.label ?? null,
   };
 }

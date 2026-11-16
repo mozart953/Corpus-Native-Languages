@@ -227,3 +227,51 @@
     flex: 1 1 100%;
   }
 }
+
+/* --------------------------- parts of speech ----------------------------- */
+
+.partOfSpeech {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.partOfSpeech__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.partOfSpeech__field {
+  min-width: 0;
+}
+
+.partOfSpeech__create {
+  padding: 16px 18px;
+}
+
+.partOfSpeech__actions {
+  flex-wrap: wrap;
+}
+
+.partOfSpeech__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-right: auto;
+}
+
+.partOfSpeech__code {
+  color: var(--nl-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+}
+
+.partOfSpeech__card--inactive {
+  border-left: 3px solid var(--nl-warning);
+}
+
+.roleHint--danger {
+  color: var(--nl-danger);
+}
+

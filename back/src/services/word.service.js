@@ -7,6 +7,7 @@ import {
 } from "../models/word.model.js";
 import { languageRepository } from "../repositories/language.repository.js";
 import { localeRepository } from "../repositories/locale.repository.js";
+import { partOfSpeechRepository } from "../repositories/part-of-speech.repository.js";
 import { wordRepository } from "../repositories/word.repository.js";
 import { toWordResponse } from "../presenters/word.presenter.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -25,18 +26,23 @@ async function assertLanguageIsUsable(languageId, client) {
   return language;
 }
 
-async function ensurePartOfSpeech(value, client) {
+/**
+ * Words may only reference a part of speech an administrator has created and
+ * kept active. `allowCode` lets an edit keep an existing value that was
+ * deactivated after the word was saved; a contributor cannot pick it anew.
+ */
+async function resolvePartOfSpeech(value, client, { allowCode = null } = {}) {
   if (!value) return null;
 
-  const label = String(value).trim();
-  const code = normalizePartOfSpeechCode(label);
+  const code = normalizePartOfSpeechCode(value);
   if (!code) return null;
 
-  await client.partOfSpeech.upsert({
-    where: { code },
-    create: { code, label },
-    update: { label },
-  });
+  const row = await partOfSpeechRepository.findByCode(code, client);
+  if (!row || (!row.isActive && code !== allowCode)) {
+    throw ApiError.badRequest(
+      "Choose a part of speech from the managed list.",
+    );
+  }
 
   return code;
 }
@@ -124,7 +130,7 @@ const baseWordService = createContentService({
   prepareCreate: async (input, client) => {
     await assertLanguageIsUsable(input.languageId, client);
     return {
-      partOfSpeechCode: await ensurePartOfSpeech(input.partOfSpeech, client),
+      partOfSpeechCode: await resolvePartOfSpeech(input.partOfSpeech, client),
     };
   },
 
@@ -159,7 +165,9 @@ const baseWordService = createContentService({
     return {
       partOfSpeechCode:
         "partOfSpeech" in input
-          ? await ensurePartOfSpeech(input.partOfSpeech, client)
+          ? await resolvePartOfSpeech(input.partOfSpeech, client, {
+              allowCode: existing.partOfSpeechCode,
+            })
           : undefined,
     };
   },

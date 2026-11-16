@@ -25,7 +25,9 @@ export const wordRepository = {
         orderBy: { position: "asc" },
         include: { translations: { orderBy: { localeCode: "asc" } } },
       },
-      partOfSpeech: true,
+      partOfSpeech: {
+        include: { translations: { orderBy: { localeCode: "asc" } } },
+      },
       reviewState: true,
     },
   }),

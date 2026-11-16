@@ -115,7 +115,7 @@ function WordCard({
 
       {word.partOfSpeech ? (
         <Badge variant="outline" className="w-fit">
-          {word.partOfSpeech}
+          {word.partOfSpeechLabel ?? word.partOfSpeech}
         </Badge>
       ) : null}
 

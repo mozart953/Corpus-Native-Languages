@@ -140,7 +140,8 @@ and one-to-many facts are stored once:
 | `Region` | Canonical region name. |
 | `LanguageRegion` | Many-to-many join (`languageId`, `regionName`, `position`) preserving the order regions were entered. |
 | `User` | Account. `roleCode` → `Role`, `statusCode` → `UserStatus`, `providerCode` → `Provider`. |
-| `ReviewState`, `LanguageStatus`, `PartOfSpeech`, `Role`, `UserStatus`, `Provider`, `RemovalStatus` | Lookup tables (`code` PK + `label`). |
+| `ReviewState`, `LanguageStatus`, `PartOfSpeech`, `Role`, `UserStatus`, `Provider`, `RemovalStatus` | Lookup tables (`code` PK + `label`). `PartOfSpeech` also has `isActive`, which hides an option without touching the words that use it. |
+| `PartOfSpeechTranslation` | Per-locale part-of-speech wording (`partOfSpeechCode`, `localeCode`, `label`); unique on the pair. |
 | `ReviewDecision` | Append-only history of moderation decisions (`entityType`, `entityId`, `stateCode`, `reviewerId`, `comment`). |
 | `RemovalRequest` | Append-only removal requests (`entityType`, `entityId`, `reason`, `requestedById`, `statusCode`, `resolvedById`, `resolvedAt`). |
 | `AuditLog` | Full action log with actor, state transition, reason and JSON snapshot. |
@@ -326,10 +327,25 @@ into `Region` and linked through `LanguageRegion` in the order given. The respon
 
 Word body: `id?`, `languageId`, `word`, `translation`, `pronunciation?`,
 `partOfSpeech?`, `usage?`. `translation` and `usage` are stored on the word's
-primary `Sense`; updates replace that sense atomically. `partOfSpeech` is
-normalized to a code and upserted into the `PartOfSpeech` lookup, so free-text
-input still works. `languageName` is joined from the language at read time, and
-responses also include a `senses[]` array.
+primary `Sense`; updates replace that sense atomically. `partOfSpeech` must be
+the stable code of an active, administrator-managed part of speech; free-text
+input is no longer auto-created. `languageName` is joined from the language at
+read time, responses include a `senses[]` array, and `partOfSpeechLabel` is the
+row's label in the requested `locale` (English fallback).
+
+### Parts of speech
+
+| Method | Path | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/part-of-speech` | public | Active options for the word form. `locale` selects `label`. |
+| `GET` | `/part-of-speech/admin` | admin | Every option, including hidden rows and `wordCount`. `locale` selects `label`. |
+| `POST` | `/part-of-speech` | admin | Create: `{ code?, translations: { en, es, … } }`. The English label is required; `code` defaults to its normalized form. |
+| `PATCH` | `/part-of-speech/:code` | admin | `{ translations?, isActive? }`. Locale labels are upserted. |
+| `DELETE` | `/part-of-speech/:code` | admin | Deactivate/hide the option. Existing words keep the label and the row can be restored. |
+| `POST` | `/part-of-speech/:code/restore` | admin | Reactivate a hidden option. |
+
+A part-of-speech response is `{ code, label, labelEn, locale, isFallback,
+isActive, wordCount, translations[] }`.
 
 Sort fields — words: `word`, `languageId`, `createdAt`, `updatedAt`; languages:
 `name`, `speakers`, `status`, `createdAt`, `updatedAt`. `translation` and the
@@ -391,6 +407,7 @@ Run from `back/`:
 | `npm run db:studio` | Open Prisma Studio. |
 | `npm run db:sync-fixtures` | Copy `../corpus-native-languages/data/corpus.js` into the seed folder. |
 | `npm run test:flow` | End-to-end moderation smoke test (API must be running). |
+| `npm run test:part-of-speech` | Part-of-speech CRUD, localization and permissions smoke test (API must be running). |
 
 ## Seed accounts
 

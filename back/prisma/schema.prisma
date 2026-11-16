@@ -46,10 +46,27 @@ model LanguageStatus {
   languages Language[]
 }
 
+// Administrators manage this lookup from the admin desk. `label` stays the
+// canonical English label for compatibility; every locale's wording lives in
+// PartOfSpeechTranslation so adding a language never needs a migration.
 model PartOfSpeech {
-  code  String @id
-  label String
-  words Word[]
+  code      String @id
+  label     String
+  isActive  Boolean @default(true)
+  words     Word[]
+  translations PartOfSpeechTranslation[]
+}
+
+model PartOfSpeechTranslation {
+  id               String       @id @default(cuid())
+  partOfSpeechCode String
+  partOfSpeech     PartOfSpeech @relation(fields: [partOfSpeechCode], references: [code], onDelete: Cascade)
+  localeCode       String
+  locale           Locale       @relation(fields: [localeCode], references: [code], onDelete: Cascade)
+  label            String
+
+  @@unique([partOfSpeechCode, localeCode])
+  @@index([localeCode])
 }
 
 model Role {
@@ -85,8 +102,9 @@ model Locale {
   isDefault Boolean @default(false)
   position  Int     @default(0)
 
-  pageContents      PageContent[]
-  senseTranslations SenseTranslation[]
+  pageContents             PageContent[]
+  senseTranslations        SenseTranslation[]
+  partOfSpeechTranslations PartOfSpeechTranslation[]
 }
 
 // ---------------------------------------------------------------------------
