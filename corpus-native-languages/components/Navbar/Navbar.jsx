@@ -47,6 +47,7 @@ function NavbarComponent({
         { id: "contribute", href: "/contribute" },
         ...(canReview ? [{ id: "review", href: "/review" }] : []),
         ...(isAdmin ? [{ id: "admin", href: "/admin" }] : []),
+        { id: "account", href: "/account" },
       ]
     : [
         { id: "home", href: "/" },

@@ -11,6 +11,7 @@ import EntryForm from "../Contribute/EntryForm.jsx";
 import SiteImageManager from "./SiteImageManager.jsx";
 import PageContentManager from "./PageContentManager.jsx";
 import PartOfSpeechManager from "./PartOfSpeechManager.jsx";
+import EmergencyRequestManager from "./EmergencyRequestManager.jsx";
 import { useI18n } from "../../lib/i18n";
 import "./Admin.css";
 
@@ -346,6 +347,7 @@ export default function AdminDashboard({ user }) {
   const [content, setContent] = useState({ words: [], languages: [] });
   const [languages, setLanguages] = useState([]);
   const [archive, setArchive] = useState({ words: [], languages: [] });
+  const [emergencyRequests, setEmergencyRequests] = useState([]);
   const [editor, setEditor] = useState(null);
   const [contentSearch, setContentSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -361,21 +363,28 @@ export default function AdminDashboard({ user }) {
 
   const loadAll = useCallback(async () => {
     try {
-      const [userResponse, archiveResponse, wordResponse, languageResponse] =
-        await Promise.all([
-          apiFetch("/users?limit=100"),
-          apiFetch(
-            `/archive?type=all&limit=100&locale=${encodeURIComponent(locale)}`,
-          ),
-          apiFetch(`/words?limit=100&locale=${encodeURIComponent(locale)}`),
-          apiFetch("/languages?limit=100"),
-        ]);
+      const [
+        userResponse,
+        archiveResponse,
+        wordResponse,
+        languageResponse,
+        emergencyResponse,
+      ] = await Promise.all([
+        apiFetch("/users?limit=100"),
+        apiFetch(
+          `/archive?type=all&limit=100&locale=${encodeURIComponent(locale)}`,
+        ),
+        apiFetch(`/words?limit=100&locale=${encodeURIComponent(locale)}`),
+        apiFetch("/languages?limit=100"),
+        apiFetch("/account/admin/requests?limit=100"),
+      ]);
 
       setAccounts(userResponse?.data ?? []);
       setArchive({
         words: archiveResponse?.data?.words ?? [],
         languages: archiveResponse?.data?.languages ?? [],
       });
+      setEmergencyRequests(emergencyResponse?.data ?? []);
       setContent({
         words: wordResponse?.data ?? [],
         languages: languageResponse?.data ?? [],
@@ -613,6 +622,15 @@ export default function AdminDashboard({ user }) {
           <span className="roleTab__count">{accounts.length}</span>
         </TabsTrigger>
         <TabsTrigger
+          value="emergency"
+          className={`roleTab ${tab === "emergency" ? "is-active" : ""}`}
+        >
+          {t("admin.tab.emergency")}{" "}
+          <span className="roleTab__count">
+            {emergencyRequests.filter((request) => request.status === "pending").length}
+          </span>
+        </TabsTrigger>
+        <TabsTrigger
           value="content"
           className={`roleTab ${tab === "content" ? "is-active" : ""}`}
         >
@@ -649,9 +667,11 @@ export default function AdminDashboard({ user }) {
       <p className="roleNotice roleNotice--info">
         {tab === "accounts"
           ? t("admin.notice.accounts")
-          : tab === "content"
-            ? t("admin.notice.content")
-            : tab === "presentation"
+          : tab === "emergency"
+            ? t("admin.notice.emergency")
+            : tab === "content"
+              ? t("admin.notice.content")
+              : tab === "presentation"
               ? t("admin.notice.presentation")
               : tab === "pageText"
                 ? t("admin.notice.pageText")
@@ -747,6 +767,11 @@ export default function AdminDashboard({ user }) {
             </div>
           )}
         </>
+      ) : tab === "emergency" ? (
+        <EmergencyRequestManager
+          requests={emergencyRequests}
+          onChanged={loadAll}
+        />
       ) : tab === "content" ? (
         <>
           <div className="roleToolbar">

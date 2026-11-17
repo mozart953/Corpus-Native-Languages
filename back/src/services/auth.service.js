@@ -8,6 +8,7 @@ import {
 import { toPublicUser } from "../presenters/user.presenter.js";
 import { ApiError } from "../utils/ApiError.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
+import { normalizeUsername } from "../utils/username.js";
 import { auditService } from "./audit.service.js";
 
 function normaliseEmail(email) {
@@ -22,10 +23,17 @@ function normaliseEmail(email) {
 export const authService = {
   async register({ username, email, password }) {
     const normalisedEmail = normaliseEmail(email);
+    const usernameKey = normalizeUsername(username);
 
     const existing = await userRepository.findByEmail(normalisedEmail);
     if (existing) {
       throw ApiError.conflict("An account with that email already exists.");
+    }
+
+    const existingUsername =
+      await userRepository.findByUsernameKey(usernameKey);
+    if (existingUsername) {
+      throw ApiError.conflict("That username is already taken.");
     }
 
     const passwordHash = await hashPassword(password);
@@ -35,6 +43,7 @@ export const authService = {
         {
           email: normalisedEmail,
           username: username.trim(),
+          usernameKey,
           passwordHash,
           providerCode: DEFAULT_PROVIDER,
           roleCode: DEFAULT_ROLE,

@@ -26,7 +26,8 @@ export default function RolePage({
   allowedRoles = null,
   children = null,
 }) {
-  const { user, status, logout } = useCorpusAuth();
+  const auth = useCorpusAuth();
+  const { user, status, logout } = auth;
   const { t } = useI18n();
   const router = useRouter();
 
@@ -119,7 +120,8 @@ export default function RolePage({
           <p className="rolePage__subtitle">{subtitle}</p>
         </header>
 
-        {gate ?? (typeof children === "function" ? children(user) : children)}
+        {gate ??
+          (typeof children === "function" ? children(user, auth) : children)}
       </main>
     </div>
   );

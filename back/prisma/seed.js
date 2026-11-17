@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { LANGUAGES, WORDS } from "./seed-data.js";
 import { normalizePartOfSpeechCode } from "../src/models/word.model.js";
+import { normalizeUsername } from "../src/utils/username.js";
 
 const prisma = new PrismaClient();
 const BCRYPT_ROUNDS = 12;
@@ -44,6 +45,12 @@ const REMOVAL_STATUSES = [
   { code: "pending", label: "Pending" },
   { code: "cancelled", label: "Cancelled" },
   { code: "completed", label: "Completed" },
+];
+
+const ACCOUNT_REQUEST_STATUSES = [
+  { code: "pending", label: "Pending" },
+  { code: "completed", label: "Completed" },
+  { code: "cancelled", label: "Cancelled" },
 ];
 
 const LOCALES = [
@@ -108,6 +115,7 @@ async function seedLookups() {
   await upsertLookup("userStatus", USER_STATUSES);
   await upsertLookup("provider", PROVIDERS);
   await upsertLookup("removalStatus", REMOVAL_STATUSES);
+  await upsertLookup("accountRequestStatus", ACCOUNT_REQUEST_STATUSES);
 
   for (const locale of LOCALES) {
     await prisma.locale.upsert({
@@ -228,6 +236,7 @@ async function upsertSeedUser({ email, username, password, role }) {
     data: {
       email: normalisedEmail,
       username,
+      usernameKey: normalizeUsername(username),
       passwordHash: await bcrypt.hash(password, BCRYPT_ROUNDS),
       providerCode: "local",
       roleCode: role,

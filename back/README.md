@@ -139,11 +139,12 @@ and one-to-many facts are stored once:
 | `Sense` | One gloss + usage for a word (`wordId`, `gloss`, `usage`, `position`). Translation and usage are no longer columns on `Word`. |
 | `Region` | Canonical region name. |
 | `LanguageRegion` | Many-to-many join (`languageId`, `regionName`, `position`) preserving the order regions were entered. |
-| `User` | Account. `roleCode` → `Role`, `statusCode` → `UserStatus`, `providerCode` → `Provider`. |
-| `ReviewState`, `LanguageStatus`, `PartOfSpeech`, `Role`, `UserStatus`, `Provider`, `RemovalStatus` | Lookup tables (`code` PK + `label`). `PartOfSpeech` also has `isActive`, which hides an option without touching the words that use it. |
+| `User` | Account. `roleCode` → `Role`, `statusCode` → `UserStatus`, `providerCode` → `Provider`. `usernameKey` enforces case-insensitive username uniqueness; `*ChangedAt` columns drive self-service cooldowns, and `emailVerifiedAt`/`pendingEmail` prepare a future verification flow. |
+| `ReviewState`, `LanguageStatus`, `PartOfSpeech`, `Role`, `UserStatus`, `Provider`, `RemovalStatus`, `AccountRequestStatus` | Lookup tables (`code` PK + `label`). `PartOfSpeech` also has `isActive`, which hides an option without touching the words that use it. |
 | `PartOfSpeechTranslation` | Per-locale part-of-speech wording (`partOfSpeechCode`, `localeCode`, `label`); unique on the pair. |
 | `ReviewDecision` | Append-only history of moderation decisions (`entityType`, `entityId`, `stateCode`, `reviewerId`, `comment`). |
 | `RemovalRequest` | Append-only removal requests (`entityType`, `entityId`, `reason`, `requestedById`, `statusCode`, `resolvedById`, `resolvedAt`). |
+| `AccountChangeRequest` | Emergency account request (`userId`, `reason`, requested fields, `statusCode`, `resolvedById`, `resolvedAt`, `resolutionNote`). An admin edit is allowed only while `statusCode = "pending"`; saving resolves it and writes an audit entry. |
 | `AuditLog` | Full action log with actor, state transition, reason and JSON snapshot. |
 | `SiteImage` | Single-row-per-key uploaded images. |
 
@@ -285,6 +286,30 @@ Base URL: `http://localhost:4000/api/v1`
 | `POST` | `/auth/login` | public | Verify email/password for an active account; used by NextAuth. Pending, rejected and deactivated accounts receive `403`. |
 | `GET` | `/auth/me` | signed in | Live current account, re-read from the database. |
 
+### Account
+
+Self-service changes are rate-limited and enforced on the server. Usernames are
+unique case-insensitively (`usernameKey`); emails are unique and normalized to
+lowercase. Cooldowns start after a successful change and are stored on the user
+row, so signing out does not reset them.
+
+| Method | Path | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/account` | signed in | Profile, per-field cooldowns, password policy, open request and request history. |
+| `PATCH` | `/account/username` | signed in | `{ username }`. Two changes are allowed only 30 days apart. |
+| `PATCH` | `/account/email` | signed in | `{ email, currentPassword }`. Applied immediately, 30-day cooldown, clears `emailVerifiedAt`. |
+| `PATCH` | `/account/password` | signed in | `{ currentPassword, newPassword }`. 8–128 characters with an uppercase letter, a lowercase letter and a number; 15-day cooldown. |
+| `GET` | `/account/requests` | signed in | The current user's emergency requests. |
+| `POST` | `/account/requests` | signed in | `{ reason, fields: ["username" \| "email" \| "password"] }`. Only one request may be open at a time. |
+| `POST` | `/account/requests/:id/cancel` | owner | Cancel an open request. |
+| `GET` | `/account/admin/requests` | admin | Emergency queue. Filters: `status`, `q`, `page`, `limit`. |
+| `PATCH` | `/account/admin/users/:id` | admin | `{ username?, email?, password?, resolutionNote? }`. Requires an open request and only the fields it names; saving resolves the request, resets the touched cooldowns and writes audit entries. |
+
+Email verification is intentionally prepared but not enforced: `emailVerifiedAt`
+and `pendingEmail` exist, but no mail is sent and a changed address is active
+immediately. The emergency path exists for users who cannot reach this page; it
+is not a general account editor.
+
 ### Languages
 
 | Method | Path | Access | Description |
@@ -408,6 +433,7 @@ Run from `back/`:
 | `npm run db:sync-fixtures` | Copy `../corpus-native-languages/data/corpus.js` into the seed folder. |
 | `npm run test:flow` | End-to-end moderation smoke test (API must be running). |
 | `npm run test:part-of-speech` | Part-of-speech CRUD, localization and permissions smoke test (API must be running). |
+| `npm run test:account` | Account cooldowns, uniqueness, password policy, emergency requests and admin overrides (API must be running). |
 
 ## Seed accounts
 

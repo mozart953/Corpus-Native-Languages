@@ -1,0 +1,133 @@
+.accountPage {
+  display: flex;
+  flex-direction: column;
+}
+
+.accountSummary .roleHint {
+  display: block;
+  margin-top: 10px;
+}
+
+.accountGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.accountCard--wide {
+  grid-column: 1 / -1;
+}
+
+.accountForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.accountForm__error {
+  margin-bottom: 0;
+}
+
+.accountHint {
+  color: var(--nl-faint);
+  font-size: 0.78rem;
+}
+
+.accountHint--locked {
+  padding: 8px 12px;
+  background: var(--nl-warning-soft);
+  border: 1px solid var(--nl-warning-line);
+  border-radius: var(--nl-radius-sm);
+  color: var(--nl-warning);
+}
+
+.accountRequest {
+  margin-top: 16px;
+}
+
+.accountRequest__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.accountRequest__status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border: 1px solid var(--nl-border-strong);
+  border-radius: var(--nl-radius-pill);
+  font-family: var(--nl-font-label);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.accountRequest__status.is-pending {
+  background: var(--nl-warning-soft);
+  border-color: var(--nl-warning-line);
+  color: var(--nl-warning);
+}
+
+.accountRequest__status.is-completed {
+  background: var(--nl-success-soft);
+  border-color: var(--nl-success-line);
+  color: var(--nl-success);
+}
+
+.accountRequest__status.is-cancelled {
+  background: var(--nl-surface-3);
+  color: var(--nl-muted);
+}
+
+.accountRequest__choiceSet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius-sm);
+}
+
+.accountRequest__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+}
+
+.accountCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nl-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.accountCheck input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--nl-primary);
+}
+
+.accountRequest__historyHead {
+  margin-top: 26px;
+}
+
+.accountRequest__history {
+  margin-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .accountGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .accountCard--wide {
+    grid-column: auto;
+  }
+}

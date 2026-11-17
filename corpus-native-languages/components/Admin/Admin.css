@@ -275,3 +275,22 @@
   color: var(--nl-danger);
 }
 
+/* ----------------------- emergency account requests ---------------------- */
+
+.adminEmergency {
+  display: flex;
+  flex-direction: column;
+}
+
+.adminEmergency__editor {
+  padding: 18px 20px;
+}
+
+.adminEmergency__grid {
+  margin-top: 14px;
+}
+
+.adminEmergency__error {
+  margin: 14px 0 0;
+}
+

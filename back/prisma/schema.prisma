@@ -93,6 +93,14 @@ model RemovalStatus {
   requests RemovalRequest[]
 }
 
+// Lifecycle of an emergency account-change request: pending -> completed or
+// cancelled. Only pending requests let an admin edit the account.
+model AccountRequestStatus {
+  code     String                 @id
+  label    String
+  requests AccountChangeRequest[]
+}
+
 // Languages the interface and corpus can be translated into. Rows are data,
 // not schema, so adding a new translation language never needs a migration.
 model Locale {
@@ -293,6 +301,38 @@ model RemovalRequest {
   @@index([statusCode])
 }
 
+// A user who cannot sign in or reach the self-service page asks an admin for
+// help. The request names the fields that need attention; an admin may edit
+// only those fields, and only while the request is pending. Completing the edit
+// resolves the request, so the record shows why the override happened.
+model AccountChangeRequest {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation("AccountChangeRequester", fields: [userId], references: [id], onDelete: Cascade)
+
+  reason String
+
+  requestUsername Boolean @default(false)
+  requestEmail    Boolean @default(false)
+  requestPassword Boolean @default(false)
+
+  statusCode String               @default("pending")
+  status     AccountRequestStatus @relation(fields: [statusCode], references: [code])
+
+  resolvedById  String?
+  resolvedBy    User?     @relation("AccountChangeResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt    DateTime?
+  resolutionNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, statusCode])
+  @@index([statusCode, createdAt])
+  @@index([resolvedById])
+}
+
 // ---------------------------------------------------------------------------
 // Accounts
 // ---------------------------------------------------------------------------
@@ -301,6 +341,22 @@ model User {
   id       String  @id @default(cuid())
   email    String  @unique
   username String
+
+  // Trimmed, whitespace-collapsed and lowercased username. A separate column
+  // keeps uniqueness case-insensitive even though the display name keeps the
+  // capitalization the user chose.
+  usernameKey String @unique
+
+  // Start of the last self-service or admin-assisted change. A null value means
+  // the field has never been changed and the user may change it immediately.
+  usernameChangedAt DateTime?
+  emailChangedAt    DateTime?
+  passwordChangedAt DateTime?
+
+  // Preparation for a future verification flow. No mail is sent yet and an
+  // email change still applies immediately, clearing the verified timestamp.
+  emailVerifiedAt DateTime?
+  pendingEmail    String?
 
   // Nullable so future OAuth providers (Google, etc.) can create accounts
   // without a password. Local accounts always have a bcrypt hash.
@@ -340,6 +396,8 @@ model User {
   siteImagesUpdated SiteImage[] @relation("SiteImageUpdatedBy")
   pageContentsUpdated PageContent[] @relation("PageContentUpdatedBy")
   auditLogs         AuditLog[] @relation("AuditLogActor")
+  accountRequests         AccountChangeRequest[] @relation("AccountChangeRequester")
+  accountRequestsResolved AccountChangeRequest[] @relation("AccountChangeResolver")
 
   @@unique([providerCode, providerId])
   @@index([roleCode])

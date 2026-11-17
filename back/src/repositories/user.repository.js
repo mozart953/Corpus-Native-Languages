@@ -9,6 +9,10 @@ export const userRepository = {
     return client.user.findUnique({ where: { email } });
   },
 
+  findByUsernameKey(usernameKey, client = prisma) {
+    return client.user.findUnique({ where: { usernameKey } });
+  },
+
   create(data, client = prisma) {
     return client.user.create({ data });
   },
@@ -26,6 +30,10 @@ export const userRepository = {
   },
 
   updateStatus(id, data, client = prisma) {
+    return client.user.update({ where: { id }, data });
+  },
+
+  updateProfile(id, data, client = prisma) {
     return client.user.update({ where: { id }, data });
   },
 
