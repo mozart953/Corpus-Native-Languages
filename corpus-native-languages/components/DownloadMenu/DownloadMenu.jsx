@@ -1,27 +1,34 @@
 "use client";
 
 import { useState } from "react";
+import { Copy, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   buildFilename,
   copyToClipboard,
   downloadTextFile,
+  wordsToCsv,
   wordsToDetailedTxt,
   wordsToJson,
   wordsToPairsTxt,
 } from "../../utils/exporters";
+import { useI18n } from "../../lib/i18n";
 import "./DownloadMenu.css";
 
 /** The export formats offered. */
 export const FORMATS = {
   JSON: "json",
+  CSV: "csv",
   PAIRS: "pairs",
   DETAILED: "detailed",
 };
 
 const FORMAT_META = {
-  [FORMATS.JSON]: { label: "JSON", hint: "Full records, nested under a meta header" },
-  [FORMATS.PAIRS]: { label: "TXT", hint: "One word per line, tab separated" },
-  [FORMATS.DETAILED]: { label: "TXT", hint: "Readable blocks with usage notes" },
+  [FORMATS.JSON]: { label: "JSON", hintKey: "download.jsonHint" },
+  [FORMATS.CSV]: { label: "CSV", hintKey: "download.csvHint" },
+  [FORMATS.PAIRS]: { label: "TXT", hintKey: "download.txtPairsHint" },
+  [FORMATS.DETAILED]: { label: "TXT", hintKey: "download.txtDetailedHint" },
 };
 
 /**
@@ -34,29 +41,43 @@ const FORMAT_META = {
  */
 function DownloadMenu({
   words = [],
-  languageName = "all languages",
+  languageName = null,
   selectedIds = [],
   baseName = "corpus",
   onExport = null,
 }) {
   const [format, setFormat] = useState(FORMATS.JSON);
   const [message, setMessage] = useState(null);
+  const { t } = useI18n();
 
   const selectedWords = words.filter((word) => selectedIds.includes(word.id));
   const useSelection = selectedWords.length > 0;
   const target = useSelection ? selectedWords : words;
 
   const isEmpty = target.length === 0;
-  const meta = { languageName: useSelection ? `${languageName} (selection)` : languageName };
+  const exportLanguageName = useSelection
+    ? `${languageName ?? t("home.words.allLanguages")} (selection)`
+    : languageName ?? t("home.words.allLanguages");
 
   const serialise = (chosen) => {
     if (chosen === FORMATS.JSON) {
-      return { content: wordsToJson(target, meta), extension: "json", mime: "application/json" };
+      return { content: wordsToJson(target), extension: "json", mime: "application/json" };
+    }
+    if (chosen === FORMATS.CSV) {
+      return { content: wordsToCsv(target), extension: "csv", mime: "text/csv" };
     }
     if (chosen === FORMATS.PAIRS) {
-      return { content: wordsToPairsTxt(target, { meta }), extension: "txt", mime: "text/plain" };
+      return {
+        content: wordsToPairsTxt(target, { languageName: exportLanguageName }),
+        extension: "txt",
+        mime: "text/plain",
+      };
     }
-    return { content: wordsToDetailedTxt(target, { meta }), extension: "txt", mime: "text/plain" };
+    return {
+      content: wordsToDetailedTxt(target, { languageName: exportLanguageName }),
+      extension: "txt",
+      mime: "text/plain",
+    };
   };
 
   const flash = (text) => {
@@ -72,7 +93,7 @@ function DownloadMenu({
 
     downloadTextFile(filename, content, mime);
     onExport?.({ format, filename, count: target.length });
-    flash(`Downloading ${filename} · ${target.length} words`);
+    flash(t("download.message", { filename, count: target.length }));
   };
 
   const handleCopy = async () => {
@@ -81,71 +102,82 @@ function DownloadMenu({
     const { content, extension } = serialise(format);
     const ok = await copyToClipboard(content);
 
-    flash(ok ? `Copied ${target.length} words as ${extension.toUpperCase()}` : "Could not copy");
+    flash(
+      ok
+        ? t("download.copied", {
+            count: target.length,
+            format: extension.toUpperCase(),
+          })
+        : t("download.copyFailed"),
+    );
   };
+
+  const wordLabel = target.length === 1 ? t("common.word") : t("common.words");
 
   return (
     <div className="downloadMenu">
       <div className="downloadMenu__head">
         <div>
-          <span className="nl-eyebrow">Export</span>
-          <h3 className="downloadMenu__title">Download these words</h3>
+          <span className="nl-eyebrow">{t("download.eyebrow")}</span>
+          <h3 className="downloadMenu__title">{t("download.title")}</h3>
         </div>
 
         {useSelection ? (
-          <span className="nl-chip downloadMenu__scope">
-            {selectedWords.length} selected
-          </span>
+          <Badge variant="outline" className="downloadMenu__scope">
+            {t("download.selected", { count: selectedWords.length })}
+          </Badge>
         ) : (
-          <span className="nl-chip nl-chip--muted downloadMenu__scope">
-            {words.length} in view
-          </span>
+          <Badge variant="outline" className="downloadMenu__scope">
+            {t("download.inView", { count: words.length })}
+          </Badge>
         )}
       </div>
 
-      <div className="downloadMenu__formats" role="group" aria-label="Export format">
+      <div className="downloadMenu__formats" role="group" aria-label={t("download.format")}>
         {Object.values(FORMATS).map((id) => (
-          <button
+          <Button
             key={id}
             type="button"
+            variant="outline"
             className={`downloadMenu__format ${format === id ? "is-active" : ""}`}
             onClick={() => setFormat(id)}
             aria-pressed={format === id}
           >
             <span className="downloadMenu__formatName">{FORMAT_META[id].label}</span>
-            <span className="downloadMenu__formatHint">{FORMAT_META[id].hint}</span>
-          </button>
+            <span className="downloadMenu__formatHint">{t(FORMAT_META[id].hintKey)}</span>
+          </Button>
         ))}
       </div>
 
       <div className="downloadMenu__actions">
-        <button
+        <Button
           type="button"
-          className="nl-btn nl-btn--primary downloadMenu__download"
+          className="downloadMenu__download"
           onClick={handleDownload}
           disabled={isEmpty}
         >
-          <span className="nl-icon nl-icon--download" aria-hidden="true" />
-          Download {FORMAT_META[format].label}
-        </button>
+          <Download className="size-4" aria-hidden="true" />
+          {t("download.downloadFormat", { format: FORMAT_META[format].label })}
+        </Button>
 
-        <button
+        <Button
           type="button"
-          className="nl-btn"
+          variant="outline"
           onClick={handleCopy}
           disabled={isEmpty}
         >
-          <span className="nl-icon nl-icon--copy" aria-hidden="true" />
-          Copy
-        </button>
+          <Copy className="size-4" aria-hidden="true" />
+          {t("common.copy")}
+        </Button>
       </div>
 
       <p className="downloadMenu__note">
         {isEmpty
-          ? "Nothing to export in this selection."
-          : `Exports the ${target.length} ${target.length === 1 ? "word" : "words"} currently shown${
-              useSelection ? " that you ticked" : ""
-            }.`}
+          ? t("download.empty")
+          : t(useSelection ? "download.noteSelection" : "download.note", {
+              count: target.length,
+              word: wordLabel,
+            })}
       </p>
 
       <p className="downloadMenu__message" role="status" aria-live="polite">

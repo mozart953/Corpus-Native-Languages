@@ -4,8 +4,8 @@ import {
   APPROVAL_ROLES,
   isValidRole,
   isValidStatus,
-  toPublicUser,
 } from "../models/user.model.js";
+import { toPublicUser } from "../presenters/user.presenter.js";
 import { ApiError } from "../utils/ApiError.js";
 import { getPagination, buildMeta } from "../utils/pagination.js";
 import { auditService } from "./audit.service.js";
@@ -18,21 +18,26 @@ const ALLOWED_TRANSITIONS = {
 };
 
 async function assertNotLastActiveAdmin(target) {
-  if (target.role !== "admin" || target.status !== "active") return;
+  if (target.roleCode !== "admin" || target.statusCode !== "active") return;
 
-  const activeAdmins = await userRepository.count({ role: "admin", status: "active" });
+  const activeAdmins = await userRepository.count({
+    roleCode: "admin",
+    statusCode: "active",
+  });
   if (activeAdmins <= 1) {
-    throw ApiError.conflict("The last active admin cannot be deactivated or demoted.");
+    throw ApiError.conflict(
+      "The last active admin cannot be deactivated or demoted.",
+    );
   }
 }
 
 async function recordStatusChange(user, target, actor, reason, client) {
   const action =
-    user.status === "active"
-      ? target.status === "deactivated"
+    user.statusCode === "active"
+      ? target.statusCode === "deactivated"
         ? "account_reactivated"
         : "account_approved"
-      : user.status === "rejected"
+      : user.statusCode === "rejected"
         ? "account_rejected"
         : "account_deactivated";
 
@@ -41,8 +46,8 @@ async function recordStatusChange(user, target, actor, reason, client) {
       entityType: "user",
       entityId: user.id,
       action,
-      fromState: target.status,
-      toState: user.status,
+      fromState: target.statusCode,
+      toState: user.statusCode,
       actor,
       reason: reason ?? null,
       snapshot: toPublicUser(user),
@@ -56,8 +61,8 @@ export const userService = {
     const pagination = getPagination({ page, limit });
     const where = {};
 
-    if (role) where.role = role;
-    if (status) where.status = status;
+    if (role) where.roleCode = role;
+    if (status) where.statusCode = status;
     if (q) {
       where.OR = [
         { email: { contains: q } },
@@ -68,7 +73,7 @@ export const userService = {
     const [rows, total] = await Promise.all([
       userRepository.findMany({
         where,
-        orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+        orderBy: [{ statusCode: "asc" }, { createdAt: "desc" }],
         skip: pagination.skip,
         take: pagination.take,
       }),
@@ -95,15 +100,15 @@ export const userService = {
 
     const target = await userRepository.findById(id);
     if (!target) throw ApiError.notFound("User not found.");
-    if (target.status !== "active") {
+    if (target.statusCode !== "active") {
       throw ApiError.conflict("Approve the account before changing its role.");
     }
 
-    if (target.role === "admin" && role !== "admin") {
+    if (target.roleCode === "admin" && role !== "admin") {
       await assertNotLastActiveAdmin(target);
     }
 
-    if (target.role === role) {
+    if (target.roleCode === role) {
       return { data: toPublicUser(target) };
     }
 
@@ -115,7 +120,7 @@ export const userService = {
           entityType: "user",
           entityId: id,
           action: "role_changed",
-          fromState: target.role,
+          fromState: target.roleCode,
           toState: role,
           actor,
           snapshot: toPublicUser(user),
@@ -141,25 +146,27 @@ export const userService = {
       throw ApiError.badRequest("Unknown account status.");
     }
     if (id === actor.id) {
-      throw ApiError.conflict("You cannot change the status of your own account.");
+      throw ApiError.conflict(
+        "You cannot change the status of your own account.",
+      );
     }
 
     const target = await userRepository.findById(id);
     if (!target) throw ApiError.notFound("User not found.");
 
-    if (target.status === status && !role) {
+    if (target.statusCode === status && !role) {
       return { data: toPublicUser(target) };
     }
 
-    const allowed = ALLOWED_TRANSITIONS[target.status] ?? [];
-    if (target.status !== status && !allowed.includes(status)) {
+    const allowed = ALLOWED_TRANSITIONS[target.statusCode] ?? [];
+    if (target.statusCode !== status && !allowed.includes(status)) {
       throw ApiError.conflict(
-        `An account cannot move from "${target.status}" to "${status}".`,
+        `An account cannot move from "${target.statusCode}" to "${status}".`,
       );
     }
 
-    let nextRole = target.role;
-    if (status === "active" && target.status !== "active") {
+    let nextRole = target.roleCode;
+    if (status === "active" && target.statusCode !== "active") {
       if (role !== undefined) {
         if (!APPROVAL_ROLES.includes(role)) {
           throw ApiError.badRequest(
@@ -167,27 +174,32 @@ export const userService = {
           );
         }
         nextRole = role;
-      } else if (target.status === "deactivated") {
+      } else if (target.statusCode === "deactivated") {
         // Reactivation keeps the role the account had before it was paused.
-        nextRole = target.role;
-      } else if (target.role === "admin") {
+        nextRole = target.roleCode;
+      } else if (target.roleCode === "admin") {
         nextRole = "admin";
       } else {
         nextRole = "contributor";
       }
     } else if (role !== undefined) {
-      throw ApiError.badRequest("A role can only be assigned when activating an account.");
+      throw ApiError.badRequest(
+        "A role can only be assigned when activating an account.",
+      );
     }
 
-    if (target.role === "admin" && (status !== "active" || nextRole !== "admin")) {
+    if (
+      target.roleCode === "admin" &&
+      (status !== "active" || nextRole !== "admin")
+    ) {
       await assertNotLastActiveAdmin(target);
     }
 
     const now = new Date();
     const activating = status === "active";
     const data = {
-      status,
-      role: nextRole,
+      statusCode: status,
+      roleCode: nextRole,
       statusReason: activating ? null : reason ?? null,
       statusChangedAt: now,
       ...(activating

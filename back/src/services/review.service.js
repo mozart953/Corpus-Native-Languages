@@ -8,7 +8,7 @@ import { ApiError } from "../utils/ApiError.js";
  * reviewer-approved entry; admins use the same view to make the final call.
  */
 export const reviewService = {
-  async queue({ page, limit, type = "all", languageId } = {}) {
+  async queue({ page, limit, type = "all", languageId, locale } = {}) {
     if (!["all", "word", "language"].includes(type)) {
       throw ApiError.badRequest("type must be one of: all, word, language.");
     }
@@ -17,10 +17,10 @@ export const reviewService = {
     const wantsLanguages = type === "all" || type === "language";
 
     const [words, languages, removalWords, removalLanguages] = await Promise.all([
-      wantsWords ? wordService.listForQueue({ page, limit, languageId }) : null,
-      wantsLanguages ? wordService.listLanguagesForQueue({ page, limit }) : null,
+      wantsWords ? wordService.listForQueue({ page, limit, languageId, locale }) : null,
+      wantsLanguages ? languageService.listForQueue({ page, limit }) : null,
       wantsWords
-        ? wordService.listRemovalRequests({ page, limit, languageId })
+        ? wordService.listRemovalRequests({ page, limit, languageId, locale })
         : null,
       wantsLanguages ? languageService.listRemovalRequests({ page, limit }) : null,
     ]);

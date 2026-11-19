@@ -36,12 +36,6 @@ const speakers = body("speakers")
   .withMessage("Speakers must be a non-negative integer.")
   .toInt();
 
-const words = body("words")
-  .optional()
-  .isInt({ min: 0 })
-  .withMessage("Words must be a non-negative integer.")
-  .toInt();
-
 const status = body("status")
   .optional()
   .isIn(LANGUAGE_STATUSES)
@@ -73,7 +67,6 @@ export const languageCreateValidator = [
   autonym,
   region,
   speakers,
-  words,
   status,
   accent,
 ];
@@ -84,11 +77,10 @@ export const languageUpdateValidator = [
   body("autonym").optional().trim().isLength({ min: 1, max: 80 }),
   body("region").optional().trim().isLength({ min: 2, max: 200 }),
   body("speakers").optional().isInt({ min: 0 }).toInt(),
-  body("words").optional().isInt({ min: 0 }).toInt(),
   body("status").optional().isIn(LANGUAGE_STATUSES),
   body("accent").optional().matches(/^#[0-9a-fA-F]{6}$/),
   body().custom((_value, { req }) => {
-    const allowed = ["name", "autonym", "region", "speakers", "words", "status", "accent"];
+    const allowed = ["name", "autonym", "region", "speakers", "status", "accent"];
     if (!allowed.some((field) => req.body[field] !== undefined)) {
       throw new Error("Provide at least one field to update.");
     }

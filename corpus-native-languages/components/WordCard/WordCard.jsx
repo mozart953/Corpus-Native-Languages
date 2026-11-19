@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Copy, Download, MoveRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { splitHighlight } from "../../utils/text";
 import { copyToClipboard } from "../../utils/exporters";
+import { useI18n } from "../../lib/i18n";
 import "./WordCard.css";
 
 /** Render a string with query matches wrapped in <mark>. */
@@ -37,6 +41,7 @@ function WordCard({
   onDownloadSingle = null,
 }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useI18n();
 
   const copyPair = async () => {
     const ok = await copyToClipboard(`${word.word}\t${word.translation}`);
@@ -45,7 +50,7 @@ function WordCard({
     window.setTimeout(() => setCopied(false), 1600);
   };
 
-  const copyLabel = copied ? "Copied" : "Copy pair";
+  const copyLabel = copied ? t("wordCard.copied") : t("wordCard.copyPair");
 
   return (
     <article
@@ -59,7 +64,7 @@ function WordCard({
               type="checkbox"
               checked={selected}
               onChange={() => onToggleSelect(word.id)}
-              aria-label={`Select ${word.word} for export`}
+              aria-label={t("wordCard.select", { word: word.word })}
             />
             <span className="wordCard__checkbox" aria-hidden="true">
               <span className="nl-icon nl-icon--check" />
@@ -67,12 +72,20 @@ function WordCard({
           </label>
         ) : null}
 
-        {showLanguage ? <span className="nl-chip wordCard__lang">{word.languageName}</span> : null}
+        {showLanguage ? (
+          <Badge variant="outline" className="wordCard__lang">
+            {word.languageName}
+          </Badge>
+        ) : null}
 
         {word.verified === false ? (
-          <span className="nl-chip nl-chip--muted wordCard__pending">Pending review</span>
+          <Badge variant="outline" className="wordCard__pending">
+            {t("wordCard.pending")}
+          </Badge>
         ) : (
-          <span className="nl-chip wordCard__verified">Verified</span>
+          <Badge variant="outline" className="wordCard__verified">
+            {t("wordCard.verified")}
+          </Badge>
         )}
       </header>
 
@@ -82,53 +95,65 @@ function WordCard({
         </p>
 
         <span className="wordCard__arrow" aria-hidden="true">
-          →
+          <MoveRight className="size-4" />
         </span>
 
-        <p className="wordCard__translation">
+        <p
+          className="wordCard__translation"
+          title={word.translationIsFallback ? t("wordCard.fallback") : undefined}
+        >
           <Highlighted text={word.translation} query={query} />
         </p>
       </div>
 
       {word.pronunciation ? (
         <p className="wordCard__pronunciation">
-          <span className="wordCard__label">Pronunciation</span>
+          <span className="wordCard__label">{t("wordCard.pronunciation")}</span>
           <span className="wordCard__value">{word.pronunciation}</span>
         </p>
       ) : null}
 
-      {word.partOfSpeech ? <span className="nl-chip nl-chip--muted">{word.partOfSpeech}</span> : null}
+      {word.partOfSpeech ? (
+        <Badge variant="outline" className="w-fit">
+          {word.partOfSpeechLabel ?? word.partOfSpeech}
+        </Badge>
+      ) : null}
 
       {word.usage ? (
         <p className="wordCard__usage">
-          <span className="wordCard__label">Usage</span>
+          <span className="wordCard__label">{t("wordCard.usage")}</span>
           {word.usage}
         </p>
       ) : null}
 
       <footer className="wordCard__foot">
-        <button
+        <Button
           type="button"
-          className={`nl-btn nl-btn--sm nl-btn--ghost wordCard__action ${copied ? "is-copied" : ""}`}
+          variant="ghost"
+          size="sm"
+          className={`wordCard__action ${copied ? "is-copied" : ""}`}
           onClick={copyPair}
           aria-live="polite"
         >
-          <span
-            className={`nl-icon ${copied ? "nl-icon--check" : "nl-icon--copy"}`}
-            aria-hidden="true"
-          />
+          {copied ? (
+            <Check className="size-3.5" aria-hidden="true" />
+          ) : (
+            <Copy className="size-3.5" aria-hidden="true" />
+          )}
           {copyLabel}
-        </button>
+        </Button>
 
         {onDownloadSingle ? (
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm nl-btn--ghost wordCard__action"
+            variant="ghost"
+            size="sm"
+            className="wordCard__action"
             onClick={() => onDownloadSingle(word)}
           >
-            <span className="nl-icon nl-icon--download" aria-hidden="true" />
-            Download
-          </button>
+            <Download className="size-3.5" aria-hidden="true" />
+            {t("wordCard.download")}
+          </Button>
         ) : null}
       </footer>
     </article>

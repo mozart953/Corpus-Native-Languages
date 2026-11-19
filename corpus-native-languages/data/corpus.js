@@ -16,7 +16,7 @@ export const LANGUAGES = [
     speakers: 486000,
     words: 1240,
     status: "active",
-    accent: "#2f8bff",
+    accent: "#2dd4bf",
   },
   {
     id: "kiche",
@@ -26,7 +26,7 @@ export const LANGUAGES = [
     speakers: 1110000,
     words: 2140,
     status: "active",
-    accent: "#74b9ff",
+    accent: "#38bdf8",
   },
   {
     id: "qeqchi",
@@ -36,7 +36,7 @@ export const LANGUAGES = [
     speakers: 1100000,
     words: 980,
     status: "active",
-    accent: "#3aa0ff",
+    accent: "#fbbf24",
   },
   {
     id: "mam",
@@ -46,7 +46,7 @@ export const LANGUAGES = [
     speakers: 520000,
     words: 760,
     status: "active",
-    accent: "#5aa9ff",
+    accent: "#a78bfa",
   },
   {
     id: "tzutujil",
@@ -56,7 +56,7 @@ export const LANGUAGES = [
     speakers: 139000,
     words: 540,
     status: "endangered",
-    accent: "#2f8bff",
+    accent: "#f472b6",
   },
   {
     id: "ixil",
@@ -66,7 +66,7 @@ export const LANGUAGES = [
     speakers: 110000,
     words: 410,
     status: "endangered",
-    accent: "#74b9ff",
+    accent: "#fb923c",
   },
   {
     id: "xinka",
@@ -76,7 +76,7 @@ export const LANGUAGES = [
     speakers: 12000,
     words: 180,
     status: "critically-endangered",
-    accent: "#3aa0ff",
+    accent: "#fb7185",
   },
   {
     id: "garifuna",
@@ -86,7 +86,7 @@ export const LANGUAGES = [
     speakers: 25000,
     words: 320,
     status: "endangered",
-    accent: "#5aa9ff",
+    accent: "#a3e635",
   },
 ];
 

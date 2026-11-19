@@ -32,8 +32,8 @@ export const globalLimiter = rateLimit({
 /** Login and registration are the most attractive endpoints to brute force. */
 export const authLimiter = rateLimit({
   ...common,
-  limit: 10,
-  handler: handler("Too many sign-in attempts. Please wait 15 minutes and try again."),
+  limit: env.nodeEnv === "production" ? 10 : 100,
+  handler: handler("Too many sign-in attempts. Please wait a few minutes and try again."),
 });
 
 /** Writes are more expensive than reads and should not be scripted in bulk. */

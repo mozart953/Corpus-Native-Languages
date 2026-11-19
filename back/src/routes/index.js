@@ -6,6 +6,10 @@ import { reviewRoutes } from "./review.routes.js";
 import { userRoutes } from "./user.routes.js";
 import { auditRoutes } from "./audit.routes.js";
 import { archiveRoutes } from "./archive.routes.js";
+import { siteImageRoutes } from "./site-image.routes.js";
+import { pageContentRoutes } from "./page-content.routes.js";
+import { partOfSpeechRoutes } from "./part-of-speech.routes.js";
+import { accountRoutes } from "./account.routes.js";
 
 export const routes = Router();
 
@@ -21,8 +25,12 @@ routes.get("/", (_req, res) => {
       words: "/api/v1/words",
       reviews: "/api/v1/reviews",
       users: "/api/v1/users",
+      account: "/api/v1/account",
       audit: "/api/v1/audit",
       archive: "/api/v1/archive",
+      siteImages: "/api/v1/site-images",
+  partOfSpeech: "/api/v1/part-of-speech",
+      content: "/api/v1/content/:locale",
     },
   });
 });
@@ -32,5 +40,9 @@ routes.use("/languages", languageRoutes);
 routes.use("/words", wordRoutes);
 routes.use("/reviews", reviewRoutes);
 routes.use("/users", userRoutes);
+routes.use("/account", accountRoutes);
 routes.use("/audit", auditRoutes);
 routes.use("/archive", archiveRoutes);
+routes.use("/site-images", siteImageRoutes);
+routes.use("/content", pageContentRoutes);
+routes.use("/part-of-speech", partOfSpeechRoutes);

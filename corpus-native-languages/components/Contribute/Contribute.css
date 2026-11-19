@@ -8,7 +8,7 @@
 }
 
 @media (max-width: 640px) {
-  .roleActions .nl-btn {
+  .roleActions > button {
     flex: 1 1 150px;
   }
 }

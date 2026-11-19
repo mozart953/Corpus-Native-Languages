@@ -1,5 +1,12 @@
 import { body, query } from "express-validator";
 
+const localeQuery = query("locale")
+  .optional()
+  .trim()
+  .isLength({ min: 2, max: 20 })
+  .matches(/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/)
+  .withMessage("The locale code is not valid.");
+
 export const reviewValidator = [
   body("decision")
     .isIn(["approve", "reject"])
@@ -16,6 +23,7 @@ export const reviewQueueValidator = [
   query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
   query("type").optional().isIn(["all", "word", "language"]),
   query("languageId").optional().trim().isLength({ max: 80 }),
+  localeQuery,
 ];
 
 export const reviewHistoryValidator = [

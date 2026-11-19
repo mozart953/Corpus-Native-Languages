@@ -1,0 +1,55 @@
+/* Segmented EN / ES switch, shared by the navbar and the home hero. */
+
+.languageToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--nl-surface-2);
+  border: 1px solid var(--nl-border);
+  border-radius: var(--nl-radius-pill);
+}
+
+.languageToggle__icon {
+  width: 14px;
+  height: 14px;
+  margin: 0 5px 0 6px;
+  flex: none;
+  color: var(--nl-muted);
+}
+
+.languageToggle__option {
+  min-width: 34px;
+  padding: 4px 9px;
+  border: 0;
+  border-radius: var(--nl-radius-pill);
+  background: transparent;
+  color: var(--nl-muted);
+  font-family: var(--nl-font-label);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--nl-speed) ease, background var(--nl-speed) ease;
+}
+
+.languageToggle__option:hover:not(:disabled) {
+  color: var(--nl-primary);
+  background: var(--nl-primary-soft);
+}
+
+.languageToggle__option.is-active {
+  background: var(--nl-primary);
+  color: var(--nl-primary-foreground);
+}
+
+.languageToggle__option:focus-visible {
+  outline: none;
+  box-shadow: var(--nl-ring);
+}
+
+.languageToggle__option:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}

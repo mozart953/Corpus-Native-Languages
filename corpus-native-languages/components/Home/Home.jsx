@@ -2,17 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  BookOpen,
+  Download,
+  Image as ImageIcon,
+  Languages,
+  PenLine,
+  Settings2,
+} from "lucide-react";
 import { LANGUAGES, WORDS } from "../../data/corpus";
 import { SEARCH_FIELDS, filterWords } from "../../utils/search";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, apiAssetUrl } from "../../lib/api";
 import { useCorpusAuth } from "../../lib/useCorpusAuth";
+import { useI18n } from "../../lib/i18n";
+import { Button } from "@/components/ui/button";
 import NavbarComponent from "../Navbar/Navbar.jsx";
 import SearchBar from "../SearchBar/SearchBar.jsx";
 import LanguageCard from "../LanguageCard/LanguageCard.jsx";
 import WordList from "../WordList/WordList.jsx";
 import DownloadMenu from "../DownloadMenu/DownloadMenu.jsx";
 import LoginDialog from "../Login/LoginDialog.jsx";
-import ImageUploader, { UPLOAD_VARIANTS } from "../ImageUploader/ImageUploader.jsx";
+import LanguageToggle from "../LanguageToggle/LanguageToggle.jsx";
 import { wordsToJson, wordsToPairsTxt, buildFilename, downloadTextFile } from "../../utils/exporters";
 import "./Home.css";
 
@@ -51,6 +61,7 @@ function HomeComponent() {
     login,
     logout,
   } = useCorpusAuth();
+  const { t, locale } = useI18n();
 
   const [languages, setLanguages] = useState(LANGUAGES);
   const [words, setWords] = useState(WORDS);
@@ -60,19 +71,35 @@ function HomeComponent() {
   const [languageId, setLanguageId] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
   const [loginMode, setLoginMode] = useState(null);
-  const [heroImage, setHeroImage] = useState(null);
-  const [languageIcons, setLanguageIcons] = useState({});
-  const [iconTarget, setIconTarget] = useState(null);
+  const [siteImage, setSiteImage] = useState(null);
   const [pendingNotice, setPendingNotice] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    apiFetch("/site-images/home-image")
+      .then((response) => {
+        if (!cancelled && response?.data?.url) setSiteImage(response.data);
+      })
+      .catch(() => {
+        // The corpus still works when presentation media is unavailable.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadCorpus() {
       try {
+        // The public list is the only place that follows the interface
+        // language; admin and review desks always read the canonical English.
         const [languageResponse, wordResponse] = await Promise.all([
           apiFetch("/languages?limit=100"),
-          apiFetch("/words?limit=100&page=1"),
+          apiFetch(`/words?limit=100&page=1&locale=${encodeURIComponent(locale)}`),
         ]);
 
         if (cancelled) return;
@@ -86,9 +113,7 @@ function HomeComponent() {
       } catch {
         if (cancelled) return;
         setCorpusSource("fixtures");
-        setPendingNotice(
-          "The corpus API is unavailable right now — showing the bundled sample data.",
-        );
+        setPendingNotice({ key: "home.notice.apiUnavailable" });
       }
     }
 
@@ -96,17 +121,26 @@ function HomeComponent() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [locale]);
 
   const stats = summarise(languages, words);
 
-  const visibleWords = filterWords(words, { query, languageId, field: scope });
-  const languageTotal = words.filter(
-    (word) => languageId === "all" || word.languageId === languageId,
-  ).length;
-
   const activeLanguage = languages.find((language) => language.id === languageId);
-  const languageLabel = activeLanguage?.name ?? "all languages";
+  const activeLanguageName = activeLanguage?.name ?? null;
+  const matchesLanguage = (word) =>
+    languageId === "all" ||
+    word.languageId === languageId ||
+    (activeLanguageName != null && word.languageName === activeLanguageName);
+
+  const visibleWords = filterWords(words, {
+    query,
+    languageId,
+    languageName: activeLanguageName,
+    field: scope,
+  });
+  const languageTotal = words.filter(matchesLanguage).length;
+
+  const languageLabel = activeLanguageName ?? t("home.words.allLanguages");
 
   const toggleSelect = (id) => {
     setSelectedIds((current) =>
@@ -131,17 +165,13 @@ function HomeComponent() {
     if (!ok) return;
 
     setLoginMode(null);
-    setPendingNotice(
-      "Signed in. Your session refreshes while you are active and expires after 30 minutes of inactivity.",
-    );
+    setPendingNotice({ key: "home.notice.signedIn" });
   };
 
   const handleLogout = async () => {
     await logout();
     setSelectedIds([]);
-    setPendingNotice("Signed out. Any images you loaded are cleared from the page.");
-    setHeroImage(null);
-    setLanguageIcons({});
+    setPendingNotice({ key: "home.notice.signedOut" });
   };
 
   const openLogin = (mode) => {
@@ -158,18 +188,21 @@ function HomeComponent() {
 
   const downloadSingle = (word) => {
     const filename = buildFilename(`${word.languageName}-${word.word}`, "json");
-    downloadTextFile(filename, wordsToJson([word], { languageName: word.languageName }), "application/json");
-    setPendingNotice(`Downloading ${word.word} as JSON.`);
+    downloadTextFile(filename, wordsToJson([word]), "application/json");
+    setPendingNotice({ key: "home.notice.downloadingJson", vars: { word: word.word } });
   };
 
   const downloadSearchResults = () => {
     const filename = buildFilename(`search-${query.trim() || "all"}`, "txt");
     downloadTextFile(
       filename,
-      wordsToPairsTxt(visibleWords, { meta: { languageName: languageLabel } }),
+      wordsToPairsTxt(visibleWords, { languageName: languageLabel }),
       "text/plain",
     );
-    setPendingNotice(`Downloading ${visibleWords.length} words as TXT pairs.`);
+    setPendingNotice({
+      key: "home.notice.downloadingResults",
+      vars: { count: visibleWords.length },
+    });
   };
 
   return (
@@ -184,80 +217,121 @@ function HomeComponent() {
       <main className="nl-main">
         {/* ------------------------------ hero ------------------------------ */}
         <section className="home__hero" aria-labelledby="home-title">
-          {heroImage ? (
-            <div className="home__heroImage">
-              {/* eslint-disable-next-line @next/next/no-img-element -- local data URL */}
-              <img src={heroImage} alt="" />
-              <button
-                type="button"
-                className="home__heroClear"
-                onClick={() => setHeroImage(null)}
-              >
-                <span className="nl-icon nl-icon--close" aria-hidden="true" />
-                Remove image
-              </button>
+          <div className="home__heroPanel">
+            <div className="home__heroContent">
+            <div className="home__heroTop">
+              <span className="nl-eyebrow">{t("home.hero.eyebrow")}</span>
+              <LanguageToggle />
             </div>
-          ) : null}
-
-          <div className="home__heroContent">
-            <span className="nl-eyebrow">Native languages of Guatemala</span>
             <h1 id="home-title" className="home__title">
-              Every word is a voice
+              {t("home.hero.titleLine1")}
               <br />
-              <span className="home__titleAccent">that should not be lost</span>
+              <span className="home__titleAccent">{t("home.hero.titleLine2")}</span>
             </h1>
-            <p className="home__lead">
-              A shared corpus of words, pronunciations and usage from the Mayan, Xinka and
-              Garifuna communities of Guatemala — open to read, open to download, and built to
-              train models that finally sound like the people who spoke these words first.
-            </p>
+            <p className="home__lead">{t("home.hero.lead")}</p>
 
             <div className="home__heroActions">
-              <a href="#words" className="nl-btn nl-btn--primary">
-                Browse the words
-              </a>
-              <a href="#languages" className="nl-btn">
-                Choose a language
-              </a>
+              <Button asChild size="lg" className="h-11 px-5 text-[0.9rem] font-semibold">
+                <a href="#words">
+                  <BookOpen className="size-4" aria-hidden="true" />
+                  {t("home.hero.browse")}
+                </a>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="h-11 px-5 text-[0.9rem] font-semibold"
+              >
+                <a href="#languages">
+                  <Languages className="size-4" aria-hidden="true" />
+                  {t("home.hero.chooseLanguage")}
+                </a>
+              </Button>
               {!user ? (
-                <button
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--ghost"
+                  variant="ghost"
+                  size="lg"
+                  className="h-11 px-4 text-[0.9rem]"
                   onClick={() => openLogin("signin")}
                 >
-                  Contribute
-                </button>
+                  <PenLine className="size-4" aria-hidden="true" />
+                  {t("home.hero.contribute")}
+                </Button>
               ) : (
-                <Link href="/contribute" className="nl-btn nl-btn--ghost">
-                  Open my contribution desk
-                </Link>
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="lg"
+                  className="h-11 px-4 text-[0.9rem]"
+                >
+                  <Link href="/contribute">
+                    <PenLine className="size-4" aria-hidden="true" />
+                    {t("home.hero.openDesk")}
+                  </Link>
+                </Button>
               )}
             </div>
 
             <dl className="home__stats">
               <div>
-                <dt>Languages</dt>
+                <dt>{t("home.stats.languages")}</dt>
                 <dd>{stats.languages}</dd>
               </div>
               <div>
-                <dt>Speakers</dt>
+                <dt>{t("home.stats.speakers")}</dt>
                 <dd>{(stats.speakers / 1_000_000).toFixed(1)}M</dd>
               </div>
               <div>
-                <dt>Words recorded</dt>
+                <dt>{t("home.stats.words")}</dt>
                 <dd>{stats.words}</dd>
               </div>
               <div>
-                <dt>At risk</dt>
+                <dt>{t("home.stats.atRisk")}</dt>
                 <dd className="home__statsWarn">{stats.endangered}</dd>
               </div>
             </dl>
+            </div>
+
+            {siteImage ? (
+              <figure className="home__heroMedia">
+                {/* eslint-disable-next-line @next/next/no-img-element -- API-hosted asset */}
+                <img
+                  src={apiAssetUrl(siteImage.url)}
+                  alt={siteImage.alt || t("home.image.alt")}
+                />
+                <figcaption>
+                  <span className="home__heroMediaLabel">
+                    <ImageIcon className="size-3.5" aria-hidden="true" />
+                    {t("home.image.presentation")}
+                  </span>
+                  {user?.roleKey === "admin" ? (
+                    <Link href="/admin" className="home__heroManage">
+                      <Settings2 className="size-3.5" aria-hidden="true" />
+                      {t("home.image.manage")}
+                    </Link>
+                  ) : (
+                    <span className="home__heroMediaNote">{t("home.image.curated")}</span>
+                  )}
+                </figcaption>
+              </figure>
+            ) : (
+              <div className="home__heroMark" aria-hidden="true">
+                <span>NL</span>
+                <small>
+                  {t("home.image.markCorpus")}
+                  <br />
+                  {t("home.image.markGuatemala")}
+                </small>
+              </div>
+            )}
           </div>
         </section>
 
         {pendingNotice ? (
           <p className="home__notice" role="status" aria-live="polite">
-            {pendingNotice}
+            {t(pendingNotice.key, pendingNotice.vars)}
           </p>
         ) : null}
 
@@ -265,20 +339,22 @@ function HomeComponent() {
         <section id="languages" className="nl-section" aria-labelledby="languages-title">
           <div className="nl-section__head">
             <div>
-              <span className="nl-eyebrow">Step 1</span>
+              <span className="nl-eyebrow">{t("home.languages.eyebrow")}</span>
               <h2 id="languages-title" className="nl-title">
-                Choose a language
+                {t("home.languages.title")}
               </h2>
-              <p className="nl-subtitle">
-                Pick a language to narrow the search, or stay on all of them. Selecting a card
-                below filters the words immediately.
-              </p>
+              <p className="nl-subtitle">{t("home.languages.subtitle")}</p>
             </div>
 
             {languageId !== "all" ? (
-              <button type="button" className="nl-btn nl-btn--sm" onClick={() => selectLanguage("all")}>
-                Show all languages
-              </button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => selectLanguage("all")}
+              >
+                {t("home.languages.showAll")}
+              </Button>
             ) : null}
           </div>
 
@@ -288,10 +364,14 @@ function HomeComponent() {
                 <LanguageCard
                   language={language}
                   active={languageId === language.id}
-                  wordCount={words.filter((word) => word.languageId === language.id).length}
+                  wordCount={
+                    words.filter(
+                      (word) =>
+                        word.languageId === language.id ||
+                        word.languageName === language.name,
+                    ).length
+                  }
                   onSelect={selectLanguage}
-                  iconUrl={languageIcons[language.id] ?? null}
-                  onIconUpload={(id) => setIconTarget(id)}
                 />
               </li>
             ))}
@@ -302,14 +382,11 @@ function HomeComponent() {
         <section id="words" className="nl-section" aria-labelledby="words-title">
           <div className="nl-section__head">
             <div>
-              <span className="nl-eyebrow">Step 2</span>
+              <span className="nl-eyebrow">{t("home.words.eyebrow")}</span>
               <h2 id="words-title" className="nl-title">
-                Search the corpus
+                {t("home.words.title")}
               </h2>
-              <p className="nl-subtitle">
-                Search a word in its own language, in translation, or both. Searching is open to
-                everyone — no account needed.
-              </p>
+              <p className="nl-subtitle">{t("home.words.subtitle")}</p>
             </div>
           </div>
 
@@ -323,8 +400,8 @@ function HomeComponent() {
               totalCount={languageTotal}
               placeholder={
                 activeLanguage
-                  ? `Search ${activeLanguage.name} — try “jun” or “water”`
-                  : "Search a word or its translation — try “jun” or “water”"
+                  ? t("home.words.placeholderLanguage", { language: activeLanguage.name })
+                  : t("home.words.placeholder")
               }
             />
           </div>
@@ -334,15 +411,16 @@ function HomeComponent() {
               {selectedIds.length > 0 ? (
                 <div className="home__selectionBar">
                   <span>
-                    <strong>{selectedIds.length}</strong> selected for export
+                    {t("home.words.selectedForExport", { count: selectedIds.length })}
                   </span>
-                  <button
+                  <Button
                     type="button"
-                    className="nl-btn nl-btn--sm nl-btn--ghost"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setSelectedIds([])}
                   >
-                    Clear selection
-                  </button>
+                    {t("home.words.clearSelection")}
+                  </Button>
                 </div>
               ) : null}
 
@@ -357,56 +435,24 @@ function HomeComponent() {
               />
             </div>
 
-            <aside className="home__sidebar" aria-label="Export and media">
+            <aside className="home__sidebar" aria-label={t("home.words.exportAside")}>
               <DownloadMenu
                 words={visibleWords}
                 languageName={languageLabel}
                 selectedIds={selectedIds}
-                baseName={activeLanguage?.id ?? "native-languages"}
+                baseName={activeLanguage?.name ?? "native-languages"}
               />
 
-              <button
+              <Button
                 type="button"
-                className="nl-btn nl-btn--block home__downloadSearch"
+                variant="outline"
+                className="home__downloadSearch"
                 onClick={downloadSearchResults}
                 disabled={visibleWords.length === 0}
               >
-                <span className="nl-icon nl-icon--download" aria-hidden="true" />
-                Download these results
-              </button>
-
-              <ImageUploader
-                variant={UPLOAD_VARIANTS.BANNER}
-                value={heroImage}
-                onChange={(dataUrl) => setHeroImage(dataUrl)}
-                label="Presentation image"
-                description="Shown at the top of this page. Drop an image or choose a file."
-              />
-
-              {iconTarget ? (
-                <ImageUploader
-                  variant={UPLOAD_VARIANTS.ICON}
-                  value={languageIcons[iconTarget] ?? null}
-                  onChange={(dataUrl) =>
-                    setLanguageIcons((current) => ({ ...current, [iconTarget]: dataUrl }))
-                  }
-                  label={`Icon for ${
-                    languages.find((language) => language.id === iconTarget)?.name ?? "language"
-                  }`}
-                  description="Square images only, up to 1 MB."
-                  maxSizeMB={1}
-                />
-              ) : null}
-
-              {iconTarget ? (
-                <button
-                  type="button"
-                  className="nl-btn nl-btn--sm nl-btn--ghost nl-btn--block"
-                  onClick={() => setIconTarget(null)}
-                >
-                  Done with icons
-                </button>
-              ) : null}
+                <Download className="size-4" aria-hidden="true" />
+                {t("home.words.downloadResults")}
+              </Button>
             </aside>
           </div>
         </section>
@@ -415,29 +461,26 @@ function HomeComponent() {
         <section id="contribute" className="nl-section" aria-labelledby="contribute-title">
           <div className="home__contribute nl-panel">
             <div>
-              <span className="nl-eyebrow">Step 3</span>
+              <span className="nl-eyebrow">{t("home.contribute.eyebrow")}</span>
               <h2 id="contribute-title" className="nl-title">
-                Add what you know
+                {t("home.contribute.title")}
               </h2>
-              <p className="nl-subtitle">
-                A word is only safe when several people agree on it. Contributors record the
-                pronunciation they were taught, the situations it is used in, and review what
-                others have added.
-              </p>
+              <p className="nl-subtitle">{t("home.contribute.subtitle")}</p>
             </div>
 
             {user ? (
-              <Link href="/contribute" className="nl-btn nl-btn--primary">
-                Go to the contribution desk
-              </Link>
+              <Button asChild size="lg" className="h-11 px-5 text-[0.9rem]">
+                <Link href="/contribute">{t("home.contribute.go")}</Link>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
-                className="nl-btn nl-btn--primary"
+                size="lg"
+                className="h-11 px-5 text-[0.9rem]"
                 onClick={() => openLogin("signup")}
               >
-                Create an account to contribute
-              </button>
+                {t("home.contribute.createAccount")}
+              </Button>
             )}
           </div>
         </section>
@@ -445,11 +488,11 @@ function HomeComponent() {
 
       <footer className="home__footer">
         <div className="nl-container home__footerInner">
-          <p>Native Languages — a corpus for the languages of Guatemala.</p>
+          <p>{t("home.footer.tagline")}</p>
           <p className="home__footerNote">
             {corpusSource === "api"
-              ? "Corpus loaded from the API. Entries marked pending are awaiting community review."
-              : "Sample entries are placeholders and are not yet verified by speakers."}
+              ? t("home.footer.apiNote")
+              : t("home.footer.fixtureNote")}
           </p>
         </div>
       </footer>

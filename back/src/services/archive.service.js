@@ -8,7 +8,7 @@ import { ApiError } from "../utils/ApiError.js";
  * and normal moderation queries, and the audit log keeps a full snapshot.
  */
 export const archiveService = {
-  async list({ page, limit, type = "all", q } = {}) {
+  async list({ page, limit, type = "all", q, locale } = {}) {
     if (!["all", "word", "language"].includes(type)) {
       throw ApiError.badRequest("type must be one of: all, word, language.");
     }
@@ -17,7 +17,7 @@ export const archiveService = {
     const wantsLanguages = type === "all" || type === "language";
 
     const [words, languages] = await Promise.all([
-      wantsWords ? wordService.listRemoved({ page, limit, q }) : null,
+      wantsWords ? wordService.listRemoved({ page, limit, q, locale }) : null,
       wantsLanguages ? languageService.listRemoved({ page, limit, q }) : null,
     ]);
 

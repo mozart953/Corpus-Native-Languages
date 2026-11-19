@@ -16,14 +16,18 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(160deg, rgba(47, 139, 255, 0.12), transparent 55%);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--nl-primary) 9%, transparent),
+    transparent 55%
+  );
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--nl-speed) ease;
 }
 
 .wordCard:hover {
-  border-color: var(--nl-border-strong);
+  border-color: var(--nl-border-hover);
   transform: translateY(-2px);
   box-shadow: var(--nl-shadow);
 }
@@ -34,7 +38,10 @@
 }
 
 .wordCard.is-selected {
-  border-color: var(--nl-blue);
+  border-color: var(--nl-primary);
+  background:
+    linear-gradient(180deg, var(--nl-primary-soft), transparent 72%),
+    linear-gradient(180deg, var(--nl-surface-2), var(--nl-surface));
   box-shadow: var(--nl-shadow-blue);
 }
 
@@ -46,7 +53,7 @@
   bottom: 14px;
   left: 0;
   width: 3px;
-  background: var(--nl-blue);
+  background: var(--nl-primary);
   border-radius: 0 3px 3px 0;
 }
 
@@ -61,6 +68,22 @@
 
 .wordCard__lang {
   margin-right: auto;
+  background: var(--nl-primary-soft) !important;
+  border-color: var(--nl-primary-line) !important;
+  color: var(--nl-primary) !important;
+}
+
+.wordCard__pending {
+  background: var(--nl-warning-soft) !important;
+  border-color: var(--nl-warning-line) !important;
+  border-style: dashed !important;
+  color: var(--nl-warning) !important;
+}
+
+.wordCard__verified {
+  background: var(--nl-success-soft) !important;
+  border-color: var(--nl-success-line) !important;
+  color: var(--nl-success) !important;
 }
 
 .wordCard__select {
@@ -90,29 +113,18 @@
 }
 
 .wordCard__select:hover .wordCard__checkbox {
-  border-color: var(--nl-blue-line);
+  border-color: var(--nl-primary-line);
 }
 
 .wordCard__select input:checked + .wordCard__checkbox {
-  background: var(--nl-blue);
-  border-color: var(--nl-blue);
-  color: var(--nl-white);
+  background: var(--nl-primary);
+  border-color: var(--nl-primary);
+  color: var(--nl-primary-foreground);
 }
 
 .wordCard__select input:focus-visible + .wordCard__checkbox {
-  outline: 2px solid var(--nl-blue-bright);
+  outline: 2px solid var(--nl-primary);
   outline-offset: 2px;
-}
-
-.wordCard__pending {
-  border-style: dashed;
-}
-
-/* A reviewed entry should look settled next to a pending one. */
-.wordCard__verified {
-  background: var(--nl-success-soft);
-  border-color: var(--nl-success);
-  color: var(--nl-success);
 }
 
 /* ------------------------------ the pair --------------------------------- */
@@ -140,22 +152,23 @@
   font-size: 1.32rem;
   font-weight: 500;
   line-height: 1.25;
-  color: var(--nl-blue-bright);
+  color: var(--nl-white);
   overflow-wrap: anywhere;
 }
 
 .wordCard__arrow {
+  display: inline-flex;
+  align-items: center;
   color: var(--nl-faint);
-  font-size: 1rem;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .wordCard__mark {
   padding: 0 2px;
-  background: var(--nl-blue-soft);
-  border-bottom: 1px solid var(--nl-blue);
+  background: var(--nl-primary-soft);
+  border-bottom: 1px solid var(--nl-primary-line);
   border-radius: 3px;
-  color: var(--nl-white);
+  color: var(--nl-primary);
 }
 
 /* ------------------------------- metadata -------------------------------- */
@@ -211,7 +224,6 @@
 
 .wordCard__action.is-copied:hover {
   background: var(--nl-success-soft);
-  border-color: var(--nl-success);
   color: var(--nl-success);
 }
 

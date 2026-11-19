@@ -1,66 +1,82 @@
 /**
- * Export helpers: turn a list of words into JSON or TXT and hand it to the
+ * Export helpers: turn a list of words into JSON, TXT or CSV and hand it to the
  * browser as a file. No library, no server — just Blob + object URL.
  *
- * The TXT writer is the one that matters most for this project: a flat
- * `word<TAB>translation` file is the shape a training pipeline can consume
- * directly, while the JSON export keeps every field for later auditing.
+ * Every format is presentation-only. Exports never contain database ids,
+ * authorship, timestamps or nested review data: the same minimal fields a
+ * visitor sees on a card, with a fake positional id so rows stay distinct.
  */
 
-/** Fields dropped from exports because they are UI-only. */
-const UI_ONLY_FIELDS = new Set(["selected"]);
+/** The fields a download may expose, in display order. */
+const PRESENTATION_COLUMNS = [
+  "id",
+  "languageName",
+  "word",
+  "translation",
+  "pronunciation",
+  "partOfSpeech",
+  "usage",
+];
 
 /**
- * Strip UI-only state and drop empty values.
+ * Project one word onto the minimal presentation shape.
+ *
+ * The id is positional (1..N), never the database id, and empty linguistic
+ * fields are omitted so the record stays small.
+ *
  * @param {object} word
+ * @param {number} index
  * @returns {object}
  */
-function toRecord(word) {
-  return Object.entries(word).reduce((record, [key, value]) => {
-    if (UI_ONLY_FIELDS.has(key)) return record;
-    if (value === null || value === undefined || value === "") return record;
-    record[key] = value;
-    return record;
+function toPublicRecord(word, index) {
+  const record = {
+    id: index + 1,
+    languageName: word.languageName ?? "",
+    word: word.word ?? "",
+    translation: word.translation ?? "",
+    pronunciation: word.pronunciation ?? "",
+    partOfSpeech: word.partOfSpeechLabel ?? word.partOfSpeech ?? "",
+    usage: word.usage ?? "",
+  };
+
+  return Object.entries(record).reduce((clean, [key, value]) => {
+    if (value !== null && value !== undefined && value !== "") clean[key] = value;
+    return clean;
   }, {});
 }
 
 /**
  * @param {object[]} words
- * @param {object} [meta] free-form provenance for the export header
  * @returns {string}
  */
-export function wordsToJson(words, meta = {}) {
-  const payload = {
-    meta: {
-      project: "Native Languages",
-      exportedAt: new Date().toISOString(),
-      ...meta,
-    },
-    total: words.length,
-    words: words.map(toRecord),
-  };
+export function wordsToJson(words) {
+  const records = words.map(toPublicRecord);
 
-  return JSON.stringify(payload, null, 2);
+  return JSON.stringify({ total: records.length, words: records }, null, 2);
 }
 
 /**
  * Tab-separated pairs, one per line. Optional leading `#` comment header.
  * @param {object[]} words
- * @param {{ includeHeader?: boolean, meta?: object }} [options]
+ * @param {{ includeHeader?: boolean, languageName?: string|null }} [options]
  * @returns {string}
  */
-export function wordsToPairsTxt(words, { includeHeader = true, meta = {} } = {}) {
+export function wordsToPairsTxt(
+  words,
+  { includeHeader = true, languageName = null } = {},
+) {
   const lines = [];
 
   if (includeHeader) {
-    lines.push(`# Native Languages — ${meta.languageName ?? "all languages"}`);
-    lines.push(`# exported: ${new Date().toISOString()}`);
+    lines.push(`# Native Languages — ${languageName ?? "all languages"}`);
     lines.push(`# entries: ${words.length}`);
     lines.push("# fields: word<TAB>translation<TAB>pronunciation");
   }
 
-  words.forEach((word) => {
-    lines.push([word.word, word.translation, word.pronunciation ?? ""].join("\t"));
+  words.map(toPublicRecord).forEach((record) => {
+    lines.push(
+      [record.word, record.translation, record.pronunciation ?? ""].join("\t"),
+    );
   });
 
   return `${lines.join("\n")}\n`;
@@ -69,31 +85,58 @@ export function wordsToPairsTxt(words, { includeHeader = true, meta = {} } = {})
 /**
  * Human-readable, one block per word — good for review and sharing.
  * @param {object[]} words
- * @param {{ includeHeader?: boolean, meta?: object }} [options]
+ * @param {{ includeHeader?: boolean, languageName?: string|null }} [options]
  * @returns {string}
  */
-export function wordsToDetailedTxt(words, { includeHeader = true, meta = {} } = {}) {
+export function wordsToDetailedTxt(
+  words,
+  { includeHeader = true, languageName = null } = {},
+) {
   const lines = [];
+  const records = words.map(toPublicRecord);
 
   if (includeHeader) {
-    lines.push(`Native Languages — ${meta.languageName ?? "all languages"}`);
-    lines.push(`Exported: ${new Date().toISOString()}`);
-    lines.push(`Entries: ${words.length}`);
+    lines.push(`Native Languages — ${languageName ?? "all languages"}`);
+    lines.push(`Entries: ${records.length}`);
     lines.push("=".repeat(48));
     lines.push("");
   }
 
-  words.forEach((word) => {
-    lines.push(`[${word.languageName ?? word.languageId}] ${word.word}`);
-    lines.push(`  translation : ${word.translation}`);
-    if (word.pronunciation) lines.push(`  pronunciation: ${word.pronunciation}`);
-    if (word.partOfSpeech) lines.push(`  part of speech: ${word.partOfSpeech}`);
-    if (word.usage) lines.push(`  usage       : ${word.usage}`);
-    if (word.verified === false) lines.push("  status      : pending community verification");
+  records.forEach((record) => {
+    lines.push(`[${record.languageName ?? "unknown"}] ${record.word}`);
+    lines.push(`  translation : ${record.translation}`);
+    if (record.pronunciation) lines.push(`  pronunciation: ${record.pronunciation}`);
+    if (record.partOfSpeech) lines.push(`  part of speech: ${record.partOfSpeech}`);
+    if (record.usage) lines.push(`  usage       : ${record.usage}`);
     lines.push("");
   });
 
   return lines.join("\n");
+}
+
+/** Quote one CSV cell when it contains a delimiter, quote or line break. */
+function escapeCsv(value) {
+  const text = String(value ?? "");
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/**
+ * Spreadsheet-ready CSV with the same minimal fields as the other formats.
+ * The UTF-8 BOM keeps accented characters readable in Excel.
+ * @param {object[]} words
+ * @returns {string}
+ */
+export function wordsToCsv(words) {
+  const records = words.map(toPublicRecord);
+  const lines = [PRESENTATION_COLUMNS.join(",")];
+
+  records.forEach((record) => {
+    lines.push(
+      PRESENTATION_COLUMNS.map((column) => escapeCsv(record[column])).join(","),
+    );
+  });
+
+  return `\uFEFF${lines.join("\r\n")}\r\n`;
 }
 
 /** Turn a label into a safe, lowercase file name fragment. */

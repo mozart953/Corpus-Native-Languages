@@ -17,6 +17,8 @@
     "db:studio": "prisma studio",
     "db:sync-fixtures": "node scripts/sync-fixtures.js",
     "test:flow": "node scripts/test-api-flow.mjs",
+    "test:part-of-speech": "node scripts/test-part-of-speech.mjs",
+    "test:account": "node scripts/test-account.mjs",
     "setup": "prisma generate && prisma migrate dev --name init && node prisma/seed.js"
   },
   "prisma": {
@@ -42,7 +44,8 @@
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.3",
     "express-validator": "^7.3.2",
-    "helmet": "^8.3.0"
+    "helmet": "^8.3.0",
+    "multer": "^2.5.0"
   },
   "devDependencies": {
     "prisma": "6.19.3"

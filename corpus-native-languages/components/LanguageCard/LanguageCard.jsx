@@ -1,6 +1,7 @@
 "use client";
 
 import { STATUS_LABELS } from "../../data/corpus";
+import { useI18n } from "../../lib/i18n";
 import "./LanguageCard.css";
 
 /** Format a speaker count as 1.1M / 486K, which reads better on a card. */
@@ -19,24 +20,21 @@ function formatCount(value) {
  * project, and a visitor should understand the stakes of what they are
  * looking at before they start browsing words.
  */
-function LanguageCard({
-  language,
-  active = false,
-  wordCount = null,
-  onSelect = null,
-  iconUrl = null,
-  onIconUpload = null,
-}) {
+function LanguageCard({ language, active = false, wordCount = null, onSelect = null }) {
+  const { t, has } = useI18n();
   const entries = wordCount ?? language.words;
-  const status = STATUS_LABELS[language.status] ?? language.status;
+  const statusKey = `languageCard.status.${language.status}`;
+  const status = has(statusKey)
+    ? t(statusKey)
+    : STATUS_LABELS[language.status] ?? language.status;
   const isCritical = language.status === "critically-endangered";
 
   return (
     <article
+      data-language={language.id}
       className={`languageCard ${active ? "is-active" : ""} ${
         isCritical ? "is-critical" : ""
       }`}
-      style={{ "--card-accent": language.accent }}
     >
       <button
         type="button"
@@ -45,12 +43,7 @@ function LanguageCard({
         aria-pressed={active}
       >
         <span className="languageCard__icon" aria-hidden="true">
-          {iconUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- user-supplied data URL
-            <img src={iconUrl} alt="" className="languageCard__iconImage" />
-          ) : (
-            language.autonym.charAt(0)
-          )}
+          {language.autonym.charAt(0)}
         </span>
 
         <span className="languageCard__identity">
@@ -59,7 +52,7 @@ function LanguageCard({
         </span>
 
         {active ? (
-          <span className="languageCard__active" aria-label="Currently selected">
+          <span className="languageCard__active" aria-label={t("languageCard.selected")}>
             <span className="nl-icon nl-icon--check" aria-hidden="true" />
           </span>
         ) : null}
@@ -69,11 +62,11 @@ function LanguageCard({
 
       <dl className="languageCard__stats">
         <div>
-          <dt>Speakers</dt>
+          <dt>{t("languageCard.speakers")}</dt>
           <dd>{formatCount(language.speakers)}</dd>
         </div>
         <div>
-          <dt>Words</dt>
+          <dt>{t("languageCard.words")}</dt>
           <dd>{formatCount(entries)}</dd>
         </div>
       </dl>
@@ -86,16 +79,6 @@ function LanguageCard({
         >
           {status}
         </span>
-
-        {onIconUpload ? (
-          <button
-            type="button"
-            className="languageCard__iconAction"
-            onClick={() => onIconUpload(language.id)}
-          >
-            {iconUrl ? "Change icon" : "Add icon"}
-          </button>
-        ) : null}
       </div>
     </article>
   );

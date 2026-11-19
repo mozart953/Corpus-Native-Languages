@@ -1,14 +1,22 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { SEARCH_FIELDS } from "../../utils/search";
+import { useI18n } from "../../lib/i18n";
 import "./SearchBar.css";
 
 /** Scope options, in the order they appear in the toggle group. */
 const SCOPES = [
-  { id: SEARCH_FIELDS.ALL, label: "All", hint: "Search words and translations" },
-  { id: SEARCH_FIELDS.WORD, label: "Words", hint: "Only the original language" },
-  { id: SEARCH_FIELDS.TRANSLATION, label: "Translations", hint: "Only the translation" },
+  { id: SEARCH_FIELDS.ALL, labelKey: "search.scope.all", hintKey: "search.scope.allHint" },
+  { id: SEARCH_FIELDS.WORD, labelKey: "search.scope.words", hintKey: "search.scope.wordsHint" },
+  {
+    id: SEARCH_FIELDS.TRANSLATION,
+    labelKey: "search.scope.translations",
+    hintKey: "search.scope.translationsHint",
+  },
 ];
 
 /**
@@ -25,10 +33,11 @@ function SearchBar({
   onScopeChange = null,
   resultCount = null,
   totalCount = null,
-  placeholder = "Search a word or its translation — try “jun” or “water”",
+  placeholder = null,
   autoFocus = false,
 }) {
   const inputRef = useRef(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -62,16 +71,16 @@ function SearchBar({
   return (
     <div className="searchBar">
       <div className="searchBar__field">
-        <span className="nl-icon nl-icon--search searchBar__icon" aria-hidden="true" />
-        <input
+        <Search className="searchBar__icon" aria-hidden="true" />
+        <Input
           ref={inputRef}
           type="search"
           className="searchBar__input"
           value={value}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          aria-label="Search the corpus by word or translation"
+          placeholder={placeholder ?? t("search.placeholder")}
+          aria-label={t("search.aria")}
           autoComplete="off"
           autoCorrect="off"
           spellCheck="false"
@@ -79,17 +88,19 @@ function SearchBar({
         />
 
         {value ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="searchBar__clear"
             onClick={() => {
               onChange?.("");
               inputRef.current?.focus();
             }}
-            aria-label="Clear search"
+            aria-label={t("search.clear")}
           >
-            <span className="nl-icon nl-icon--close" aria-hidden="true" />
-          </button>
+            <X className="size-4" aria-hidden="true" />
+          </Button>
         ) : (
           <kbd className="searchBar__kbd" aria-hidden="true">
             /
@@ -101,33 +112,29 @@ function SearchBar({
         <div
           className="searchBar__scopes"
           role="group"
-          aria-label="Choose which fields to search"
+          aria-label={t("search.group")}
         >
           {SCOPES.map((option) => (
-            <button
+            <Button
               key={option.id}
               type="button"
+              variant="ghost"
+              size="sm"
               className={`searchBar__scope ${scope === option.id ? "is-active" : ""}`}
               onClick={() => onScopeChange?.(option.id)}
               aria-pressed={scope === option.id}
-              title={option.hint}
+              title={t(option.hintKey)}
             >
-              {option.label}
-            </button>
+              {t(option.labelKey)}
+            </Button>
           ))}
         </div>
 
         {resultCount !== null ? (
           <p className="searchBar__count" role="status" aria-live="polite">
-            {isFiltered ? (
-              <>
-                <strong>{resultCount}</strong> of {totalCount} words
-              </>
-            ) : (
-              <>
-                <strong>{totalCount}</strong> words
-              </>
-            )}
+            {isFiltered
+              ? t("search.countOf", { count: resultCount, total: totalCount })
+              : t("search.count", { total: totalCount })}
           </p>
         ) : null}
       </div>

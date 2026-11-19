@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useI18n } from "../../lib/i18n";
 
 const LANGUAGE_STATUSES = [
-  { value: "active", label: "Active" },
-  { value: "endangered", label: "Endangered" },
-  { value: "critically-endangered", label: "Critically endangered" },
+  { value: "active", labelKey: "languageCard.status.active" },
+  { value: "endangered", labelKey: "languageCard.status.endangered" },
+  { value: "critically-endangered", labelKey: "languageCard.status.critically-endangered" },
 ];
 
 function initialValues(kind, entry, languages) {
@@ -28,8 +33,196 @@ function initialValues(kind, entry, languages) {
     region: entry?.region ?? "",
     speakers: entry?.speakers ?? 0,
     status: entry?.status ?? "active",
-    accent: entry?.accent ?? "#2f8bff",
+    accent: entry?.accent ?? "#2dd4bf",
   };
+}
+
+/**
+ * Per-locale wording for the word's primary sense.
+ *
+ * Only reviewers and admins can reach this endpoint, so the editor is hidden
+ * for contributors. English is edited through the main Translation field and
+ * is the canonical fallback; every other active locale can be added, updated
+ * or deleted here without changing the review state.
+ */
+function TranslationEditor({ wordId, senses }) {
+  const { t, locales } = useI18n();
+  const options = (locales ?? []).filter((item) => item.code !== "en");
+  const [translations, setTranslations] = useState(
+    () => senses?.[0]?.translations ?? [],
+  );
+  const [localeCode, setLocaleCode] = useState(options[0]?.code ?? "");
+  const current = translations.find((row) => row.locale === localeCode);
+  const [gloss, setGloss] = useState(current?.gloss ?? "");
+  const [usage, setUsage] = useState(current?.usage ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
+
+  if (options.length === 0) {
+    return (
+      <div className="roleForm__section">
+        <h3 className="roleSection__title">{t("form.translations.title")}</h3>
+        <p className="roleHint">{t("form.translations.englishHint")}</p>
+      </div>
+    );
+  }
+
+  const chooseLocale = (nextCode) => {
+    const next = translations.find((row) => row.locale === nextCode);
+    setLocaleCode(nextCode);
+    setGloss(next?.gloss ?? "");
+    setUsage(next?.usage ?? "");
+    setError(null);
+    setNotice(null);
+  };
+
+  const applyResponse = (response) => {
+    const next = response?.data?.senses?.[0]?.translations ?? [];
+    setTranslations(next);
+    const saved = next.find((row) => row.locale === localeCode);
+    setGloss(saved?.gloss ?? "");
+    setUsage(saved?.usage ?? "");
+  };
+
+  const save = async () => {
+    if (!gloss.trim()) {
+      setError(t("form.error.translation"));
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await apiFetch(
+        `/words/${encodeURIComponent(wordId)}/translations/${encodeURIComponent(localeCode)}`,
+        { method: "PUT", body: { gloss: gloss.trim(), usage: usage.trim() } },
+      );
+      applyResponse(response);
+      setNotice(
+        t("form.translations.saved", { locale: localeCode.toUpperCase() }),
+      );
+    } catch (cause) {
+      setError(cause?.message ?? t("form.error.save"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await apiFetch(
+        `/words/${encodeURIComponent(wordId)}/translations/${encodeURIComponent(localeCode)}`,
+        { method: "DELETE" },
+      );
+      applyResponse(response);
+      setNotice(
+        t("form.translations.deleted", { locale: localeCode.toUpperCase() }),
+      );
+    } catch (cause) {
+      setError(cause?.message ?? t("form.error.save"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="roleForm__section">
+      <div className="roleForm__sectionHead">
+        <div>
+          <h3 className="roleSection__title">{t("form.translations.title")}</h3>
+          <p className="roleHint">{t("form.translations.hint")}</p>
+        </div>
+      </div>
+
+      <div className="roleFormGrid">
+        <div className="roleField">
+          <Label className="roleLabel" htmlFor="translation-locale">
+            {t("form.translations.locale")}
+          </Label>
+          <select
+            id="translation-locale"
+            className="roleSelect"
+            value={localeCode}
+            onChange={(event) => chooseLocale(event.target.value)}
+          >
+            {options.map((item) => (
+              <option key={item.code} value={item.code}>
+                {item.label} ({item.code.toUpperCase()})
+              </option>
+            ))}
+          </select>
+          <span className="roleHint">{t("form.translations.englishHint")}</span>
+        </div>
+
+        <div className="roleField">
+          <Label className="roleLabel" htmlFor="translation-gloss">
+            {t("form.translations.gloss")}
+          </Label>
+          <Input
+            id="translation-gloss"
+            className="roleInput"
+            value={gloss}
+            onChange={(event) => {
+              setGloss(event.target.value);
+              setError(null);
+              setNotice(null);
+            }}
+            placeholder={t("form.translationPlaceholder")}
+          />
+        </div>
+
+        <div className="roleField roleField--wide">
+          <Label className="roleLabel" htmlFor="translation-usage">
+            {t("form.translations.usage")}
+          </Label>
+          <Textarea
+            id="translation-usage"
+            className="roleTextarea"
+            value={usage}
+            onChange={(event) => {
+              setUsage(event.target.value);
+              setError(null);
+              setNotice(null);
+            }}
+            placeholder={t("form.usagePlaceholder")}
+          />
+        </div>
+      </div>
+
+      {error ? (
+        <p className="roleError" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {notice ? (
+        <p className="roleNotice" role="status">
+          {notice}
+        </p>
+      ) : null}
+
+      <div className="roleActions">
+        <Button type="button" onClick={save} disabled={busy}>
+          {busy ? t("form.translations.saving") : t("form.translations.save")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={remove}
+          disabled={busy || !current}
+        >
+          {t("form.translations.delete")}
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -47,26 +240,79 @@ export default function EntryForm({
   const isEdit = Boolean(entry?.id);
   const isWord = kind === "word";
   const role = ["reviewer", "admin"].includes(roleKey) ? roleKey : "contributor";
+  const { t, locale } = useI18n();
   const [values, setValues] = useState(() => initialValues(kind, entry, languages));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [partOfSpeechOptions, setPartOfSpeechOptions] = useState([]);
+  const [partOfSpeechLoading, setPartOfSpeechLoading] = useState(isWord);
+  const [partOfSpeechError, setPartOfSpeechError] = useState(null);
+
+  useEffect(() => {
+    if (!isWord) return undefined;
+
+    let cancelled = false;
+
+    const load = async () => {
+      setPartOfSpeechLoading(true);
+      setPartOfSpeechError(null);
+
+      try {
+        const response = await apiFetch(
+          `/part-of-speech?locale=${encodeURIComponent(locale)}`,
+        );
+        if (!cancelled) setPartOfSpeechOptions(response?.data ?? []);
+      } catch (cause) {
+        if (!cancelled) {
+          setPartOfSpeechError(
+            cause?.message ?? t("form.partOfSpeechLoadError"),
+          );
+        }
+      } finally {
+        if (!cancelled) setPartOfSpeechLoading(false);
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isWord, locale, t]);
+
+  // A word saved before its part of speech was deactivated keeps that value in
+  // the form so an unrelated edit cannot silently clear it.
+  const selectablePartsOfSpeech = useMemo(() => {
+    const list = [...partOfSpeechOptions];
+    const currentCode = entry?.partOfSpeech;
+
+    if (currentCode && !list.some((option) => option.code === currentCode)) {
+      list.push({
+        code: currentCode,
+        label: entry?.partOfSpeechLabel ?? currentCode,
+        isActive: false,
+      });
+    }
+
+    return list;
+  }, [partOfSpeechOptions, entry]);
 
   const saveLabel = isEdit
-    ? "Save changes"
+    ? t("form.saveChanges")
     : role === "admin"
-      ? "Publish entry"
+      ? t("form.publish")
       : role === "reviewer"
-        ? "Save for final approval"
-        : "Save draft";
+        ? t("form.saveForApproval")
+        : t("form.saveDraft");
 
   const roleHint =
     role === "admin"
-      ? "Admin saves keep the current review state; new entries publish immediately."
+      ? t("form.hint.admin")
       : role === "reviewer"
-        ? "Reviewer saves mark the entry reviewer approved; an admin still gives the final approval."
+        ? t("form.hint.reviewer")
         : isEdit
-          ? "Editing a draft keeps it private; editing submitted content returns it to pending."
-          : "Save first, then submit it to the reviewer queue when you are ready.";
+          ? t("form.hint.contributorEdit")
+          : t("form.hint.contributorNew");
 
   const update = (field) => (event) => {
     const { value } = event.target;
@@ -79,15 +325,15 @@ export default function EntryForm({
     setError(null);
 
     if (isWord) {
-      if (!values.languageId) return setError("Choose a language first.");
-      if (!values.word.trim()) return setError("Enter the word.");
-      if (!values.translation.trim()) return setError("Enter a translation.");
+      if (!values.languageId) return setError(t("form.error.language"));
+      if (!values.word.trim()) return setError(t("form.error.word"));
+      if (!values.translation.trim()) return setError(t("form.error.translation"));
     } else {
-      if (values.name.trim().length < 2) return setError("Enter a language name.");
-      if (!values.autonym.trim()) return setError("Enter the language's own name.");
-      if (values.region.trim().length < 2) return setError("Enter the region.");
+      if (values.name.trim().length < 2) return setError(t("form.error.name"));
+      if (!values.autonym.trim()) return setError(t("form.error.autonym"));
+      if (values.region.trim().length < 2) return setError(t("form.error.region"));
       if (Number(values.speakers) < 0 || Number.isNaN(Number(values.speakers))) {
-        return setError("Speakers must be zero or more.");
+        return setError(t("form.error.speakers"));
       }
     }
 
@@ -114,7 +360,7 @@ export default function EntryForm({
           region: values.region.trim(),
           speakers: Number(values.speakers),
           status: values.status,
-          accent: values.accent || "#2f8bff",
+          accent: values.accent || "#2dd4bf",
         };
         if (!isEdit && values.id.trim()) body.id = values.id.trim();
       }
@@ -126,26 +372,36 @@ export default function EntryForm({
 
       onSaved?.(response.data, kind, isEdit);
     } catch (cause) {
-      setError(cause?.message ?? "Could not save this entry.");
+      setError(cause?.message ?? t("form.error.save"));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const canEditTranslations = isWord && isEdit && role !== "contributor";
+
   return (
     <form className="rolePanel roleForm" onSubmit={submit} noValidate>
       <div className="roleForm__head">
         <div>
-          <span className="nl-eyebrow">{isEdit ? "Edit entry" : "New entry"}</span>
+          <span className="nl-eyebrow">
+            {t(isEdit ? "form.editEntry" : "form.newEntry")}
+          </span>
           <h2 className="roleSection__title">
-            {isEdit
-              ? `Update this ${isWord ? "word" : "language"}`
-              : `Add a ${isWord ? "word" : "language"}`}
+            {t(
+              isEdit
+                ? isWord
+                  ? "form.updateWord"
+                  : "form.updateLanguage"
+                : isWord
+                  ? "form.addWord"
+                  : "form.addLanguage",
+            )}
           </h2>
         </div>
-        <button type="button" className="nl-btn nl-btn--sm nl-btn--ghost" onClick={onCancel}>
-          Close
-        </button>
+        <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+          {t("form.close")}
+        </Button>
       </div>
 
       {error ? (
@@ -157,16 +413,18 @@ export default function EntryForm({
       {isWord ? (
         <div className="roleFormGrid">
           <div className="roleField roleField--wide">
-            <label className="roleLabel" htmlFor="entry-language">
-              Language
-            </label>
+            <Label className="roleLabel" htmlFor="entry-language">
+              {t("form.language")}
+            </Label>
             <select
               id="entry-language"
               className="roleSelect"
               value={values.languageId}
               onChange={update("languageId")}
             >
-              {languages.length === 0 ? <option value="">No languages yet</option> : null}
+              {languages.length === 0 ? (
+                <option value="">{t("form.noLanguages")}</option>
+              ) : null}
               {languages.map((language) => (
                 <option key={language.id} value={language.id}>
                   {language.name}
@@ -175,74 +433,87 @@ export default function EntryForm({
               ))}
             </select>
             {languages.length === 0 ? (
-              <span className="roleHint">
-                Create a language first, then come back to add words to it.
-              </span>
+              <span className="roleHint">{t("form.createLanguageFirst")}</span>
             ) : null}
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-word">
-              Word
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-word">
+              {t("form.word")}
+            </Label>
+            <Input
               id="entry-word"
               className="roleInput"
               value={values.word}
               onChange={update("word")}
-              placeholder="e.g. jun"
+              placeholder={t("form.wordPlaceholder")}
             />
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-translation">
-              Translation
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-translation">
+              {t("form.translation")}
+            </Label>
+            <Input
               id="entry-translation"
               className="roleInput"
               value={values.translation}
               onChange={update("translation")}
-              placeholder="e.g. one"
+              placeholder={t("form.translationPlaceholder")}
             />
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-pronunciation">
-              Pronunciation
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-pronunciation">
+              {t("form.pronunciation")}
+            </Label>
+            <Input
               id="entry-pronunciation"
               className="roleInput"
               value={values.pronunciation}
               onChange={update("pronunciation")}
-              placeholder="How it sounds"
+              placeholder={t("form.pronunciationPlaceholder")}
             />
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-pos">
-              Part of speech
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-pos">
+              {t("form.partOfSpeech")}
+            </Label>
+            <select
               id="entry-pos"
-              className="roleInput"
+              className="roleSelect"
               value={values.partOfSpeech}
               onChange={update("partOfSpeech")}
-              placeholder="noun, verb, greeting…"
-            />
+              disabled={partOfSpeechLoading}
+            >
+              <option value="">{t("form.partOfSpeechNone")}</option>
+              {selectablePartsOfSpeech.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {option.label}
+                  {option.isActive === false
+                    ? ` — ${t("form.partOfSpeechInactive")}`
+                    : ""}
+                </option>
+              ))}
+            </select>
+            {partOfSpeechError ? (
+              <span className="roleHint roleHint--danger">
+                {partOfSpeechError}
+              </span>
+            ) : null}
           </div>
 
           <div className="roleField roleField--wide">
-            <label className="roleLabel" htmlFor="entry-usage">
-              Usage or example
-            </label>
-            <textarea
+            <Label className="roleLabel" htmlFor="entry-usage">
+              {t("form.usage")}
+            </Label>
+            <Textarea
               id="entry-usage"
               className="roleTextarea"
               value={values.usage}
               onChange={update("usage")}
-              placeholder="A sentence, a context, or a note for reviewers."
+              placeholder={t("form.usagePlaceholder")}
             />
           </div>
         </div>
@@ -250,63 +521,63 @@ export default function EntryForm({
         <div className="roleFormGrid">
           {!isEdit ? (
             <div className="roleField">
-              <label className="roleLabel" htmlFor="entry-id">
-                URL id (optional)
-              </label>
-              <input
+              <Label className="roleLabel" htmlFor="entry-id">
+                {t("form.id")}
+              </Label>
+              <Input
                 id="entry-id"
                 className="roleInput"
                 value={values.id}
                 onChange={update("id")}
-                placeholder="auto-generated from the name"
+                placeholder={t("form.idPlaceholder")}
               />
             </div>
           ) : null}
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-name">
-              Name
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-name">
+              {t("form.name")}
+            </Label>
+            <Input
               id="entry-name"
               className="roleInput"
               value={values.name}
               onChange={update("name")}
-              placeholder="e.g. Kaqchikel"
+              placeholder={t("form.namePlaceholder")}
             />
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-autonym">
-              Name in the language
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-autonym">
+              {t("form.autonym")}
+            </Label>
+            <Input
               id="entry-autonym"
               className="roleInput"
               value={values.autonym}
               onChange={update("autonym")}
-              placeholder="e.g. Kaqchikel"
+              placeholder={t("form.autonymPlaceholder")}
             />
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-region">
-              Region
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-region">
+              {t("form.region")}
+            </Label>
+            <Input
               id="entry-region"
               className="roleInput"
               value={values.region}
               onChange={update("region")}
-              placeholder="e.g. Chimaltenango"
+              placeholder={t("form.regionPlaceholder")}
             />
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-speakers">
-              Speakers
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-speakers">
+              {t("form.speakers")}
+            </Label>
+            <Input
               id="entry-speakers"
               type="number"
               min="0"
@@ -317,9 +588,9 @@ export default function EntryForm({
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-status">
-              Vitality
-            </label>
+            <Label className="roleLabel" htmlFor="entry-status">
+              {t("form.vitality")}
+            </Label>
             <select
               id="entry-status"
               className="roleSelect"
@@ -328,36 +599,40 @@ export default function EntryForm({
             >
               {LANGUAGE_STATUSES.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.label}
+                  {t(option.labelKey)}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="roleField">
-            <label className="roleLabel" htmlFor="entry-accent">
-              Accent colour
-            </label>
-            <input
+            <Label className="roleLabel" htmlFor="entry-accent">
+              {t("form.accent")}
+            </Label>
+            <Input
               id="entry-accent"
               className="roleInput"
               value={values.accent}
               onChange={update("accent")}
-              placeholder="#2f8bff"
+              placeholder="#2dd4bf"
             />
           </div>
         </div>
       )}
 
       <div className="roleActions">
-        <button type="submit" className="nl-btn nl-btn--primary" disabled={submitting}>
-          {submitting ? "Saving…" : saveLabel}
-        </button>
-        <button type="button" className="nl-btn" onClick={onCancel} disabled={submitting}>
-          Cancel
-        </button>
+        <Button type="submit" disabled={submitting}>
+          {submitting ? t("form.saving") : saveLabel}
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={submitting}>
+          {t("form.cancel")}
+        </Button>
         <span className="roleHint">{roleHint}</span>
       </div>
+
+      {canEditTranslations ? (
+        <TranslationEditor wordId={entry.id} senses={entry.senses} />
+      ) : null}
     </form>
   );
 }

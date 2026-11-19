@@ -1,36 +1,27 @@
+/**
+ * Sortable columns. Translation is a to-many sense gloss, so it cannot be used
+ * as a single SQL sort key; clients search it instead.
+ */
 export const WORD_SORT_FIELDS = Object.freeze({
   word: "word",
-  translation: "translation",
   languageId: "languageId",
   createdAt: "createdAt",
   updatedAt: "updatedAt",
 });
 
 /**
- * Public representation of a word. `languageName` is derived from the joined
- * language instead of being duplicated in the database, so renaming a language
- * updates every word response automatically.
+ * Turn free-text part-of-speech input into a stable lookup code. The migration
+ * used the same normalization for existing rows.
  */
-export function toWordResponse(word) {
-  return {
-    id: word.id,
-    languageId: word.languageId,
-    languageName: word.language?.name ?? null,
-    word: word.word,
-    translation: word.translation,
-    pronunciation: word.pronunciation ?? "",
-    partOfSpeech: word.partOfSpeech ?? "",
-    usage: word.usage ?? "",
-    verified: word.verified,
-    reviewState: word.reviewState,
-    rejectionReason: word.rejectionReason ?? null,
-    reviewedAt: word.reviewedAt ?? null,
-    removalRequestedAt: word.removalRequestedAt ?? null,
-    removalRequestReason: word.removalRequestReason ?? null,
-    createdById: word.createdById ?? null,
-    deletedAt: word.deletedAt ?? null,
-    deletionReason: word.deletionReason ?? null,
-    createdAt: word.createdAt,
-    updatedAt: word.updatedAt,
-  };
+export function normalizePartOfSpeechCode(value) {
+  const text = String(value ?? "").trim().toLowerCase();
+  if (!text) return null;
+
+  const code = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return code || null;
 }

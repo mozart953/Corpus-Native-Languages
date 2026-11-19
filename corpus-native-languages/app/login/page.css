@@ -18,13 +18,13 @@
 }
 
 .page__back:hover {
-  color: var(--nl-blue-bright);
+  color: var(--nl-primary);
 }
 
 .page__loginNote {
   padding: 14px 18px;
-  background: var(--nl-blue-soft);
-  border: 1px solid var(--nl-blue-line);
+  background: var(--nl-info-soft);
+  border: 1px solid var(--nl-info-line);
   border-left-width: 3px;
   border-radius: var(--nl-radius-sm);
   color: var(--nl-text);
@@ -47,7 +47,7 @@
 }
 
 .page__modeToggle {
-  color: var(--nl-blue-bright);
+  color: var(--nl-primary);
   font-size: 0.86rem;
   font-weight: 600;
   text-decoration: underline;
@@ -55,7 +55,7 @@
 }
 
 .page__modeToggle:hover {
-  color: var(--nl-white);
+  color: var(--nl-primary-strong);
 }
 
 .page__signedIn {

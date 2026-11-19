@@ -5,7 +5,9 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import LoginComponent from "@/components/Login/Login.jsx";
 import NavbarComponent from "@/components/Navbar/Navbar.jsx";
+import { Button } from "@/components/ui/button";
 import { useCorpusAuth } from "@/lib/useCorpusAuth";
+import { useI18n } from "@/lib/i18n";
 import "./page.css";
 
 function rolePath(user) {
@@ -24,6 +26,7 @@ function LoginPageContent() {
 
   const { user, submitting, error, notice, setError, login, logout } =
     useCorpusAuth();
+  const { t } = useI18n();
 
   const handleLogin = async ({ name, email, password }) => {
     await login({ mode, name, email, password });
@@ -51,24 +54,27 @@ function LoginPageContent() {
       <main className="nl-main">
         <div className="page__loginWrap">
           <Link href="/" className="page__back">
-            ← Back to the corpus
+            {t("loginPage.back")}
           </Link>
 
           {user ? (
             <section className="page__signedIn">
-              <span className="nl-eyebrow">Session active</span>
-              <h1 className="page__signedInTitle">Signed in as {user.name}</h1>
+              <span className="nl-eyebrow">{t("loginPage.sessionActive")}</span>
+              <h1 className="page__signedInTitle">
+                {t("loginPage.signedInAs", { name: user.name })}
+              </h1>
               <p className="page__loginNote" role="status">
-                Your role is <strong>{user.role}</strong>. The session refreshes
-                while you are active and expires after 30 minutes of inactivity.
+                {t("loginPage.roleNote", { role: user.role })}
               </p>
               <div className="page__signedInActions">
-                <Link href={rolePath(user)} className="nl-btn nl-btn--primary">
-                  Open my {user.role.toLowerCase()} desk
-                </Link>
-                <button type="button" className="nl-btn" onClick={handleLogout}>
-                  Sign out
-                </button>
+                <Button asChild>
+                  <Link href={rolePath(user)}>
+                    {t("loginPage.openDesk", { role: user.role.toLowerCase() })}
+                  </Link>
+                </Button>
+                <Button type="button" variant="outline" onClick={handleLogout}>
+                  {t("loginPage.signOut")}
+                </Button>
               </div>
             </section>
           ) : (
@@ -83,20 +89,19 @@ function LoginPageContent() {
 
               <div className="page__modeRow">
                 <span>
-                  {mode === "signin"
-                    ? "New here? Accounts are reviewed before they can contribute."
-                    : "Already approved? Use your email and password to sign in."}
+                  {t(mode === "signin" ? "loginPage.newHere" : "loginPage.already")}
                 </span>
-                <button
+                <Button
                   type="button"
-                  className="page__modeToggle"
+                  variant="link"
+                  className="page__modeToggle h-auto p-0"
                   onClick={() => {
                     setError(null);
                     setMode(mode === "signin" ? "signup" : "signin");
                   }}
                 >
-                  {mode === "signin" ? "Create an account" : "Back to sign in"}
-                </button>
+                  {t(mode === "signin" ? "loginPage.create" : "loginPage.backToSignIn")}
+                </Button>
               </div>
             </>
           )}
@@ -107,12 +112,14 @@ function LoginPageContent() {
 }
 
 function LoginPageFallback() {
+  const { t } = useI18n();
+
   return (
     <div className="nl-page">
       <main className="nl-main">
         <div className="page__loginWrap">
           <div className="page__signedIn">
-            <p className="page__loginNote">Loading the sign-in form…</p>
+            <p className="page__loginNote">{t("loginPage.loading")}</p>
           </div>
         </div>
       </main>

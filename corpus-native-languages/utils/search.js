@@ -47,21 +47,42 @@ export function searchWords(words, query, field = SEARCH_FIELDS.ALL) {
 
 /**
  * Filter to one language. Pass "all" to keep every language.
+ *
+ * Public words carry only `languageName`; fixtures carry both fields, so the
+ * filter accepts a matching id or name.
+ *
  * @param {object[]} words
  * @param {string} languageId
+ * @param {string|null} [languageName]
  * @returns {object[]}
  */
-export function filterByLanguage(words, languageId) {
+export function filterByLanguage(words, languageId, languageName = null) {
   if (!languageId || languageId === "all") return words;
-  return words.filter((word) => word.languageId === languageId);
+  return words.filter(
+    (word) =>
+      word.languageId === languageId ||
+      (languageName != null && word.languageName === languageName),
+  );
 }
 
 /**
  * Combine language filter + free text search.
  * @param {object[]} words
- * @param {{ query?: string, languageId?: string, field?: string }} options
+ * @param {{ query?: string, languageId?: string, languageName?: string|null, field?: string }} options
  * @returns {object[]}
  */
-export function filterWords(words, { query = "", languageId = "all", field = SEARCH_FIELDS.ALL } = {}) {
-  return searchWords(filterByLanguage(words, languageId), query, field);
+export function filterWords(
+  words,
+  {
+    query = "",
+    languageId = "all",
+    languageName = null,
+    field = SEARCH_FIELDS.ALL,
+  } = {},
+) {
+  return searchWords(
+    filterByLanguage(words, languageId, languageName),
+    query,
+    field,
+  );
 }

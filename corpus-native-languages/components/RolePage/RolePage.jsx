@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import NavbarComponent from "../Navbar/Navbar.jsx";
 import { useCorpusAuth } from "../../lib/useCorpusAuth";
+import { useI18n } from "../../lib/i18n";
 import "./RolePage.css";
 
 /**
@@ -24,7 +26,9 @@ export default function RolePage({
   allowedRoles = null,
   children = null,
 }) {
-  const { user, status, logout } = useCorpusAuth();
+  const auth = useCorpusAuth();
+  const { user, status, logout } = auth;
+  const { t } = useI18n();
   const router = useRouter();
 
   const handleLogin = (mode) => {
@@ -44,7 +48,7 @@ export default function RolePage({
   if (status === "loading") {
     gate = (
       <div className="roleGate">
-        <p className="roleGate__title">Checking your session…</p>
+        <p className="roleGate__title">{t("role.checking")}</p>
       </div>
     );
   } else if (!user) {
@@ -53,57 +57,49 @@ export default function RolePage({
         <span className="roleGate__icon" aria-hidden="true">
           NL
         </span>
-        <h2 className="roleGate__title">Sign in to continue</h2>
-        <p className="roleGate__text">
-          This area is for approved contributors, reviewers and administrators.
-          Public reading and downloads never require an account.
-        </p>
+        <h2 className="roleGate__title">{t("role.signInTitle")}</h2>
+        <p className="roleGate__text">{t("role.signInText")}</p>
         <div className="roleGate__actions">
-          <button
+          <Button type="button" onClick={() => handleLogin("signin")}>
+            {t("role.signIn")}
+          </Button>
+          <Button
             type="button"
-            className="nl-btn nl-btn--primary"
-            onClick={() => handleLogin("signin")}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            className="nl-btn"
+            variant="outline"
             onClick={() => handleLogin("signup")}
           >
-            Create an account
-          </button>
+            {t("role.createAccount")}
+          </Button>
         </div>
       </div>
     );
   } else if (!isActive) {
     const labels = {
-      pending: "Your account is waiting for admin approval.",
-      rejected: "Your registration was rejected.",
-      deactivated: "Your account has been deactivated.",
+      pending: t("role.pending"),
+      rejected: t("role.rejected"),
+      deactivated: t("role.deactivated"),
     };
     gate = (
       <div className="roleGate">
-        <h2 className="roleGate__title">Account access paused</h2>
+        <h2 className="roleGate__title">{t("role.pausedTitle")}</h2>
         <p className="roleGate__text">
-          {user.statusReason || labels[user.status] || "Your account is not active."}
+          {user.statusReason || labels[user.status] || t("role.inactive")}
         </p>
-        <Link href="/" className="nl-btn">
-          Back to the corpus
-        </Link>
+        <Button asChild variant="outline">
+          <Link href="/">{t("role.back")}</Link>
+        </Button>
       </div>
     );
   } else if (!hasRole) {
     gate = (
       <div className="roleGate">
-        <h2 className="roleGate__title">This desk is not open to your role</h2>
+        <h2 className="roleGate__title">{t("role.wrongRoleTitle")}</h2>
         <p className="roleGate__text">
-          You are signed in as <strong>{user.role}</strong>. Ask an admin if you
-          need a different role.
+          {t("role.wrongRoleText", { role: user.role })}
         </p>
-        <Link href="/contribute" className="nl-btn nl-btn--primary">
-          Go to my contributions
-        </Link>
+        <Button asChild>
+          <Link href="/contribute">{t("role.goContributions")}</Link>
+        </Button>
       </div>
     );
   }
@@ -124,7 +120,8 @@ export default function RolePage({
           <p className="rolePage__subtitle">{subtitle}</p>
         </header>
 
-        {gate ?? (typeof children === "function" ? children(user) : children)}
+        {gate ??
+          (typeof children === "function" ? children(user, auth) : children)}
       </main>
     </div>
   );

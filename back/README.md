@@ -48,8 +48,10 @@ curl http://localhost:4000/api/v1/health
 
 Expected: `{"status":"ok","service":"corpus-native-languages-api",...}`.
 
-The seed creates eight approved languages, 28 approved sample words, and three
-local accounts (see [Seed accounts](#seed-accounts)).
+The seed upserts lookup tables, creates eight approved languages, 28 approved
+sample words (each with a primary sense and region links), an initial review
+decision per fixture, and three local accounts (see [Seed accounts](#seed-accounts)).
+It is idempotent: re-running it does not duplicate rows.
 
 ---
 
@@ -77,9 +79,9 @@ response shaping stay independent.
 ```
 back/
 ├── prisma/
-│   ├── schema.prisma          # Language, Word, User, AuditLog
+│   ├── schema.prisma          # normalized 3NF models (see Data model)
 │   ├── migrations/            # committed SQL migrations
-│   ├── seed.js                # accounts + fixture corpus
+│   ├── seed.js                # lookups + accounts + fixture corpus
 │   └── seed-data.js           # copy of the frontend fixtures
 ├── scripts/
 │   ├── sync-fixtures.js       # frontend fixtures -> prisma/seed-data.js
@@ -93,8 +95,12 @@ back/
     ├── validators/            # express-validator chains
     ├── controllers/           # HTTP status + response envelope only
     ├── services/              # workflow, permissions, transactions
-    ├── repositories/          # Prisma queries
-    ├── models/                # enums, sort fields, response mappers
+    │   ├── content.service.js       # shared language/word lifecycle factory
+    │   ├── content-workflow.js      # pure moderation policy
+    │   └── content-history.service.js # latest decision / pending removal
+    ├── repositories/          # Prisma queries (transaction client optional)
+    ├── models/                # workflow vocabulary, sort fields, input helpers
+    ├── presenters/            # DB row -> flat API response
     └── utils/                 # ApiError, pagination, password, session decoding
 ```
 
@@ -102,7 +108,8 @@ Request flow:
 
 ```
 route → guard → role guard → rate limiter → validator → controller
-      → service (permissions + transaction + audit) → repository → Prisma
+      → service (permissions + transaction + audit)
+      → repository → Prisma → presenter → response
 ```
 
 Every JSON success response is wrapped:
@@ -116,6 +123,50 @@ Every error uses:
 ```json
 { "error": { "code": "FORBIDDEN", "message": "..." } }
 ```
+
+---
+
+## Data model
+
+The schema is normalized to third normal form. Repeating text (states, roles,
+statuses, parts of speech, regions) lives in lookup tables referenced by code,
+and one-to-many facts are stored once:
+
+| Model | Purpose |
+| --- | --- |
+| `Language` | Corpus language. `statusCode` → `LanguageStatus`; `reviewStateCode` → `ReviewState`. |
+| `Word` | Word belonging to a `Language`. `partOfSpeechCode` → `PartOfSpeech`; `reviewStateCode` → `ReviewState`. |
+| `Sense` | One gloss + usage for a word (`wordId`, `gloss`, `usage`, `position`). Translation and usage are no longer columns on `Word`. |
+| `Region` | Canonical region name. |
+| `LanguageRegion` | Many-to-many join (`languageId`, `regionName`, `position`) preserving the order regions were entered. |
+| `User` | Account. `roleCode` → `Role`, `statusCode` → `UserStatus`, `providerCode` → `Provider`. `usernameKey` enforces case-insensitive username uniqueness; `*ChangedAt` columns drive self-service cooldowns, and `emailVerifiedAt`/`pendingEmail` prepare a future verification flow. |
+| `ReviewState`, `LanguageStatus`, `PartOfSpeech`, `Role`, `UserStatus`, `Provider`, `RemovalStatus`, `AccountRequestStatus` | Lookup tables (`code` PK + `label`). `PartOfSpeech` also has `isActive`, which hides an option without touching the words that use it. |
+| `PartOfSpeechTranslation` | Per-locale part-of-speech wording (`partOfSpeechCode`, `localeCode`, `label`); unique on the pair. |
+| `ReviewDecision` | Append-only history of moderation decisions (`entityType`, `entityId`, `stateCode`, `reviewerId`, `comment`). |
+| `RemovalRequest` | Append-only removal requests (`entityType`, `entityId`, `reason`, `requestedById`, `statusCode`, `resolvedById`, `resolvedAt`). |
+| `AccountChangeRequest` | Emergency account request (`userId`, `reason`, requested fields, `statusCode`, `resolvedById`, `resolvedAt`, `resolutionNote`). An admin edit is allowed only while `statusCode = "pending"`; saving resolves it and writes an audit entry. |
+| `AuditLog` | Full action log with actor, state transition, reason and JSON snapshot. |
+| `SiteImage` | Single-row-per-key uploaded images. |
+
+`ReviewDecision` and `RemovalRequest` use the same polymorphic
+`entityType`/`entityId` convention as `AuditLog`; `entityId` intentionally has no
+foreign key so history survives a hard schema change.
+
+Derived, not stored:
+
+- `verified` = `reviewStateCode === "approved"`.
+- `rejectionReason` = comment of the latest `ReviewDecision`, only when its state
+  is `rejected`.
+- `reviewedAt` = timestamp of the latest `ReviewDecision` that has a reviewer.
+- `removalRequestedAt` / `removalRequestReason` = latest **pending**
+  `RemovalRequest`.
+- `Language.words` = count of approved, non-deleted words.
+- `Language.region` = ordered region names joined with `", "`.
+
+Soft-delete columns (`deletedAt`, `deletedById`, `deletionReason`) are a
+documented pragmatic exception: they keep removed content recoverable and are
+not a repeating group. The flat API responses are unchanged; normalized detail
+(`regions`, `senses`) is additive and safe for existing clients to ignore.
 
 ---
 
@@ -153,7 +204,8 @@ can restore it from their private trash.
 
 Admins never physically delete corpus rows. `DELETE /words/:id` (or
 `/languages/:id`) sets `deletedAt`, `deletedById`, `deletionReason` and
-`reviewState = "removed"`, and appends an `AuditLog` row containing the full
+`reviewStateCode = "removed"`, appends a `ReviewDecision`, resolves any pending
+`RemovalRequest` as `completed`, and appends an `AuditLog` row containing the full
 snapshot. The content disappears from the public API and normal moderation queue,
 but stays recoverable through `GET /archive` and
 `POST /words/:id/restore`. Restored content returns as `pending` so it is reviewed
@@ -164,7 +216,10 @@ gets a private trash move instead: the row keeps `reviewState = "draft"`, gains
 `deletedAt`, and is listed only for its author by `GET /words/trash` (or
 `/languages/trash`). Restoring it returns it to the draft list. Reviewers cannot
 delete content; they open a removal request, and the content stays public until
-an admin performs the logical removal.
+an admin performs the logical removal. Requests are stored in `RemovalRequest`
+with status `pending` → `completed` (admin removal) or `cancelled` (withdrawn),
+so the flat `removalRequestedAt` / `removalRequestReason` fields always reflect
+the latest pending request.
 
 ### Account lifecycle
 
@@ -231,6 +286,30 @@ Base URL: `http://localhost:4000/api/v1`
 | `POST` | `/auth/login` | public | Verify email/password for an active account; used by NextAuth. Pending, rejected and deactivated accounts receive `403`. |
 | `GET` | `/auth/me` | signed in | Live current account, re-read from the database. |
 
+### Account
+
+Self-service changes are rate-limited and enforced on the server. Usernames are
+unique case-insensitively (`usernameKey`); emails are unique and normalized to
+lowercase. Cooldowns start after a successful change and are stored on the user
+row, so signing out does not reset them.
+
+| Method | Path | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/account` | signed in | Profile, per-field cooldowns, password policy, open request and request history. |
+| `PATCH` | `/account/username` | signed in | `{ username }`. Two changes are allowed only 30 days apart. |
+| `PATCH` | `/account/email` | signed in | `{ email, currentPassword }`. Applied immediately, 30-day cooldown, clears `emailVerifiedAt`. |
+| `PATCH` | `/account/password` | signed in | `{ currentPassword, newPassword }`. 8–128 characters with an uppercase letter, a lowercase letter and a number; 15-day cooldown. |
+| `GET` | `/account/requests` | signed in | The current user's emergency requests. |
+| `POST` | `/account/requests` | signed in | `{ reason, fields: ["username" \| "email" \| "password"] }`. Only one request may be open at a time. |
+| `POST` | `/account/requests/:id/cancel` | owner | Cancel an open request. |
+| `GET` | `/account/admin/requests` | admin | Emergency queue. Filters: `status`, `q`, `page`, `limit`. |
+| `PATCH` | `/account/admin/users/:id` | admin | `{ username?, email?, password?, resolutionNote? }`. Requires an open request and only the fields it names; saving resolves the request, resets the touched cooldowns and writes audit entries. |
+
+Email verification is intentionally prepared but not enforced: `emailVerifiedAt`
+and `pendingEmail` exist, but no mail is sent and a changed address is active
+immediately. The emergency path exists for users who cannot reach this page; it
+is not a general account editor.
+
 ### Languages
 
 | Method | Path | Access | Description |
@@ -248,11 +327,18 @@ Base URL: `http://localhost:4000/api/v1`
 | `DELETE` | `/languages/:id` | contributor+ / admin | Contributor: move an own draft to the private trash. Admin: logical removal, `{ reason? }`. |
 | `POST` | `/languages/:id/restore` | owner / admin | Restore a trashed draft (owner) or archived language (admin, returns to `pending`). |
 
-Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `words?`,
-`status?`, `accent?`. `status` is `active`, `endangered` or
-`critically-endangered`; `accent` is a `#rrggbb` colour.
+Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `status?`,
+`accent?`. `status` is `active`, `endangered` or `critically-endangered`; `accent`
+is a `#rrggbb` colour. `region` is a comma-separated list; each name is upserted
+into `Region` and linked through `LanguageRegion` in the order given. The response
+`words` count is derived from approved, non-deleted words and is read-only.
 
 ### Words
+
+Both public word reads (`GET /words` and `GET /words/:id`) send a flat
+presentation record to anonymous visitors and contributors (`id` is a positional
+number, not the database id). Reviewers and admins receive the full moderation
+record from the same endpoints.
 
 | Method | Path | Access | Description |
 | --- | --- | --- | --- |
@@ -270,12 +356,31 @@ Language body: `id?`, `name`, `autonym`, `region`, `speakers`, `words?`,
 | `POST` | `/words/:id/restore` | owner / admin | Restore a trashed draft (owner) or archived word (admin, returns to `pending`). |
 
 Word body: `id?`, `languageId`, `word`, `translation`, `pronunciation?`,
-`partOfSpeech?`, `usage?`. `languageName` is joined from the language at read
-time rather than duplicated.
+`partOfSpeech?`, `usage?`. `translation` and `usage` are stored on the word's
+primary `Sense`; updates replace that sense atomically. `partOfSpeech` must be
+the stable code of an active, administrator-managed part of speech; free-text
+input is no longer auto-created. `languageName` is joined from the language at
+read time, responses include a `senses[]` array, and `partOfSpeechLabel` is the
+row's label in the requested `locale` (English fallback).
 
-Sort fields — words: `word`, `translation`, `languageId`, `createdAt`,
-`updatedAt`; languages: `name`, `speakers`, `words`, `status`, `createdAt`,
-`updatedAt`. Pagination defaults to 20 and is capped at 100.
+### Parts of speech
+
+| Method | Path | Access | Description |
+| --- | --- | --- | --- |
+| `GET` | `/part-of-speech` | public | Active options for the word form. `locale` selects `label`. |
+| `GET` | `/part-of-speech/admin` | admin | Every option, including hidden rows and `wordCount`. `locale` selects `label`. |
+| `POST` | `/part-of-speech` | admin | Create: `{ code?, translations: { en, es, … } }`. The English label is required; `code` defaults to its normalized form. |
+| `PATCH` | `/part-of-speech/:code` | admin | `{ translations?, isActive? }`. Locale labels are upserted. |
+| `DELETE` | `/part-of-speech/:code` | admin | Deactivate/hide the option. Existing words keep the label and the row can be restored. |
+| `POST` | `/part-of-speech/:code/restore` | admin | Reactivate a hidden option. |
+
+A part-of-speech response is `{ code, label, labelEn, locale, isFallback,
+isActive, wordCount, translations[] }`.
+
+Sort fields — words: `word`, `languageId`, `createdAt`, `updatedAt`; languages:
+`name`, `speakers`, `status`, `createdAt`, `updatedAt`. `translation` and the
+derived `words` count are not sortable because they are not single columns.
+Pagination defaults to 20 and is capped at 100.
 
 ### Review and audit
 
@@ -332,6 +437,8 @@ Run from `back/`:
 | `npm run db:studio` | Open Prisma Studio. |
 | `npm run db:sync-fixtures` | Copy `../corpus-native-languages/data/corpus.js` into the seed folder. |
 | `npm run test:flow` | End-to-end moderation smoke test (API must be running). |
+| `npm run test:part-of-speech` | Part-of-speech CRUD, localization and permissions smoke test (API must be running). |
+| `npm run test:account` | Account cooldowns, uniqueness, password policy, emergency requests and admin overrides (API must be running). |
 
 ## Seed accounts
 

@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { LogOut, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/ThemeToggle/ThemeToggle.jsx";
+import LanguageToggle from "@/components/LanguageToggle/LanguageToggle.jsx";
+import { useI18n } from "../../lib/i18n";
 import "./Navbar.css";
 
 /**
@@ -25,6 +30,7 @@ function NavbarComponent({
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const confirmRef = useRef(null);
+  const { t } = useI18n();
 
   const isSignedIn = Boolean(user);
   const roleKey = user?.roleKey ?? "contributor";
@@ -35,18 +41,19 @@ function NavbarComponent({
   // review and admin links only appear for roles the API will actually accept.
   const links = isSignedIn
     ? [
-        { id: "home", href: "/", label: "Home" },
-        { id: "words", href: "/#words", label: "Words" },
-        { id: "languages", href: "/#languages", label: "Languages" },
-        { id: "contribute", href: "/contribute", label: "Contribute" },
-        ...(canReview ? [{ id: "review", href: "/review", label: "Review" }] : []),
-        ...(isAdmin ? [{ id: "admin", href: "/admin", label: "Admin" }] : []),
+        { id: "home", href: "/" },
+        { id: "words", href: "/#words" },
+        { id: "languages", href: "/#languages" },
+        { id: "contribute", href: "/contribute" },
+        ...(canReview ? [{ id: "review", href: "/review" }] : []),
+        ...(isAdmin ? [{ id: "admin", href: "/admin" }] : []),
+        { id: "account", href: "/account" },
       ]
     : [
-        { id: "home", href: "/", label: "Home" },
-        { id: "words", href: "/#words", label: "Words" },
-        { id: "languages", href: "/#languages", label: "Languages" },
-        { id: "contribute", href: "/#contribute", label: "Contribute" },
+        { id: "home", href: "/" },
+        { id: "words", href: "/#words" },
+        { id: "languages", href: "/#languages" },
+        { id: "contribute", href: "/#contribute" },
       ];
 
   useEffect(() => {
@@ -80,24 +87,26 @@ function NavbarComponent({
             NL
           </span>
           <span className="navbar__brandText">
-            Native Languages
-            <small>Corpus Guatemala</small>
+            {t("nav.brand")}
+            <small>{t("nav.brandSmall")}</small>
           </span>
         </Link>
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="icon"
           className="navbar__toggle"
           aria-expanded={menuOpen}
           aria-controls="navbar-menu"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-label={menuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
           onClick={() => setMenuOpen((open) => !open)}
         >
-          <span className={`nl-icon nl-icon--menu ${menuOpen ? "is-open" : ""}`} aria-hidden="true" />
-        </button>
+          {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </Button>
 
         <div id="navbar-menu" className={`navbar__panel ${menuOpen ? "is-open" : ""}`}>
-          <nav className="navbar__links" aria-label="Main">
+          <nav className="navbar__links" aria-label={t("nav.main")}>
             {links.map((link) => (
               <Link
                 key={link.id}
@@ -107,12 +116,15 @@ function NavbarComponent({
                   activePath === link.href ? "is-active" : ""
                 }`}
               >
-                {link.label}
+                {t(`nav.${link.id}`)}
               </Link>
             ))}
           </nav>
 
           <div className="navbar__actions">
+            <LanguageToggle />
+            <ThemeToggle />
+
             {isSignedIn ? (
               <>
                 <div className="navbar__user">
@@ -129,51 +141,57 @@ function NavbarComponent({
                   <div
                     className="navbar__confirm"
                     role="alertdialog"
-                    aria-label="Confirm sign out"
+                    aria-label={t("nav.confirmSignOut")}
                   >
-                    <span>Sign out?</span>
-                    <button
+                    <span>{t("nav.signOutQuestion")}</span>
+                    <Button
                       type="button"
                       ref={confirmRef}
-                      className="nl-btn nl-btn--sm nl-btn--danger"
+                      variant="destructive"
+                      size="sm"
                       onClick={handleSignOut}
                     >
-                      Yes, sign out
-                    </button>
-                    <button
+                      {t("nav.yesSignOut")}
+                    </Button>
+                    <Button
                       type="button"
-                      className="nl-btn nl-btn--sm nl-btn--ghost"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setConfirmingSignOut(false)}
                     >
-                      Stay
-                    </button>
+                      {t("nav.stay")}
+                    </Button>
                   </div>
                 ) : (
-                  <button
+                  <Button
                     type="button"
-                    className="nl-btn nl-btn--sm navbar__signOut"
+                    variant="outline"
+                    size="sm"
+                    className="navbar__signOut"
                     onClick={handleSignOut}
                   >
-                    Sign out
-                  </button>
+                    <LogOut className="size-3.5" aria-hidden="true" />
+                    {t("nav.signOut")}
+                  </Button>
                 )}
               </>
             ) : (
               <>
-                <button
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm"
+                  variant="outline"
+                  size="sm"
                   onClick={() => onLogin?.("signin")}
                 >
-                  Sign in
-                </button>
-                <button
+                  {t("nav.signIn")}
+                </Button>
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm nl-btn--primary"
+                  size="sm"
                   onClick={() => onLogin?.("signup")}
                 >
-                  Create account
-                </button>
+                  {t("nav.createAccount")}
+                </Button>
               </>
             )}
           </div>

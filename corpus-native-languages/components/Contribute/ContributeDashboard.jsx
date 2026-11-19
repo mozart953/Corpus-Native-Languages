@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "../../lib/api";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StatusBadge from "../Moderation/StatusBadge.jsx";
 import EntryForm from "./EntryForm.jsx";
+import { useI18n } from "../../lib/i18n";
 import "./Contribute.css";
 
 function mergeLanguages(...groups) {
@@ -35,6 +38,7 @@ function EntryCard({
   onDelete,
   onRestore,
 }) {
+  const { t, has } = useI18n();
   const isDraft = entry.reviewState === "draft";
   const isTrash = mode === "trash";
   const title = kind === "word" ? entry.word : entry.name;
@@ -42,13 +46,17 @@ function EntryCard({
     kind === "word"
       ? entry.translation
       : `${entry.autonym} · ${entry.region}`;
+  const kindLabel = t(
+    kind === "word" ? "contribute.card.word" : "contribute.card.language",
+  );
+  const statusKey = `languageCard.status.${entry.status}`;
 
   return (
     <article className={`roleCard ${isTrash ? "roleCard--removed" : ""}`}>
       <div className="roleCard__head">
         <h3 className="roleCard__title">{title}</h3>
         {isTrash ? (
-          <StatusBadge state="removed" label="In trash" />
+          <StatusBadge state="removed" label={t("contribute.card.inTrash")} />
         ) : (
           <StatusBadge state={entry.reviewState} />
         )}
@@ -57,82 +65,94 @@ function EntryCard({
       <p className="roleCard__subtitle">{subtitle}</p>
 
       <div className="roleCard__meta">
-        <span>{kind === "word" ? "Word" : "Language"}</span>
+        <span>{kindLabel}</span>
         {kind === "word" && entry.languageName ? (
-          <span>in {entry.languageName}</span>
+          <span>{t("common.inLanguage", { language: entry.languageName })}</span>
         ) : null}
         {kind === "language" ? (
           <span>
-            {Number(entry.speakers).toLocaleString()} speakers · {entry.status}
+            {t("contribute.card.speakersStatus", {
+              count: Number(entry.speakers).toLocaleString(),
+              status: has(statusKey) ? t(statusKey) : entry.status,
+            })}
           </span>
         ) : null}
-        <span>Updated {formatDate(entry.updatedAt)}</span>
-        {entry.partOfSpeech ? <span>{entry.partOfSpeech}</span> : null}
+        <span>{t("contribute.card.updated", { date: formatDate(entry.updatedAt) })}</span>
+        {entry.partOfSpeech
+          ? <span>{entry.partOfSpeechLabel ?? entry.partOfSpeech}</span>
+          : null}
       </div>
 
       {entry.rejectionReason ? (
         <p className="roleCard__note roleCard__note--danger">
-          Rejected: {entry.rejectionReason}
+          {t("contribute.card.rejected", { reason: entry.rejectionReason })}
         </p>
       ) : null}
 
       {entry.removalRequestedAt ? (
         <p className="roleCard__note">
-          Removal requested {formatDate(entry.removalRequestedAt)}
+          {t("contribute.card.removalRequested", {
+            date: formatDate(entry.removalRequestedAt),
+          })}
           {entry.removalRequestReason ? ` — ${entry.removalRequestReason}` : ""}
         </p>
       ) : null}
 
       {isTrash && entry.deletionReason ? (
         <p className="roleCard__note roleCard__note--danger">
-          Discarded: {entry.deletionReason}
+          {t("contribute.card.discarded", { reason: entry.deletionReason })}
         </p>
       ) : null}
 
       <div className="roleActions">
         {isTrash ? (
-          <button
+          <Button
             type="button"
-            className="nl-btn nl-btn--sm nl-btn--primary"
+            size="sm"
             onClick={() => onRestore(kind, entry)}
             disabled={busy}
           >
-            {busy ? "Restoring…" : "Restore draft"}
-          </button>
+            {busy
+              ? t("contribute.card.restoring")
+              : t("contribute.card.restoreDraft")}
+          </Button>
         ) : (
           <>
-            <button
+            <Button
               type="button"
-              className="nl-btn nl-btn--sm"
+              variant="outline"
+              size="sm"
               onClick={() => onEdit(kind, entry)}
               disabled={busy}
             >
-              Edit
-            </button>
+              {t("contribute.card.edit")}
+            </Button>
 
             {isDraft ? (
               <>
-                <button
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm nl-btn--primary"
+                  size="sm"
                   onClick={() => onSubmit(kind, entry)}
                   disabled={busy}
                 >
-                  {busy ? "Submitting…" : "Submit for review"}
-                </button>
-                <button
+                  {busy
+                    ? t("contribute.card.submitting")
+                    : t("contribute.card.submit")}
+                </Button>
+                <Button
                   type="button"
-                  className="nl-btn nl-btn--sm nl-btn--danger"
+                  variant="outline"
+                  size="sm"
                   onClick={() => onDelete(kind, entry)}
                   disabled={busy}
+                  className="border-border text-foreground hover:bg-accent"
                 >
-                  Delete draft
-                </button>
+                  {t("contribute.card.deleteDraft")}
+                </Button>
               </>
             ) : (
-              <span className="roleHint">
-                Submitted entries can only be removed through the review desk.
-              </span>
+              <span className="roleHint">{t("contribute.card.submittedHint")}</span>
             )}
           </>
         )}
@@ -156,6 +176,7 @@ export default function ContributeDashboard({ user }) {
   const [editor, setEditor] = useState(null);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
+  const { t, locale } = useI18n();
 
   const load = useCallback(async () => {
     try {
@@ -166,9 +187,9 @@ export default function ContributeDashboard({ user }) {
         trashLanguages,
         publicLanguages,
       ] = await Promise.all([
-        apiFetch("/words/mine?limit=100"),
+        apiFetch(`/words/mine?limit=100&locale=${encodeURIComponent(locale)}`),
         apiFetch("/languages/mine?limit=100"),
-        apiFetch("/words/trash?limit=100"),
+        apiFetch(`/words/trash?limit=100&locale=${encodeURIComponent(locale)}`),
         apiFetch("/languages/trash?limit=100"),
         apiFetch("/languages?limit=100"),
       ]);
@@ -186,11 +207,11 @@ export default function ContributeDashboard({ user }) {
       );
       setError(null);
     } catch (cause) {
-      setError(cause?.message ?? "Could not load your contributions.");
+      setError(cause?.message ?? t("contribute.loading"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t, locale]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- fetch on mount; updates happen after the awaited API call
@@ -199,6 +220,9 @@ export default function ContributeDashboard({ user }) {
 
   const entryCount = entries.words.length + entries.languages.length;
   const trashCount = trash.words.length + trash.languages.length;
+
+  const kindLabel = (kind) =>
+    t(kind === "word" ? "contribute.card.word" : "contribute.card.language");
 
   const runAction = async (kind, entry, action, message) => {
     setBusyId(entry.id);
@@ -223,7 +247,7 @@ export default function ContributeDashboard({ user }) {
       setNotice(message);
       await load();
     } catch (cause) {
-      setError(cause?.message ?? "Could not complete that action.");
+      setError(cause?.message ?? t("form.error.save"));
     } finally {
       setBusyId(null);
     }
@@ -234,21 +258,14 @@ export default function ContributeDashboard({ user }) {
       kind,
       entry,
       "submit",
-      `${kind === "word" ? "Word" : "Language"} submitted for review.`,
+      t("contribute.notice.submitted", { kind: kindLabel(kind) }),
     );
   };
 
   const handleDelete = (kind, entry) => {
-    const ok = window.confirm(
-      "Move this draft to your private trash? You can restore it any time.",
-    );
+    const ok = window.confirm(t("contribute.confirmDelete"));
     if (!ok) return;
-    runAction(
-      kind,
-      entry,
-      "delete",
-      "Draft moved to your private trash. You can restore it any time.",
-    );
+    runAction(kind, entry, "delete", t("contribute.notice.deleted"));
   };
 
   const handleRestore = (kind, entry) => {
@@ -256,49 +273,48 @@ export default function ContributeDashboard({ user }) {
       kind,
       entry,
       "restore",
-      `${kind === "word" ? "Word" : "Language"} restored as a draft.`,
+      t("contribute.notice.restored", { kind: kindLabel(kind) }),
     );
   };
 
   const handleSaved = async (_data, kind, isEdit) => {
     setEditor(null);
     setNotice(
-      `${kind === "word" ? "Word" : "Language"} ${
-        isEdit ? "updated" : "saved as a draft"
-      }.`,
+      t(isEdit ? "contribute.notice.updated" : "contribute.notice.savedDraft", {
+        kind: kindLabel(kind),
+      }),
     );
     await load();
   };
 
   const roleHint =
     user.roleKey === "admin"
-      ? "Admin saves publish immediately."
+      ? t("contribute.hint.admin")
       : user.roleKey === "reviewer"
-        ? "Reviewer saves still need an admin's final approval before they publish."
-        : "Your drafts stay private until you submit them for review.";
+        ? t("contribute.hint.reviewer")
+        : t("contribute.hint.contributor");
+
+  const entryUnit = (count) =>
+    `${count} ${t(count === 1 ? "common.entry" : "common.entries")}`;
 
   return (
-    <div>
-      <div className="roleTabs" role="tablist" aria-label="Contribution views">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "entries"}
+    <Tabs value={tab} onValueChange={setTab} className="gap-0">
+      <TabsList className="roleTabs" aria-label={t("contribute.title")}>
+        <TabsTrigger
+          value="entries"
           className={`roleTab ${tab === "entries" ? "is-active" : ""}`}
-          onClick={() => setTab("entries")}
         >
-          My contributions <span className="roleTab__count">{entryCount}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "trash"}
+          {t("contribute.tab.entries")}{" "}
+          <span className="roleTab__count">{entryCount}</span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="trash"
           className={`roleTab ${tab === "trash" ? "is-active" : ""}`}
-          onClick={() => setTab("trash")}
         >
-          Private trash <span className="roleTab__count">{trashCount}</span>
-        </button>
-      </div>
+          {t("contribute.tab.trash")}{" "}
+          <span className="roleTab__count">{trashCount}</span>
+        </TabsTrigger>
+      </TabsList>
 
       <p className="roleNotice roleNotice--info">{roleHint}</p>
 
@@ -315,26 +331,24 @@ export default function ContributeDashboard({ user }) {
       ) : null}
 
       {tab === "entries" ? (
-        <div className="roleToolbar">
+          <div className="roleToolbar">
           <div className="roleToolbar__group">
-            <button
+            <Button
               type="button"
-              className="nl-btn nl-btn--primary"
               onClick={() => setEditor({ kind: "word", entry: null })}
             >
-              New word
-            </button>
-            <button
+              {t("contribute.newWord")}
+            </Button>
+            <Button
               type="button"
-              className="nl-btn"
+              variant="outline"
               onClick={() => setEditor({ kind: "language", entry: null })}
             >
-              New language
-            </button>
+              {t("contribute.newLanguage")}
+            </Button>
           </div>
           <span className="roleHint">
-            {languages.length} language{languages.length === 1 ? "" : "s"} available
-            for words
+            {t("contribute.languagesAvailable", { count: languages.length })}
           </span>
         </div>
       ) : null}
@@ -352,22 +366,18 @@ export default function ContributeDashboard({ user }) {
       ) : null}
 
       {loading ? (
-        <div className="roleEmpty">Loading your contributions…</div>
+        <div className="roleEmpty">{t("contribute.loading")}</div>
       ) : tab === "entries" ? (
         entryCount === 0 ? (
-          <div className="roleEmpty">
-            Nothing here yet. Create a language first if you are starting from
-            scratch, then add words to it.
-          </div>
+          <div className="roleEmpty">{t("contribute.empty")}</div>
         ) : (
           <>
             {entries.languages.length > 0 ? (
               <section className="roleSection">
                 <div className="roleSection__head">
-                  <h2 className="roleSection__title">Languages</h2>
+                  <h2 className="roleSection__title">{t("contribute.section.languages")}</h2>
                   <span className="roleSection__hint">
-                    {entries.languages.length} entr
-                    {entries.languages.length === 1 ? "y" : "ies"}
+                    {entryUnit(entries.languages.length)}
                   </span>
                 </div>
                 <div className="roleList">
@@ -391,10 +401,9 @@ export default function ContributeDashboard({ user }) {
             {entries.words.length > 0 ? (
               <section className="roleSection">
                 <div className="roleSection__head">
-                  <h2 className="roleSection__title">Words</h2>
+                  <h2 className="roleSection__title">{t("contribute.section.words")}</h2>
                   <span className="roleSection__hint">
-                    {entries.words.length} entr
-                    {entries.words.length === 1 ? "y" : "ies"}
+                    {entryUnit(entries.words.length)}
                   </span>
                 </div>
                 <div className="roleList">
@@ -417,16 +426,15 @@ export default function ContributeDashboard({ user }) {
           </>
         )
       ) : trashCount === 0 ? (
-        <div className="roleEmpty">
-          Your private trash is empty. Deleting a draft moves it here instead of
-          destroying it.
-        </div>
+        <div className="roleEmpty">{t("contribute.trashEmpty")}</div>
       ) : (
         <>
           {trash.languages.length > 0 ? (
             <section className="roleSection">
               <div className="roleSection__head">
-                <h2 className="roleSection__title">Trashed languages</h2>
+                <h2 className="roleSection__title">
+                  {t("contribute.section.trashedLanguages")}
+                </h2>
               </div>
               <div className="roleList">
                 {trash.languages.map((entry) => (
@@ -449,7 +457,9 @@ export default function ContributeDashboard({ user }) {
           {trash.words.length > 0 ? (
             <section className="roleSection">
               <div className="roleSection__head">
-                <h2 className="roleSection__title">Trashed words</h2>
+                <h2 className="roleSection__title">
+                  {t("contribute.section.trashedWords")}
+                </h2>
               </div>
               <div className="roleList">
                 {trash.words.map((entry) => (
@@ -470,6 +480,6 @@ export default function ContributeDashboard({ user }) {
           ) : null}
         </>
       )}
-    </div>
+    </Tabs>
   );
 }

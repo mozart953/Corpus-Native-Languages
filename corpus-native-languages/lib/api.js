@@ -1,5 +1,12 @@
 const API_BASE = (process.env.NEXT_PUBLIC_API_BASE ?? "/api/backend").replace(/\/+$/, "");
 
+/** Turn an API-relative asset path into a URL the browser can request. */
+export function apiAssetUrl(path) {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
 export class ApiError extends Error {
   constructor(message, status, details, code) {
     super(message);
@@ -24,6 +31,8 @@ export async function apiFetch(path, options = {}) {
   const { method = "GET", body, headers, ...rest } = options;
   const url = `${API_BASE}${path.startsWith("/") ? path : `/${path}`}`;
   const retryable = method === "GET";
+  const isFormData =
+    typeof FormData !== "undefined" && body instanceof FormData;
   let response;
 
   for (let attempt = 0; attempt <= (retryable ? 1 : 0); attempt += 1) {
@@ -31,10 +40,17 @@ export async function apiFetch(path, options = {}) {
       method,
       credentials: "same-origin",
       headers: {
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+        ...(body !== undefined && !isFormData
+          ? { "Content-Type": "application/json" }
+          : {}),
         ...headers,
       },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body:
+        body === undefined
+          ? undefined
+          : isFormData
+            ? body
+            : JSON.stringify(body),
       cache: "no-store",
       ...rest,
     });
