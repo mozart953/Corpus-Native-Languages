@@ -11,7 +11,7 @@
 .navbar__inner {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   min-height: 68px;
 }
 
@@ -21,6 +21,7 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   margin-right: auto;
   color: var(--nl-white);
 }
@@ -44,32 +45,41 @@
 
 .navbar__brandText {
   display: flex;
+  min-width: 0;
   flex-direction: column;
+  overflow: hidden;
   font-size: 0.98rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .navbar__brandText small {
+  overflow: hidden;
   color: var(--nl-faint);
   font-family: var(--nl-font-label);
   font-size: 0.66rem;
   font-weight: 500;
   letter-spacing: 0.12em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* Links */
 
 .navbar__panel {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 24px;
 }
 
 .navbar__links {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 4px;
 }
@@ -81,6 +91,7 @@
   color: var(--nl-muted);
   font-size: 0.9rem;
   font-weight: 500;
+  white-space: nowrap;
   transition: color var(--nl-speed) ease, background var(--nl-speed) ease;
 }
 
@@ -112,12 +123,14 @@
 
 .navbar__actions {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 8px;
 }
 
 .navbar__user {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 10px;
   padding: 4px 14px 4px 4px;
@@ -144,6 +157,8 @@
 
 .navbar__userText {
   display: flex;
+  min-width: 0;
+  max-width: 120px;
   flex-direction: column;
   color: var(--nl-white);
   font-size: 0.85rem;
@@ -151,27 +166,56 @@
   line-height: 1.2;
 }
 
+.navbar__userName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .navbar__userText small {
+  overflow: hidden;
   color: var(--nl-muted);
   font-family: var(--nl-font-label);
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.11em;
+  text-overflow: ellipsis;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.navbar__session {
+  display: flex;
+  position: relative;
+  min-width: 34px;
+  align-items: center;
 }
 
 .navbar__signOut {
+  flex: none;
   border-style: dashed;
+}
+
+.navbar__signOutText {
+  display: none;
 }
 
 .navbar__confirm {
   display: flex;
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 18px);
+  right: 0;
+  width: max-content;
+  max-width: min(380px, calc(100vw - 32px));
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 6px 8px 6px 14px;
   background: var(--nl-surface-2);
   border: 1px solid var(--nl-border-strong);
   border-radius: var(--nl-radius-pill);
+  box-shadow: var(--nl-shadow);
   color: var(--nl-white);
   font-size: 0.82rem;
   font-weight: 600;
@@ -186,6 +230,105 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Signed-in density -------------------------------------------------------
+   An authenticated navbar carries more links and a user chip, so it uses a
+   smaller type scale and tighter spacing than the public one. */
+
+.navbar--signed-in .navbar__brand {
+  gap: 10px;
+}
+
+.navbar--signed-in .navbar__mark {
+  width: 34px;
+  height: 34px;
+  font-size: 0.78rem;
+}
+
+.navbar--signed-in .navbar__brandText {
+  font-size: 0.9rem;
+}
+
+.navbar--signed-in .navbar__brandText small {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+}
+
+.navbar--signed-in .navbar__panel {
+  gap: 12px;
+}
+
+.navbar--signed-in .navbar__links {
+  gap: 2px;
+}
+
+.navbar--signed-in .navbar__link {
+  padding: 7px 8px;
+  font-size: 0.78rem;
+}
+
+.navbar--signed-in .navbar__actions {
+  gap: 5px;
+}
+
+.navbar--signed-in .navbar__user {
+  gap: 8px;
+  padding: 3px 8px 3px 3px;
+}
+
+.navbar--signed-in .navbar__avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 0.72rem;
+}
+
+.navbar--signed-in .navbar__userText {
+  max-width: 104px;
+  font-size: 0.78rem;
+}
+
+.navbar--signed-in .navbar__userText small {
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+}
+
+.navbar--signed-in .navbar__signOut {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+@media (max-width: 1180px) {
+  .navbar--signed-in .navbar__brandText small,
+  .navbar--signed-in .navbar__userText small {
+    display: none;
+  }
+
+  .navbar--signed-in .navbar__panel {
+    gap: 9px;
+  }
+
+  .navbar--signed-in .navbar__links {
+    gap: 1px;
+  }
+
+  .navbar--signed-in .navbar__link {
+    padding: 7px;
+    font-size: 0.74rem;
+  }
+
+  .navbar--signed-in .navbar__actions {
+    gap: 4px;
+  }
+
+  .navbar--signed-in .navbar__user {
+    padding-right: 7px;
+  }
+
+  .navbar--signed-in .navbar__userText {
+    max-width: 92px;
   }
 }
 
@@ -217,7 +360,7 @@
   transition: transform var(--nl-speed) ease;
 }
 
-@media (max-width: 880px) {
+@media (max-width: 1100px) {
   .navbar__toggle {
     display: inline-flex;
     order: 3;
@@ -244,22 +387,32 @@
     display: flex;
   }
 
-  .navbar__links {
+  /* The stacked panel has room again: undo the desktop density. */
+  .navbar--signed-in .navbar__brandText small {
+    display: block;
+  }
+
+  .navbar__links,
+  .navbar--signed-in .navbar__links {
     flex-direction: column;
     align-items: stretch;
     gap: 2px;
   }
 
-  .navbar__link {
+  .navbar__link,
+  .navbar--signed-in .navbar__link {
     padding: 12px;
+    font-size: 0.9rem;
   }
 
   .navbar__link::after {
     display: none;
   }
 
-  .navbar__actions {
+  .navbar__actions,
+  .navbar--signed-in .navbar__actions {
     flex-wrap: wrap;
+    gap: 8px;
   }
 
   .navbar__actions > button {
@@ -270,9 +423,54 @@
     flex: 0 0 auto;
   }
 
+  .navbar__user,
+  .navbar--signed-in .navbar__user {
+    flex: 1 1 100%;
+    gap: 10px;
+    padding: 4px 12px 4px 4px;
+  }
+
+  .navbar__avatar,
+  .navbar--signed-in .navbar__avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.78rem;
+  }
+
+  .navbar__userText,
+  .navbar--signed-in .navbar__userText {
+    max-width: none;
+    font-size: 0.85rem;
+  }
+
+  .navbar__userText small,
+  .navbar--signed-in .navbar__userText small {
+    display: block;
+    font-size: 0.62rem;
+    letter-spacing: 0.11em;
+  }
+
+  .navbar__session {
+    position: static;
+    flex: 1 1 100%;
+  }
+
+  .navbar--signed-in .navbar__signOut {
+    width: 100%;
+    padding: 0 12px;
+  }
+
+  .navbar__signOutText {
+    display: inline;
+  }
+
   .navbar__confirm {
+    position: static;
+    width: 100%;
+    max-width: none;
     flex-wrap: wrap;
     border-radius: var(--nl-radius);
+    box-shadow: none;
   }
 }
 

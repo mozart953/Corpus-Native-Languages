@@ -80,7 +80,7 @@ function NavbarComponent({
   };
 
   return (
-    <header className="navbar">
+    <header className={`navbar ${isSignedIn ? "navbar--signed-in" : "navbar--signed-out"}`}>
       <div className="navbar__inner nl-container">
         <Link href="/" className="navbar__brand" onClick={() => setMenuOpen(false)}>
           <span className="navbar__mark" aria-hidden="true">
@@ -132,48 +132,54 @@ function NavbarComponent({
                     {user.initials ?? user.name?.charAt(0) ?? "?"}
                   </span>
                   <span className="navbar__userText">
-                    {user.name}
-                    {user.role ? <small>{user.role}</small> : null}
+                    <span className="navbar__userName" title={user.name}>
+                      {user.name}
+                    </span>
+                    {user.role ? <small title={user.role}>{user.role}</small> : null}
                   </span>
                 </div>
 
-                {confirmingSignOut ? (
-                  <div
-                    className="navbar__confirm"
-                    role="alertdialog"
-                    aria-label={t("nav.confirmSignOut")}
-                  >
-                    <span>{t("nav.signOutQuestion")}</span>
+                <div className="navbar__session">
+                  {confirmingSignOut ? (
+                    <div
+                      className="navbar__confirm"
+                      role="alertdialog"
+                      aria-label={t("nav.confirmSignOut")}
+                    >
+                      <span>{t("nav.signOutQuestion")}</span>
+                      <Button
+                        type="button"
+                        ref={confirmRef}
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleSignOut}
+                      >
+                        {t("nav.yesSignOut")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setConfirmingSignOut(false)}
+                      >
+                        {t("nav.stay")}
+                      </Button>
+                    </div>
+                  ) : (
                     <Button
                       type="button"
-                      ref={confirmRef}
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
+                      className="navbar__signOut"
+                      aria-label={t("nav.signOut")}
+                      title={t("nav.signOut")}
                       onClick={handleSignOut}
                     >
-                      {t("nav.yesSignOut")}
+                      <LogOut className="size-3.5" aria-hidden="true" />
+                      <span className="navbar__signOutText">{t("nav.signOut")}</span>
                     </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setConfirmingSignOut(false)}
-                    >
-                      {t("nav.stay")}
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="navbar__signOut"
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="size-3.5" aria-hidden="true" />
-                    {t("nav.signOut")}
-                  </Button>
-                )}
+                  )}
+                </div>
               </>
             ) : (
               <>
