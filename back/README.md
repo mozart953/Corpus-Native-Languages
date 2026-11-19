@@ -335,6 +335,11 @@ into `Region` and linked through `LanguageRegion` in the order given. The respon
 
 ### Words
 
+Both public word reads (`GET /words` and `GET /words/:id`) send a flat
+presentation record to anonymous visitors and contributors (`id` is a positional
+number, not the database id). Reviewers and admins receive the full moderation
+record from the same endpoints.
+
 | Method | Path | Access | Description |
 | --- | --- | --- | --- |
 | `GET` | `/words` | public | Paginated approved words. Filters: `q`, `languageId`, `partOfSpeech`, `verified`, `sort`, `direction`, `page`, `limit`. |

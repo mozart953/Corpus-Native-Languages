@@ -8,6 +8,7 @@ import {
   buildFilename,
   copyToClipboard,
   downloadTextFile,
+  wordsToCsv,
   wordsToDetailedTxt,
   wordsToJson,
   wordsToPairsTxt,
@@ -18,12 +19,14 @@ import "./DownloadMenu.css";
 /** The export formats offered. */
 export const FORMATS = {
   JSON: "json",
+  CSV: "csv",
   PAIRS: "pairs",
   DETAILED: "detailed",
 };
 
 const FORMAT_META = {
   [FORMATS.JSON]: { label: "JSON", hintKey: "download.jsonHint" },
+  [FORMATS.CSV]: { label: "CSV", hintKey: "download.csvHint" },
   [FORMATS.PAIRS]: { label: "TXT", hintKey: "download.txtPairsHint" },
   [FORMATS.DETAILED]: { label: "TXT", hintKey: "download.txtDetailedHint" },
 };
@@ -52,20 +55,29 @@ function DownloadMenu({
   const target = useSelection ? selectedWords : words;
 
   const isEmpty = target.length === 0;
-  const meta = {
-    languageName: useSelection
-      ? `${languageName ?? t("home.words.allLanguages")} (selection)`
-      : languageName ?? t("home.words.allLanguages"),
-  };
+  const exportLanguageName = useSelection
+    ? `${languageName ?? t("home.words.allLanguages")} (selection)`
+    : languageName ?? t("home.words.allLanguages");
 
   const serialise = (chosen) => {
     if (chosen === FORMATS.JSON) {
-      return { content: wordsToJson(target, meta), extension: "json", mime: "application/json" };
+      return { content: wordsToJson(target), extension: "json", mime: "application/json" };
+    }
+    if (chosen === FORMATS.CSV) {
+      return { content: wordsToCsv(target), extension: "csv", mime: "text/csv" };
     }
     if (chosen === FORMATS.PAIRS) {
-      return { content: wordsToPairsTxt(target, { meta }), extension: "txt", mime: "text/plain" };
+      return {
+        content: wordsToPairsTxt(target, { languageName: exportLanguageName }),
+        extension: "txt",
+        mime: "text/plain",
+      };
     }
-    return { content: wordsToDetailedTxt(target, { meta }), extension: "txt", mime: "text/plain" };
+    return {
+      content: wordsToDetailedTxt(target, { languageName: exportLanguageName }),
+      extension: "txt",
+      mime: "text/plain",
+    };
   };
 
   const flash = (text) => {

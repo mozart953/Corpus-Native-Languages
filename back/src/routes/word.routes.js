@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { wordController } from "../controllers/word.controller.js";
-import { requireAuth } from "../middlewares/auth.guard.js";
+import { optionalAuth, requireAuth } from "../middlewares/auth.guard.js";
 import { requireRole } from "../middlewares/role.guard.js";
 import { validate } from "../middlewares/validate.js";
 import { reviewLimiter, writeLimiter } from "../middlewares/rate-limit.js";
@@ -21,12 +21,12 @@ import { reviewValidator } from "../validators/review.validator.js";
 export const wordRoutes = Router();
 
 // Public reads -------------------------------------------------------------
-wordRoutes.get("/", wordQueryValidator, validate, wordController.list);
+wordRoutes.get("/", optionalAuth, wordQueryValidator, validate, wordController.list);
 
 // Sign-in-only views. `/trash` and `/mine` must stay above `/:id`.
 wordRoutes.get("/mine", requireAuth, wordListMineValidator, validate, wordController.listMine);
 wordRoutes.get("/trash", requireAuth, wordListMineValidator, validate, wordController.listTrash);
-wordRoutes.get("/:id", wordGetValidator, validate, wordController.get);
+wordRoutes.get("/:id", optionalAuth, wordGetValidator, validate, wordController.get);
 
 // Authenticated writes -----------------------------------------------------
 wordRoutes.post(

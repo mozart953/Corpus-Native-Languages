@@ -33,7 +33,7 @@ This project proposes a shared, community-reviewed corpus that:
    Accounts exist only to contribute and review.
 3. **Is useful to machines as well as people** — exports include a
    tab-separated `word → translation` format that a training pipeline can read
-   directly, alongside full JSON records for auditing.
+   directly, plus JSON and CSV with the same minimal, presentation-only fields.
 4. **Belongs to the communities** — every entry carries a `verified` flag and
    stays marked *pending community review* until speakers of that language sign
    it off. The goal is preservation with consent, not extraction.
@@ -55,8 +55,9 @@ What works today:
 - Search words, translations, pronunciations and usage notes, with matching that
   is tolerant of orthography variants (`K'iche`, `K'iche'`, `Kʼicheʼ`).
 - Paginated word cards with search highlighting and a pending/verified badge.
-- Select individual words and export them as JSON, tab-separated TXT, or a
-  readable TXT report. Copy pairs or exports to the clipboard.
+- Select individual words and export them as JSON, CSV, tab-separated TXT, or a
+  readable TXT report. Downloads never include database ids, timestamps or
+  review internals. Copy pairs or exports to the clipboard.
 - The corpus is fetched from the Express API; the bundled fixtures remain the
   first render and the offline fallback.
 - Real registration and sign-in through NextAuth's local Credentials provider,
@@ -157,7 +158,8 @@ What is intentionally **not** implemented yet:
 - **Search and exports:** `utils/search.js` combines the language filter with
   free text; `utils/text.js` folds case, diacritics and decorative apostrophes
   while keeping an index map for highlighting. `utils/exporters.js` contains the
-  JSON/TXT serialisers and the Blob download helper.
+  JSON/CSV/TXT serialisers (all using one minimal presentation projection) and
+  the Blob download helper.
 - **Styling:** `app/globals.css` defines design tokens and shared primitives each
   component extends with its own stylesheet. Tailwind's PostCSS plugin is
   present, but the interface is hand-written CSS.

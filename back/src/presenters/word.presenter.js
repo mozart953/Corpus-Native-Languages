@@ -98,3 +98,24 @@ export function toWordResponse(word, { locale = DEFAULT_LOCALE } = {}) {
     reviewStateLabel: word.reviewState?.label ?? null,
   };
 }
+
+/**
+ * Presentation-only projection for anonymous visitors and downloads.
+ *
+ * It deliberately drops database identifiers, authorship, review metadata and
+ * timestamps; `id` is a caller-supplied positional number used only so the UI
+ * and exported files can tell rows apart. Build it from a full word response.
+ */
+export function toPublicWordResponse(word, { id } = {}) {
+  return {
+    id,
+    languageName: word.languageName ?? null,
+    word: word.word,
+    translation: word.translation ?? "",
+    pronunciation: word.pronunciation ?? "",
+    partOfSpeech: word.partOfSpeech ?? "",
+    partOfSpeechLabel: word.partOfSpeechLabel ?? null,
+    usage: word.usage ?? "",
+    translationIsFallback: Boolean(word.translationIsFallback),
+  };
+}

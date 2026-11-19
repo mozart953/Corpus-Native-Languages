@@ -3,14 +3,18 @@ import { wordService } from "../services/word.service.js";
 
 export const wordController = {
   list: asyncHandler(async (req, res) => {
-    res.json(await wordService.listPublic(req.validated));
+    res.json(await wordService.listPublic(req.validated, req.user));
   }),
 
   get: asyncHandler(async (req, res) => {
     res.json(
-      await wordService.getPublic(req.validated.id, {
-        locale: req.validated.locale,
-      }),
+      await wordService.getPublic(
+        req.validated.id,
+        {
+          locale: req.validated.locale,
+        },
+        req.user,
+      ),
     );
   }),
 

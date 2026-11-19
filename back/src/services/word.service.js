@@ -9,8 +9,12 @@ import { languageRepository } from "../repositories/language.repository.js";
 import { localeRepository } from "../repositories/locale.repository.js";
 import { partOfSpeechRepository } from "../repositories/part-of-speech.repository.js";
 import { wordRepository } from "../repositories/word.repository.js";
-import { toWordResponse } from "../presenters/word.presenter.js";
+import {
+  toPublicWordResponse,
+  toWordResponse,
+} from "../presenters/word.presenter.js";
 import { ApiError } from "../utils/ApiError.js";
+import { getPagination } from "../utils/pagination.js";
 import { auditService } from "./audit.service.js";
 import { contentHistory } from "./content-history.service.js";
 import { createContentService } from "./content.service.js";
@@ -269,6 +273,33 @@ async function requireActiveLocale(localeInput) {
 
 export const wordService = {
   ...baseWordService,
+
+  /**
+   * Public browsing stays presentation-only for everyone except moderators.
+   * Contributors and anonymous visitors get a flat record with a positional
+   * number instead of the database id; reviewers/admins keep the full record
+   * because the admin Content tab reads this same endpoint.
+   */
+  async listPublic({ page, limit, ...rest } = {}, actor = null) {
+    const result = await baseWordService.listPublic({ page, limit, ...rest });
+    if (isModerator(actor)) return result;
+
+    const pagination = getPagination({ page, limit });
+    return {
+      ...result,
+      data: result.data.map((word, index) =>
+        toPublicWordResponse(word, { id: pagination.skip + index + 1 }),
+      ),
+    };
+  },
+
+  async getPublic(id, { locale } = {}, actor = null) {
+    const result = await baseWordService.getPublic(id, { locale });
+    if (isModerator(actor)) return result;
+
+    // A single public record has no list position, so number it from one.
+    return { data: toPublicWordResponse(result.data, { id: 1 }) };
+  },
 
   /**
    * Create or replace one locale's wording for the word's primary sense.

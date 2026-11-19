@@ -125,13 +125,22 @@ function HomeComponent() {
 
   const stats = summarise(languages, words);
 
-  const visibleWords = filterWords(words, { query, languageId, field: scope });
-  const languageTotal = words.filter(
-    (word) => languageId === "all" || word.languageId === languageId,
-  ).length;
-
   const activeLanguage = languages.find((language) => language.id === languageId);
-  const languageLabel = activeLanguage?.name ?? t("home.words.allLanguages");
+  const activeLanguageName = activeLanguage?.name ?? null;
+  const matchesLanguage = (word) =>
+    languageId === "all" ||
+    word.languageId === languageId ||
+    (activeLanguageName != null && word.languageName === activeLanguageName);
+
+  const visibleWords = filterWords(words, {
+    query,
+    languageId,
+    languageName: activeLanguageName,
+    field: scope,
+  });
+  const languageTotal = words.filter(matchesLanguage).length;
+
+  const languageLabel = activeLanguageName ?? t("home.words.allLanguages");
 
   const toggleSelect = (id) => {
     setSelectedIds((current) =>
@@ -179,7 +188,7 @@ function HomeComponent() {
 
   const downloadSingle = (word) => {
     const filename = buildFilename(`${word.languageName}-${word.word}`, "json");
-    downloadTextFile(filename, wordsToJson([word], { languageName: word.languageName }), "application/json");
+    downloadTextFile(filename, wordsToJson([word]), "application/json");
     setPendingNotice({ key: "home.notice.downloadingJson", vars: { word: word.word } });
   };
 
@@ -187,7 +196,7 @@ function HomeComponent() {
     const filename = buildFilename(`search-${query.trim() || "all"}`, "txt");
     downloadTextFile(
       filename,
-      wordsToPairsTxt(visibleWords, { meta: { languageName: languageLabel } }),
+      wordsToPairsTxt(visibleWords, { languageName: languageLabel }),
       "text/plain",
     );
     setPendingNotice({
@@ -355,7 +364,13 @@ function HomeComponent() {
                 <LanguageCard
                   language={language}
                   active={languageId === language.id}
-                  wordCount={words.filter((word) => word.languageId === language.id).length}
+                  wordCount={
+                    words.filter(
+                      (word) =>
+                        word.languageId === language.id ||
+                        word.languageName === language.name,
+                    ).length
+                  }
                   onSelect={selectLanguage}
                 />
               </li>
@@ -425,7 +440,7 @@ function HomeComponent() {
                 words={visibleWords}
                 languageName={languageLabel}
                 selectedIds={selectedIds}
-                baseName={activeLanguage?.id ?? "native-languages"}
+                baseName={activeLanguage?.name ?? "native-languages"}
               />
 
               <Button
